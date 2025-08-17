@@ -311,7 +311,10 @@
       return (
         <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
           <div className="mb-2 text-center text-sm text-slate-300">Radar comparativo (promedio por stat)</div>
-          <RadarChart dataSeries={
+          <RadarChart dataSeries={[
+            { label:'A', values: avgA, stroke: TEAM_COLORS.A.stroke, fill: TEAM_COLORS.A.fill },
+            { label:'B', values: avgB, stroke: TEAM_COLORS.B.stroke, fill: TEAM_COLORS.B.fill },
+          ]} />
           <div className="mt-2 flex justify-center gap-4 text-xs text-slate-300">
             <span className="inline-flex items-center gap-1"><span className={`h-2 w-2 rounded-full ${TEAM_COLORS.A.dotClass}`}></span> Equipo A</span>
             <span className="inline-flex items-center gap-1"><span className={`h-2 w-2 rounded-full ${TEAM_COLORS.B.dotClass}`}></span> Equipo B</span>
