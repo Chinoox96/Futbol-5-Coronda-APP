@@ -28,7 +28,7 @@
         var el=document.getElementById('fatal');
         if(!el){ el=document.createElement('div'); el.id='fatal'; el.style.position='fixed'; el.style.inset='0'; el.style.background='rgba(2,6,23,0.98)'; el.style.color='#fca5a5'; el.style.zIndex='99999'; el.style.padding='16px'; el.style.fontFamily='ui-monospace, SFMono-Regular, Menlo, monospace'; el.style.overflow='auto'; document.body.appendChild(el);} 
         el.innerHTML='<div style="max-width:900px;margin:0 auto">'+
-          '<h2 style="font-weight:700;margin:0 0 12px">?? Error cargando la app</h2>'+
+          '<h2 style="font-weight:700;margin:0 0 12px">⚠️ Error cargando la app</h2>'+
           '<pre style="white-space:pre-wrap">'+String(msg)+'</pre>'+
           '<p style="opacity:.9">Probá: recargar sin caché (Ctrl/Cmd+Shift+R), revisar conexión/CDNs, o decirme qué sale aquí.</p>'+
         '</div>';
@@ -158,7 +158,7 @@
                 </div>
               </button>
               <button onClick={onToggle} className={`ml-3 rounded-xl px-3 py-1 text-sm ring-1 ${selected ? 'bg-emerald-600 text-white ring-emerald-500' : 'bg-slate-800 text-slate-200 ring-slate-700 hover:bg-slate-700'}`}>
-                {selected ? '? Convocado' : '+ Convocar'}
+                {selected ? '✓ Convocado' : '+ Convocar'}
               </button>
             </div>
             <div className="mt-2 grid grid-cols-4 gap-1 text-[11px] text-slate-300">
@@ -300,8 +300,7 @@
             <div className="text-xs opacity-80">Diff: {diff}</div>
           </div>
           <div className="mt-1 text-sm">Resultado: <span className="font-semibold">{label}</span> <span className="opacity-80">(A: {sA} vs B: {sB})</span></div>
-          <div className="mt-1 text-xs opacity-80">Umbrales: Parejo &lt; 0.30 - Aceptable &lt; 0.80 - Desbalanceado = 0.80<\/div>
-        </div>
+          <div className="mt-1 text-xs opacity-80">Umbrales: Parejo &lt; 0.30 - Aceptable &lt; 0.80 - Desbalanceado ≥ 0.80</div>
       );
     }
 
@@ -384,8 +383,8 @@
               </div>
             </div>
             <nav className="mt-2 grid grid-cols-2 gap-2">
-              <button onClick={()=>setTab('partido')} className={`rounded-xl px-3 py-2 text-sm ring-1 ${tab==='partido'?'bg-slate-800 text-white ring-slate-600':'bg-slate-900/70 text-slate-200 ring-slate-800'}`}>? Partido</button>
-              <button onClick={()=>setTab('plantel')} className={`rounded-xl px-3 py-2 text-sm ring-1 ${tab==='plantel'?'bg-slate-800 text-white ring-slate-600':'bg-slate-900/70 text-slate-200 ring-slate-800'}`}>?? Plantel</button>
+              <button onClick={()=>setTab('partido')} className={`rounded-xl px-3 py-2 text-sm ring-1 ${tab==='partido'?'bg-slate-800 text-white ring-slate-600':'bg-slate-900/70 text-slate-200 ring-slate-800'}`}>⚽ Partido</button>
+              <button onClick={()=>setTab('plantel')} className={`rounded-xl px-3 py-2 text-sm ring-1 ${tab==='plantel'?'bg-slate-800 text-white ring-slate-600':'bg-slate-900/70 text-slate-200 ring-slate-800'}`}>👥 Plantel</button>
             </nav>
             {tab==='partido' && teams && (
               <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
@@ -434,14 +433,14 @@
 
           {tab==='partido' && (
             <div className="sticky bottom-2 mt-4 grid grid-cols-2 gap-2">
-              <button onClick={makeRandom} disabled={!canMake} className={`rounded-2xl px-4 py-3 text-base font-semibold ring-1 ${canMake?'bg-slate-800 text-slate-100 ring-slate-700 hover:bg-slate-700':'bg-slate-800/40 text-slate-500 ring-slate-800 cursor-not-allowed'}`}>?? Azar</button>
-              <button onClick={makeBalanced} disabled={!canMake} className={`rounded-2xl px-4 py-3 text-base font-semibold ring-1 ${canMake?'bg-emerald-600 text-white ring-emerald-500 hover:bg-emerald-500':'bg-emerald-600/40 text-emerald-200 ring-emerald-800 cursor-not-allowed'}`}>?? Equilibrado</button>
+              <button onClick={makeRandom} disabled={!canMake} className={`rounded-2xl px-4 py-3 text-base font-semibold ring-1 ${canMake?'bg-slate-800 text-slate-100 ring-slate-700 hover:bg-slate-700':'bg-slate-800/40 text-slate-500 ring-slate-800 cursor-not-allowed'}`}>🎲 Azar</button>
+              <button onClick={makeBalanced} disabled={!canMake} className={`rounded-2xl px-4 py-3 text-base font-semibold ring-1 ${canMake?'bg-emerald-600 text-white ring-emerald-500 hover:bg-emerald-500':'bg-emerald-600/40 text-emerald-200 ring-emerald-800 cursor-not-allowed'}`}>⚖️ Equilibrado</button>
             </div>
           )}
 
           {/* Botón flotante SIEMPRE visible */}
           {!isStandalone && (
-            <button onClick={onInstallClick} className="fixed bottom-20 right-3 z-50 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg ring-1 ring-emerald-500 hover:bg-emerald-500">?? Instalar</button>
+            <button onClick={onInstallClick} className="fixed bottom-20 right-3 z-50 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg ring-1 ring-emerald-500 hover:bg-emerald-500">📲 Instalar</button>
           )}
 
           {/* Modal de ayuda de instalación */}
@@ -456,7 +455,7 @@
                       <div className="font-semibold">Android (Chrome)</div>
                       <ol className="list-decimal pl-5 space-y-1">
                         <li>Asegurate de tener <code>/sw.js</code> y <code>/icons/</code> subidos.</li>
-                        <li>Si no aparece el prompt automático, abrí el menú (?) y elegí <b>Agregar a pantalla de inicio</b>.</li>
+                        <li>Si no aparece el prompt automático, abrí el menú (⋮) y elegí <b>Agregar a pantalla de inicio</b>.</li>
                       </ol>
                     </div>
                   )}
@@ -503,7 +502,7 @@
         const sc = teamScore(ba, map, chem); const gg = teamGlobal(ba, map); assert(Number.isFinite(sc), `teamScore finito (${sc})`); assert(sc >= gg + 0.6, `teamScore (${sc}) >= teamGlobal (${gg}) + 0.6`);
         const ta = teamAverages(ba, map); assert(STAT_KEYS.every(k=>typeof ta[k]==='number'), `teamAverages claves numéricas (${JSON.stringify(ta)})`);
         const a=players[0].id, b=players[1].id; assert(chem[a][b]===chem[b][a], `química simétrica (chem[${a}][${b}]==chem[${b}][${a}])`);
-        const ids12 = players.map(p=>p.id); const [r12a,r12b]=randomSplit(ids12); assert(r12a.length===6 && r12b.length===6, `randomSplit 12?6/6 (got ${r12a.length}/${r12b.length})`);
+        const ids12 = players.map(p=>p.id); const [r12a,r12b]=randomSplit(ids12); assert(r12a.length===6 && r12b.length===6, `randomSplit 12→6/6 (got ${r12a.length}/${r12b.length})`);
         const before = JSON.stringify(ids10); balancedSplit(ids10, map, chem); const after = JSON.stringify(ids10); assert(before===after, 'balancedSplit no muta input');
         // Nuevos tests
         const okRange = players.every(p=> STAT_KEYS.every(k=> p[k] >= 1 && p[k] <= 10));
