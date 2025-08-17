@@ -595,3 +595,88 @@
               <button onClick={makeRandom} disabled={!canMake} className={`rounded-2xl px-4 py-3 text-base font-semibold ring-1 ${canMake?'bg-slate-800 text-slate-100 ring-slate-700 hover:bg-slate-700':'bg-slate-800/40 text-slate-500 ring-slate-800 cursor-not-allowed'}`}>🎲 Azar</button>
               <button onClick={makeBalanced} disabled={!canMake} className={`rounded-2xl px-4 py-3 text-base font-semibold ring-1 ${canMake?'bg-emerald-600 text-white ring-emerald-500 hover:bg-emerald-500':'bg-emerald-600/40 text-emerald-200 ring-emerald-800 cursor-not-allowed'}`}>⚖️ Equilibrado</button>
             </div>
+          )}
+
+          {!isStandalone && (
+            <button onClick={onInstallClick} className="fixed bottom-20 right-3 z-50 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg ring-1 ring-emerald-500 hover:bg-emerald-500">📲 Instalar</button>
+          )}
+
+          {showInstallInfo && (
+            <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={()=>setShowInstallInfo(false)}>
+              <div className="w-full max-w-md rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700" onClick={e=>e.stopPropagation()}>
+                <div className="mb-2 text-lg font-semibold">Instalar como app</div>
+                <div className="space-y-2 text-sm text-slate-300">
+                  <div><span className="font-semibold">Estado PWA:</span> SW: {swReady? 'ok':'faltante'} - Manifest: {hasManifest? 'ok':'faltante'}</div>
+                  {isAndroid && (
+                    <div>
+                      <div className="font-semibold">Android (Chrome)</div>
+                      <ol className="list-decimal pl-5 space-y-1">
+                        <li>Asegurate de tener <code>/sw.js</code> y <code>/icons/</code> subidos.</li>
+                        <li>Si no aparece el prompt automático, abrí el menú (⋮) y elegí <b>Agregar a pantalla de inicio</b>.</li>
+                      </ol>
+                    </div>
+                  )}
+                  {isIOS && (
+                    <div>
+                      <div className="font-semibold">iOS (Safari)</div>
+                      <ol className="list-decimal pl-5 space-y-1">
+                        <li>Tocá <b>Compartir</b> y luego <b>Añadir a pantalla de inicio</b>.</li>
+                        <li>iOS no muestra botón de instalar automático por política de Apple.</li>
+                      </ol>
+                    </div>
+                  )}
+                  {!isAndroid && !isIOS && (
+                    <div>Podés instalar desde el menú del navegador: <b>Instalar app</b> o <b>Agregar a pantalla de inicio</b>.</div>
+                  )}
+                </div>
+                <div className="mt-4 text-right">
+                  <button onClick={()=>setShowInstallInfo(false)} className="rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">Cerrar</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <footer className="mt-6 rounded-xl bg-slate-900/60 p-3 text-[12px] text-slate-300 ring-1 ring-slate-800">
+            <div className="font-semibold">Leyenda:</div>
+            <div>ATA=Ataque - PAS=Pase - REG=Regate - VEL=Velocidad - DEF=Defensa - FIS=Físico - ARQ=Arco - EQP=Trabajo en equipo</div>
+          </footer>
+
+          <PlayerModal player={modalPlayer} onClose={()=>setModalPlayer(null)} players={players} chem={chem} teamIdsA={teams?.A||[]} teamIdsB={teams?.B||[]} />
+          {showForm && <PlayerFormModal initial={showForm.id? showForm:null} onCancel={()=>setShowForm(null)} onSave={onSavePlayer} />}
+          {showSettings && <SettingsModal onClose={()=>setShowSettings(false)} kChem={kChemUI} setKChem={setKChemUI} onExport={onExport} onImport={onImport} onReset={onResetSeed} />}
+        </div>
+      );
+    }
+
+    // ================= DEV TESTS =================
+    function runDevTests(players, map, chem){
+      try{
+        const log=(...a)=>console.log('[DEV TEST]',...a);
+        const assert=(c,m)=>{ if(!c) console.error('[DEV TEST FAIL]',m); else log('OK:',m); };
+        const g0 = globalOf(players[0]);
+        assert(g0>=1 && g0<=10, `global jugador[0] dentro de 1..10 (g0=${g0})`);
+        const ids10 = players.slice(0,10).map(p=>p.id); const [ra,rb]=randomSplit(ids10); assert(ra.length===5 && rb.length===5, `randomSplit 5/5 (got ${ra.length}/${rb.length})`);
+        const {A:ba, B:bb, m:{sA, sB}} = balancedSplit(ids10, map, chem); assert(ba.length===5 && bb.length===5, 'balancedSplit 5/5'); const diff=Math.abs(sA-sB); assert(diff>=0, `balancedSplit diff>=0 (${diff.toFixed(2)})`);
+        const qc = teamChemistry(ba, chem); assert(qc>=1 && qc<=10, `teamChemistry 1..10 (${qc})`);
+        const sc = teamScore(ba, map, chem); const gg = teamGlobal(ba, map); assert(Number.isFinite(sc), `teamScore finito (${sc})`); assert(sc >= gg + 0.6, `teamScore (${sc}) >= teamGlobal (${gg}) + 0.6`);
+        const ta = teamAverages(ba, map); assert(STAT_KEYS.every(k=>typeof ta[k]==='number'), `teamAverages claves numéricas (${JSON.stringify(ta)})`);
+        const a=players[0].id, b=players[1].id; assert(chem[a][b]===chem[b][a], `química simétrica (chem[${a}][${b}]==chem[${b}][${a}])`);
+        const ids12 = players.map(p=>p.id); const [r12a,r12b]=randomSplit(ids12); assert(r12a.length===6 && r12b.length===6, `randomSplit 12→6/6 (got ${r12a.length}/${r12b.length})`);
+        const before = JSON.stringify(ids10); balancedSplit(ids10, map, chem); const after = JSON.stringify(ids10); assert(before===after, 'balancedSplit no muta input');
+        // Nuevos tests
+        const okRange = players.every(p=> STAT_KEYS.every(k=> p[k] >= 1 && p[k] <= 10));
+        assert(okRange, 'todos los stats están en 1..10');
+        const diagOk = players.every(p=> chem[p.id][p.id] === 10);
+        assert(diagOk, 'química propia = 10 para cada jugador');
+        const avgCheck = teamAverages(players.slice(0,5).map(p=>p.id), map);
+        assert(STAT_KEYS.every(k=> Number.isFinite(avgCheck[k])), 'teamAverages no produce NaN');
+      }catch(err){ console.error('[DEV TEST ERROR]', err); }
+    }
+
+    // Montaje
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App/>);
+  </script>
+
+</body>
+</html>
