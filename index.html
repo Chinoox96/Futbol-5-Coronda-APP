@@ -286,21 +286,8 @@
       );
     }
 
-    function BalanceIndicator({ A, B, map, chem }){
-      const sA = teamScore(A, map, chem);
-      const sB = teamScore(B, map, chem);
-      const diff = Number(Math.abs(sA - sB).toFixed(2));
-      let label='Parejo', classes='bg-emerald-600/15 text-emerald-200 ring-emerald-500/30';
-      if (diff >= 0.8) { label='Desbalanceado'; classes='bg-rose-600/15 text-rose-200 ring-rose-500/30'; }
-      else if (diff >= 0.3) { label='Aceptable'; classes='bg-amber-600/15 text-amber-100 ring-amber-500/30'; }
-      return (
-        <div className={`rounded-2xl p-3 ring-1 ${classes}`}>
-          <div className="flex items-center justify-between text-sm">
-            <div className="font-semibold">Balance del partido</div>
-            <div className="text-xs opacity-80">Diff: {diff}</div>
-          </div>
-          <div className="mt-1 text-sm">Resultado: <span className="font-semibold">{label}</span> <span className="opacity-80">(A: {sA} vs B: {sB})</span></div>
-          <div className="mt-1 text-xs opacity-80">Umbrales: Parejo &lt; 0.30 - Aceptable &lt; 0.80 - Desbalanceado ≥ 0.80</div>
+    $1
+        </div>
       );
     }
 
