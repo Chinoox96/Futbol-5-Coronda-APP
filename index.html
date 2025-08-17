@@ -53,7 +53,7 @@
   </script>
 
   <script type="text/babel">
-    const { useMemo, useState, useEffect } = React;
+    const { useMemo, useState, useEffect, useRef } = React;
 
     // ================= PWA: manifest estático o dinámico + SW =================
     (async function ensureManifest(){
@@ -123,12 +123,19 @@
       B: { stroke: 'rgba(59,130,246,1)', fill: 'rgba(59,130,246,0.18)', dotClass: 'bg-blue-500',    hex: '#3b82f6' },
     };
     const WEIGHTS = { ATA:0.18, DEF:0.16, PAS:0.14, REG:0.14, VEL:0.14, FIS:0.10, ARQ:0.07, EQP:0.07 };
-    const K_CHEM = 0.6;
+    const K_CHEM = 0.6; // usado por tests y funciones base
 
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const avg = (arr) => (arr.length ? arr.reduce((p,c)=>p+c,0)/arr.length : 0);
     const globalOf = (p) => { let s=0,w=0; for (const k of Object.keys(WEIGHTS)){ s+=(p[k]||0)*WEIGHTS[k]; w+=WEIGHTS[k]; } return Number((s/w).toFixed(2)); };
 
+    // ======= Persistencia =======
+    const STORAGE_KEYS = { players:'f5.players', selected:'f5.selected', teams:'f5.teams', kchem:'f5.kchem' };
+    const safeJSON = (s, d) => { try { return JSON.parse(s); } catch { return d; } };
+
+    const withGlobals = (arr)=> arr.map(p=> ({...p, _GLOBAL: globalOf(p)}));
+
+    // Química
     const buildChemistry = (players) => {
       const q={};
       for(const a of players){ q[a.id]={}; for(const b of players){ if(a.id===b.id){q[a.id][b.id]=10; continue;} if(q[b.id]?.[a.id]!=null){ q[a.id][b.id]=q[b.id][a.id]; continue;} let v=5; if(a.equipoPropio&&b.equipoPropio&&a.equipoPropio===b.equipoPropio) v+=1.2; if(a.equipoFavorito&&b.equipoFavorito&&a.equipoFavorito===b.equipoFavorito) v+=0.8; const eqpBonus=((a.EQP+b.EQP)/2 - 5)*0.15; v+=eqpBonus; q[a.id][b.id]=clamp(Number(v.toFixed(2)),1,10);} }
@@ -136,13 +143,16 @@
     };
     const teamChemistry = (ids, chem) => { if(ids.length<=1) return 10; let t=0,p=0; for(let i=0;i<ids.length;i++) for(let j=i+1;j<ids.length;j++){ t+= chem[ids[i]]?.[ids[j]] ?? 5; p++; } return Number((t/(p||1)).toFixed(2)); };
     const teamGlobal = (ids, map) => Number(avg(ids.map(id=>map[id]._GLOBAL)).toFixed(2));
-    const teamScore  = (ids, map, chem) => Number((teamGlobal(ids,map)+teamChemistry(ids,chem)*K_CHEM).toFixed(2));
+    const teamScore  = (ids, map, chem) => Number((teamGlobal(ids,map)+teamChemistry(ids,chem)*K_CHEM).toFixed(2)); // base (tests)
+    const teamScoreUI = (ids, map, chem, kChem) => Number((teamGlobal(ids,map)+teamChemistry(ids,chem)*kChem).toFixed(2)); // UI ajustable
+
     const randomSplit = (ids) => { const s=[...ids].sort(()=>Math.random()-0.5); const m=Math.floor(s.length/2); return [s.slice(0,m), s.slice(m)]; };
-    const scoreDiff = (A,B,map,chem) => { const sA=teamScore(A,map,chem), sB=teamScore(B,map,chem); return {A:[...A],B:[...B],diff:Math.abs(sA-sB),m:{sA,sB}}; };
-    const balancedSplit = (ids,map,chem) => { let [A,B]=randomSplit(ids); let best=scoreDiff(A,B,map,chem); const iter=900; for(let t=0;t<iter;t++){ const i=Math.floor(Math.random()*A.length), j=Math.floor(Math.random()*B.length); [A[i],B[j]]=[B[j],A[i]]; const cur=scoreDiff(A,B,map,chem); if(cur.diff<=best.diff || Math.random()<0.12){ best=cur; } else { [A[i],B[j]]=[B[j],A[i]]; } } return { A:best.A, B:best.B, m:best.m }; };
+    const scoreDiff = (A,B,map,chem,kChem=K_CHEM) => { const sA=teamScoreUI(A,map,chem,kChem), sB=teamScoreUI(B,map,chem,kChem); return {A:[...A],B:[...B],diff:Math.abs(sA-sB),m:{sA,sB}}; };
+    const balancedSplit = (ids,map,chem,kChem=K_CHEM) => { let [A,B]=randomSplit(ids); let best=scoreDiff(A,B,map,chem,kChem); const iter=900; for(let t=0;t<iter;t++){ const i=Math.floor(Math.random()*A.length), j=Math.floor(Math.random()*B.length); [A[i],B[j]]=[B[j],A[i]]; const cur=scoreDiff(A,B,map,chem,kChem); if(cur.diff<=best.diff || Math.random()<0.12){ best=cur; } else { [A[i],B[j]]=[B[j],A[i]]; } } return { A:best.A, B:best.B, m:best.m }; };
 
     const Pill = ({ children, className='' }) => <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${className}`}>{children}</span>;
 
+    // ========= UI: Filas, Tarjetas, Charts =========
     function PlayerRow({ p, selected, onToggle, onOpen }){
       return (
         <div className="flex items-center gap-3 rounded-xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
@@ -157,9 +167,11 @@
                   {p.equipoFavorito && <Pill className="bg-cyan-600/20 text-cyan-200">Fav: {p.equipoFavorito}</Pill>}
                 </div>
               </button>
-              <button onClick={onToggle} className={`ml-3 rounded-xl px-3 py-1 text-sm ring-1 ${selected ? 'bg-emerald-600 text-white ring-emerald-500' : 'bg-slate-800 text-slate-200 ring-slate-700 hover:bg-slate-700'}`}>
-                {selected ? '✓ Convocado' : '+ Convocar'}
-              </button>
+              <div className="flex items-center gap-2">
+                <button onClick={onToggle} className={`rounded-xl px-3 py-1 text-sm ring-1 ${selected ? 'bg-emerald-600 text-white ring-emerald-500' : 'bg-slate-800 text-slate-200 ring-slate-700 hover:bg-slate-700'}`}>
+                  {selected ? '✓ Convocado' : '+ Convocar'}
+                </button>
+              </div>
             </div>
             <div className="mt-2 grid grid-cols-4 gap-1 text-[11px] text-slate-300">
               {STAT_KEYS.map(k => (
@@ -174,10 +186,10 @@
       );
     }
 
-    function TeamCard({ title, teamKey, ids, map, chem, onOpenPlayer }){
+    function TeamCard({ title, teamKey, ids, map, chem, onOpenPlayer, kChem }){
       const g = teamGlobal(ids, map);
       const c = teamChemistry(ids, chem);
-      const s = teamScore(ids, map, chem);
+      const s = teamScoreUI(ids, map, chem, kChem);
       const color = TEAM_COLORS[teamKey] || TEAM_COLORS.A;
       return (
         <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
@@ -238,7 +250,29 @@
       );
     }
 
-    function PlayerModal({ player, onClose }){
+    function PlayerChemList({ player, players, chem, teamIdsA=[], teamIdsB=[] }){
+      const list = players.filter(p=>p.id!==player.id).map(p=>{
+        const v = chem[player.id]?.[p.id] ?? 5;
+        const onA = teamIdsA.includes(p.id);
+        const onB = teamIdsB.includes(p.id);
+        return { ...p, _chem:v, onA, onB };
+      }).sort((a,b)=> b._chem - a._chem);
+      return (
+        <div className="max-h-72 overflow-auto space-y-1">
+          {list.map(o=> (
+            <div key={o.id} className={`flex items-center justify-between rounded-lg px-2 py-1 text-sm ${o.onA? 'bg-emerald-600/15 ring-1 ring-emerald-500/30' : o.onB? 'bg-blue-600/15 ring-1 ring-blue-500/30':'bg-slate-800/60 ring-1 ring-slate-700'}`}>
+              <div className="flex items-center gap-2 min-w-0">
+                <img src={o.fotoUrl} className="h-7 w-7 rounded-full object-cover ring-1 ring-slate-700"/>
+                <span className="truncate">{o.nombre}</span>
+              </div>
+              <span className="font-semibold">{o._chem}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    function PlayerModal({ player, onClose, players, chem, teamIdsA=[], teamIdsB=[] }){
       const [mode, setMode] = useState('radar');
       if (!player) return null;
       return (
@@ -255,11 +289,14 @@
             <div className="mb-3 flex gap-2">
               <button onClick={()=>setMode('radar')} className={`rounded-xl px-3 py-1 text-sm ring-1 ${mode==='radar'?'bg-cyan-600 text-white ring-cyan-500':'bg-slate-800 text-slate-200 ring-slate-700'}`}>Radar</button>
               <button onClick={()=>setMode('barras')} className={`rounded-xl px-3 py-1 text-sm ring-1 ${mode==='barras'?'bg-cyan-600 text-white ring-cyan-500':'bg-slate-800 text-slate-200 ring-slate-700'}`}>Barras</button>
+              <button onClick={()=>setMode('quim')} className={`rounded-xl px-3 py-1 text-sm ring-1 ${mode==='quim'?'bg-cyan-600 text-white ring-cyan-500':'bg-slate-800 text-slate-200 ring-slate-700'}`}>Química</button>
             </div>
             {mode==='radar' ? (
               <RadarChart dataSeries={[{ label: player.nombre, values: player, stroke:'rgba(34,211,238,1)', fill:'rgba(34,211,238,0.18)' }]} />
-            ) : (
+            ) : mode==='barras' ? (
               <BarsChart values={player} />
+            ) : (
+              <PlayerChemList player={player} players={players} chem={chem} teamIdsA={teamIdsA} teamIdsB={teamIdsB} />
             )}
           </div>
         </div>
@@ -274,10 +311,7 @@
       return (
         <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
           <div className="mb-2 text-center text-sm text-slate-300">Radar comparativo (promedio por stat)</div>
-          <RadarChart dataSeries={[
-            { label:'A', values: avgA, stroke: TEAM_COLORS.A.stroke, fill: TEAM_COLORS.A.fill },
-            { label:'B', values: avgB, stroke: TEAM_COLORS.B.stroke, fill: TEAM_COLORS.B.fill },
-          ]} />
+          <RadarChart dataSeries={
           <div className="mt-2 flex justify-center gap-4 text-xs text-slate-300">
             <span className="inline-flex items-center gap-1"><span className={`h-2 w-2 rounded-full ${TEAM_COLORS.A.dotClass}`}></span> Equipo A</span>
             <span className="inline-flex items-center gap-1"><span className={`h-2 w-2 rounded-full ${TEAM_COLORS.B.dotClass}`}></span> Equipo B</span>
@@ -286,9 +320,9 @@
       );
     }
 
-    function BalanceIndicator({ A, B, map, chem }){
-      const sA = teamScore(A, map, chem);
-      const sB = teamScore(B, map, chem);
+    function BalanceIndicator({ A, B, map, chem, kChem }){
+      const sA = teamScoreUI(A, map, chem, kChem);
+      const sB = teamScoreUI(B, map, chem, kChem);
       const diff = Number(Math.abs(sA - sB).toFixed(2));
       let label='Parejo', classes='bg-emerald-600/15 text-emerald-200 ring-emerald-500/30';
       if (diff >= 0.8) { label='Desbalanceado'; classes='bg-rose-600/15 text-rose-200 ring-rose-500/30'; }
@@ -305,10 +339,10 @@
       );
     }
 
-    function TeamMiniSummary({ ids, map, chem }){
+    function TeamMiniSummary({ ids, map, chem, kChem }){
       const g = teamGlobal(ids, map);
       const c = teamChemistry(ids, chem);
-      const s = teamScore(ids, map, chem);
+      const s = teamScoreUI(ids, map, chem, kChem);
       return (
         <div className="grid grid-cols-3 gap-1 text-center">
           <div>
@@ -327,15 +361,84 @@
       );
     }
 
+    // ======= Modales: Añadir/Editar jugador + Settings =======
+    function PlayerFormModal({ initial, onCancel, onSave }){
+      const [form, setForm] = useState(()=> initial || { nombre:'', equipoPropio:'', equipoFavorito:'', fotoUrl:'', ATA:5,PAS:5,REG:5,VEL:5,DEF:5,FIS:5,ARQ:5,EQP:5 });
+      const fileRef = useRef(null);
+      const set = (k,v)=> setForm(f=> ({...f,[k]:v}));
+      const onFile = (e)=>{ const f=e.target.files?.[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=> set('fotoUrl', rd.result); rd.readAsDataURL(f); };
+      const onSubmit = (e)=>{ e.preventDefault(); const clean={...form}; STAT_KEYS.forEach(k=> clean[k]=clamp(parseInt(clean[k]||0,10),1,10)); if(!clean.nombre.trim()) return; onSave(clean); };
+      return (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={onCancel}>
+          <form className="w-full max-w-md space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700" onSubmit={onSubmit} onClick={e=>e.stopPropagation()}>
+            <div className="text-lg font-semibold">{initial? 'Editar jugador':'Añadir jugador'}</div>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <label className="space-y-1"><span>Nombre</span><input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.nombre} onChange={e=>set('nombre',e.target.value)} required/></label>
+              <label className="space-y-1"><span>Foto URL</span><input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.fotoUrl||''} placeholder="https://..." onChange={e=>set('fotoUrl',e.target.value)}/></label>
+              <label className="space-y-1 col-span-2"><span>o subir imagen</span><input ref={fileRef} type="file" accept="image/*" onChange={onFile} className="w-full text-xs"/></label>
+              <label className="space-y-1"><span>Equipo propio</span><input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.equipoPropio||''} onChange={e=>set('equipoPropio',e.target.value)}/></label>
+              <label className="space-y-1"><span>Equipo favorito</span><input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.equipoFavorito||''} onChange={e=>set('equipoFavorito',e.target.value)}/></label>
+            </div>
+            <div className="grid grid-cols-4 gap-2 text-sm">
+              {STAT_KEYS.map(k=> (
+                <label key={k} className="space-y-1"><span title={STAT_LABEL[k]}>{k}</span><input type="number" min="1" max="10" className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form[k]} onChange={e=>set(k,e.target.value)} /></label>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={onCancel} className="rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">Cancelar</button>
+              <button type="submit" className="rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">Guardar</button>
+            </div>
+          </form>
+        </div>
+      );
+    }
+
+    function SettingsModal({ onClose, kChem, setKChem, onExport, onImport, onReset }){
+      const importRef = useRef(null);
+      return (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={onClose}>
+          <div className="w-full max-w-md space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700" onClick={e=>e.stopPropagation()}>
+            <div className="mb-1 text-lg font-semibold">Ajustes</div>
+            <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700">
+              <div className="mb-1 text-sm font-semibold">Peso de Química en Score</div>
+              <input type="range" min="0" max="1" step="0.05" value={kChem} onChange={e=>setKChem(Number(e.target.value))} className="w-full"/>
+              <div className="text-xs text-slate-300 mt-1">k = {kChem.toFixed(2)} (solo UI; los tests siguen con k=0.60)</div>
+            </div>
+            <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700 space-y-2">
+              <div className="text-sm font-semibold">Importar / Exportar plantel</div>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={onExport} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">Exportar JSON</button>
+                <button onClick={()=>importRef.current?.click()} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">Importar JSON</button>
+                <input ref={importRef} type="file" accept="application/json" className="hidden" onChange={onImport} />
+                <button onClick={onReset} className="ml-auto rounded-xl bg-rose-700 px-3 py-1 text-sm text-white ring-1 ring-rose-500 hover:bg-rose-600">Restablecer seed</button>
+              </div>
+              <div className="text-xs text-slate-400">El JSON incluye jugadores y fotos (si subiste archivo se guarda como base64).</div>
+            </div>
+            <div className="text-right">
+              <button onClick={onClose} className="rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     function App(){
-      const players = useMemo(()=> SEED_JUGADORES.map(p=> ({...p, _GLOBAL: globalOf(p)})), []);
+      // Carga inicial desde localStorage
+      const storedPlayers = safeJSON(localStorage.getItem(STORAGE_KEYS.players), null);
+      const initialPlayers = withGlobals(Array.isArray(storedPlayers) && storedPlayers.length ? storedPlayers : SEED_JUGADORES);
+
+      const [players, setPlayers] = useState(initialPlayers);
+      const [selected, setSelected] = useState(()=> new Set(safeJSON(localStorage.getItem(STORAGE_KEYS.selected), [])));
+      const [teams, setTeams] = useState(()=> safeJSON(localStorage.getItem(STORAGE_KEYS.teams), null));
+      const [kChemUI, setKChemUI] = useState(()=> Number(localStorage.getItem(STORAGE_KEYS.kchem) ?? K_CHEM));
+
       const map = useMemo(()=> Object.fromEntries(players.map(p=>[p.id,p])), [players]);
       const chem = useMemo(()=> buildChemistry(players), [players]);
 
-      const [selected, setSelected] = useState(()=> new Set());
-      const [teams, setTeams] = useState(null);
       const [tab, setTab] = useState('partido');
       const [modalPlayer, setModalPlayer] = useState(null);
+      const [showForm, setShowForm] = useState(null); // null | jugador
+      const [showSettings, setShowSettings] = useState(false);
 
       // Botón de instalar universal (Android muestra prompt, iOS muestra instrucciones)
       const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -346,7 +449,6 @@
       useEffect(()=>{
         const handler = (e) => { e.preventDefault(); setDeferredPrompt(e); };
         window.addEventListener('beforeinstallprompt', handler);
-        // estado SW + manifest
         if (navigator.serviceWorker?.getRegistration) {
           navigator.serviceWorker.getRegistration().then(r => setSwReady(!!r));
         }
@@ -354,11 +456,17 @@
         return () => window.removeEventListener('beforeinstallprompt', handler);
       },[]);
 
+      // Persistencia
+      useEffect(()=>{ localStorage.setItem(STORAGE_KEYS.players, JSON.stringify(players)); },[players]);
+      useEffect(()=>{ localStorage.setItem(STORAGE_KEYS.selected, JSON.stringify(Array.from(selected))); },[selected]);
+      useEffect(()=>{ localStorage.setItem(STORAGE_KEYS.teams, JSON.stringify(teams)); },[teams]);
+      useEffect(()=>{ localStorage.setItem(STORAGE_KEYS.kchem, String(kChemUI)); },[kChemUI]);
+
       const convocados = Array.from(selected);
       const canMake = convocados.length === 10;
       const toggleSelect = (id) => setSelected(prev => { const n=new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
       const makeRandom   = () => { if (!canMake) return; const [A,B] = randomSplit(convocados); setTeams({A,B}); };
-      const makeBalanced = () => { if (!canMake) return; const {A,B} = balancedSplit(convocados,map,chem); setTeams({A,B}); };
+      const makeBalanced = () => { if (!canMake) return; const {A,B} = balancedSplit(convocados,map,chem,kChemUI); setTeams({A,B}); };
 
       useEffect(()=>{ runDevTests(players, map, chem); },[players, map, chem]);
 
@@ -374,13 +482,50 @@
         }
       };
 
+      // CRUD Jugadores
+      const onAddPlayer = () => setShowForm({});
+      const onEditPlayer = (p) => setShowForm(p);
+      const onSavePlayer = (data) => {
+        if (showForm && showForm.id) {
+          // editar
+          setPlayers(prev => withGlobals(prev.map(x=> x.id===showForm.id? {...x, ...data}: x)));
+        } else {
+          // crear
+          const id = String(Date.now());
+          setPlayers(prev => withGlobals([...prev, { id, ...data }]));
+        }
+        setShowForm(null);
+      };
+      const onDeletePlayer = (id) => {
+        setPlayers(prev => prev.filter(p=>p.id!==id));
+        setSelected(prev => { const n=new Set(prev); n.delete(id); return n; });
+        setTeams(prev => prev? { A: prev.A.filter(x=>x!==id), B: prev.B.filter(x=>x!==id) } : prev);
+      };
+
+      // Export/Import
+      const onExport = () => {
+        const payload = { players, selected: Array.from(selected), teams, kChemUI };
+        const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download='futbol5_plantel.json'; a.click(); URL.revokeObjectURL(url);
+      };
+      const onImport = (e) => {
+        const f=e.target.files?.[0]; if(!f) return; const rd=new FileReader();
+        rd.onload=()=>{ try{ const data=JSON.parse(rd.result); if(Array.isArray(data.players)){ setPlayers(withGlobals(data.players)); } if(Array.isArray(data.selected)){ setSelected(new Set(data.selected)); } if(data.teams && data.teams.A && data.teams.B){ setTeams(data.teams); } if(typeof data.kChemUI==='number'){ setKChemUI(data.kChemUI); } } catch(err){ alert('JSON inválido'); } };
+        rd.readAsText(f);
+      };
+      const onResetSeed = () => { setPlayers(withGlobals(SEED_JUGADORES)); setSelected(new Set()); setTeams(null); setKChemUI(K_CHEM); };
+
       return (
         <div className="mx-auto max-w-screen-md p-3 text-slate-100">
           <header className="sticky top-0 z-10 mb-3 rounded-xl bg-slate-950/90 p-3 ring-1 ring-slate-800 backdrop-blur">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <h1 className="text-lg font-bold">Fútbol 5 - Generador</h1>
-              <div className={`rounded-xl px-3 py-1 text-sm ring-1 ${convocados.length<10?'bg-amber-600/20 text-amber-200 ring-amber-500/40': convocados.length>10?'bg-rose-600/20 text-rose-200 ring-rose-500/40':'bg-emerald-600/20 text-emerald-200 ring-emerald-500/40'}`}>
-                Convocados: {convocados.length}/10
+              <div className="flex items-center gap-2">
+                <div className={`rounded-xl px-3 py-1 text-sm ring-1 ${convocados.length<10?'bg-amber-600/20 text-amber-200 ring-amber-500/40': convocados.length>10?'bg-rose-600/20 text-rose-200 ring-rose-500/40':'bg-emerald-600/20 text-emerald-200 ring-emerald-500/40'}`}>
+                  Convocados: {convocados.length}/10
+                </div>
+                <button onClick={()=>setShowSettings(true)} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">⚙️</button>
               </div>
             </div>
             <nav className="mt-2 grid grid-cols-2 gap-2">
@@ -389,16 +534,26 @@
             </nav>
             {tab==='partido' && teams && (
               <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-                <div className="rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-800"><div className="flex items-center gap-2 font-semibold"><span className={`h-2.5 w-2.5 rounded-full ${TEAM_COLORS.A.dotClass}`} />Equipo A</div><TeamMiniSummary ids={teams.A} map={map} chem={chem}/></div>
-                <div className="rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-800"><div className="flex items-center gap-2 font-semibold"><span className={`h-2.5 w-2.5 rounded-full ${TEAM_COLORS.B.dotClass}`} />Equipo B</div><TeamMiniSummary ids={teams.B} map={map} chem={chem}/></div>
+                <div className="rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-800"><div className="flex items-center gap-2 font-semibold"><span className={`h-2.5 w-2.5 rounded-full ${TEAM_COLORS.A.dotClass}`} />Equipo A</div><TeamMiniSummary ids={teams.A} map={map} chem={chem} kChem={kChemUI}/></div>
+                <div className="rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-800"><div className="flex items-center gap-2 font-semibold"><span className={`h-2.5 w-2.5 rounded-full ${TEAM_COLORS.B.dotClass}`} />Equipo B</div><TeamMiniSummary ids={teams.B} map={map} chem={chem} kChem={kChemUI}/></div>
               </div>
             )}
           </header>
 
           {tab==='plantel' ? (
             <section className="space-y-2">
+              <div className="mb-2 flex items-center gap-2">
+                <button onClick={onAddPlayer} className="rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">+ Añadir jugador</button>
+                <button onClick={()=>{ setSelected(new Set()); setTeams(null); }} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">Limpiar convocados</button>
+              </div>
               {players.map(p => (
-                <PlayerRow key={p.id} p={p} selected={selected.has(p.id)} onToggle={()=>toggleSelect(p.id)} onOpen={()=>setModalPlayer(p)} />
+                <div key={p.id} className="space-y-2">
+                  <PlayerRow p={p} selected={selected.has(p.id)} onToggle={()=>toggleSelect(p.id)} onOpen={()=>setModalPlayer(p)} />
+                  <div className="-mt-2 mb-2 flex gap-2 pl-14">
+                    <button onClick={()=>onEditPlayer(p)} className="rounded-xl bg-slate-800 px-2 py-1 text-xs ring-1 ring-slate-700 hover:bg-slate-700">Editar</button>
+                    <button onClick={()=>onDeletePlayer(p.id)} className="rounded-xl bg-rose-700 px-2 py-1 text-xs text-white ring-1 ring-rose-500 hover:bg-rose-600">Borrar</button>
+                  </div>
+                </div>
               ))}
             </section>
           ) : (
@@ -411,10 +566,10 @@
 
               {teams && (
                 <>
-                  <TeamCard title="Equipo A" teamKey="A" ids={teams.A} map={map} chem={chem} onOpenPlayer={(p)=>setModalPlayer(p)} />
-                  <TeamCard title="Equipo B" teamKey="B" ids={teams.B} map={map} chem={chem} onOpenPlayer={(p)=>setModalPlayer(p)} />
+                  <TeamCard title="Equipo A" teamKey="A" ids={teams.A} map={map} chem={chem} onOpenPlayer={(p)=>setModalPlayer(p)} kChem={kChemUI} />
+                  <TeamCard title="Equipo B" teamKey="B" ids={teams.B} map={map} chem={chem} onOpenPlayer={(p)=>setModalPlayer(p)} kChem={kChemUI} />
 
-                  <BalanceIndicator A={teams.A} B={teams.B} map={map} chem={chem} />
+                  <BalanceIndicator A={teams.A} B={teams.B} map={map} chem={chem} kChem={kChemUI} />
 
                   <TeamRadarCompare A={teams.A} B={teams.B} map={map} />
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -437,88 +592,3 @@
               <button onClick={makeRandom} disabled={!canMake} className={`rounded-2xl px-4 py-3 text-base font-semibold ring-1 ${canMake?'bg-slate-800 text-slate-100 ring-slate-700 hover:bg-slate-700':'bg-slate-800/40 text-slate-500 ring-slate-800 cursor-not-allowed'}`}>🎲 Azar</button>
               <button onClick={makeBalanced} disabled={!canMake} className={`rounded-2xl px-4 py-3 text-base font-semibold ring-1 ${canMake?'bg-emerald-600 text-white ring-emerald-500 hover:bg-emerald-500':'bg-emerald-600/40 text-emerald-200 ring-emerald-800 cursor-not-allowed'}`}>⚖️ Equilibrado</button>
             </div>
-          )}
-
-          {/* Botón flotante SIEMPRE visible */}
-          {!isStandalone && (
-            <button onClick={onInstallClick} className="fixed bottom-20 right-3 z-50 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg ring-1 ring-emerald-500 hover:bg-emerald-500">📲 Instalar</button>
-          )}
-
-          {/* Modal de ayuda de instalación */}
-          {showInstallInfo && (
-            <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={()=>setShowInstallInfo(false)}>
-              <div className="w-full max-w-md rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700" onClick={e=>e.stopPropagation()}>
-                <div className="mb-2 text-lg font-semibold">Instalar como app</div>
-                <div className="space-y-2 text-sm text-slate-300">
-                  <div><span className="font-semibold">Estado PWA:</span> SW: {swReady? 'ok':'faltante'} - Manifest: {hasManifest? 'ok':'faltante'}</div>
-                  {isAndroid && (
-                    <div>
-                      <div className="font-semibold">Android (Chrome)</div>
-                      <ol className="list-decimal pl-5 space-y-1">
-                        <li>Asegurate de tener <code>/sw.js</code> y <code>/icons/</code> subidos.</li>
-                        <li>Si no aparece el prompt automático, abrí el menú (⋮) y elegí <b>Agregar a pantalla de inicio</b>.</li>
-                      </ol>
-                    </div>
-                  )}
-                  {isIOS && (
-                    <div>
-                      <div className="font-semibold">iOS (Safari)</div>
-                      <ol className="list-decimal pl-5 space-y-1">
-                        <li>Tocá <b>Compartir</b> y luego <b>Añadir a pantalla de inicio</b>.</li>
-                        <li>iOS no muestra botón de instalar automático por política de Apple.</li>
-                      </ol>
-                    </div>
-                  )}
-                  {!isAndroid && !isIOS && (
-                    <div>Podés instalar desde el menú del navegador: <b>Instalar app</b> o <b>Agregar a pantalla de inicio</b>.</div>
-                  )}
-                </div>
-                <div className="mt-4 text-right">
-                  <button onClick={()=>setShowInstallInfo(false)} className="rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">Cerrar</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <footer className="mt-6 rounded-xl bg-slate-900/60 p-3 text-[12px] text-slate-300 ring-1 ring-slate-800">
-            <div className="font-semibold">Leyenda:</div>
-            <div>ATA=Ataque - PAS=Pase - REG=Regate - VEL=Velocidad - DEF=Defensa - FIS=Físico - ARQ=Arco - EQP=Trabajo en equipo</div>
-          </footer>
-
-          <PlayerModal player={modalPlayer} onClose={()=>setModalPlayer(null)} />
-        </div>
-      );
-    }
-
-    // ================= DEV TESTS =================
-    function runDevTests(players, map, chem){
-      try{
-        const log=(...a)=>console.log('[DEV TEST]',...a);
-        const assert=(c,m)=>{ if(!c) console.error('[DEV TEST FAIL]',m); else log('OK:',m); };
-        const g0 = globalOf(players[0]);
-        assert(g0>=1 && g0<=10, `global jugador[0] dentro de 1..10 (g0=${g0})`);
-        const ids10 = players.slice(0,10).map(p=>p.id); const [ra,rb]=randomSplit(ids10); assert(ra.length===5 && rb.length===5, `randomSplit 5/5 (got ${ra.length}/${rb.length})`);
-        const {A:ba, B:bb, m:{sA, sB}} = balancedSplit(ids10, map, chem); assert(ba.length===5 && bb.length===5, 'balancedSplit 5/5'); const diff=Math.abs(sA-sB); assert(diff>=0, `balancedSplit diff>=0 (${diff.toFixed(2)})`);
-        const qc = teamChemistry(ba, chem); assert(qc>=1 && qc<=10, `teamChemistry 1..10 (${qc})`);
-        const sc = teamScore(ba, map, chem); const gg = teamGlobal(ba, map); assert(Number.isFinite(sc), `teamScore finito (${sc})`); assert(sc >= gg + 0.6, `teamScore (${sc}) >= teamGlobal (${gg}) + 0.6`);
-        const ta = teamAverages(ba, map); assert(STAT_KEYS.every(k=>typeof ta[k]==='number'), `teamAverages claves numéricas (${JSON.stringify(ta)})`);
-        const a=players[0].id, b=players[1].id; assert(chem[a][b]===chem[b][a], `química simétrica (chem[${a}][${b}]==chem[${b}][${a}])`);
-        const ids12 = players.map(p=>p.id); const [r12a,r12b]=randomSplit(ids12); assert(r12a.length===6 && r12b.length===6, `randomSplit 12→6/6 (got ${r12a.length}/${r12b.length})`);
-        const before = JSON.stringify(ids10); balancedSplit(ids10, map, chem); const after = JSON.stringify(ids10); assert(before===after, 'balancedSplit no muta input');
-        // Nuevos tests
-        const okRange = players.every(p=> STAT_KEYS.every(k=> p[k] >= 1 && p[k] <= 10));
-        assert(okRange, 'todos los stats están en 1..10');
-        const diagOk = players.every(p=> chem[p.id][p.id] === 10);
-        assert(diagOk, 'química propia = 10 para cada jugador');
-        const avgCheck = teamAverages(players.slice(0,5).map(p=>p.id), map);
-        assert(STAT_KEYS.every(k=> Number.isFinite(avgCheck[k])), 'teamAverages no produce NaN');
-      }catch(err){ console.error('[DEV TEST ERROR]', err); }
-    }
-
-    // Montaje
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App/>);
-  </script>
-
-</body>
-</html>
