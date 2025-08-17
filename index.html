@@ -2,10 +2,12 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta http-equiv="Content-Language" content="es" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>F˙tbol 5 ñ Generador</title>
+  <title>F√∫tbol 5 - Generador</title>
   <meta name="theme-color" content="#10b981" />
-  <!-- Tailwind vÌa CDN (sin build) -->
+  <!-- Tailwind v√≠a CDN (sin build) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- React 18 UMD + Babel Standalone para compilar JSX en el navegador -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -13,7 +15,7 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <!-- Base relativa: hace que ./sw.js, ./icons/ funcionen tanto en / como en /<repo>/ -->
   <base href="./" />
-  <!-- Manifest: lo inyectamos por JS (no hace falta archivo fÌsico) -->
+  <!-- Manifest: lo trataremos de cargar EST√ÅTICO si existe; si no, se inyecta din√°mico -->
   <link rel="manifest" id="dynamic-manifest-link" href="#" />
   <link rel="icon" href="./icons/icon-192.png" />
   <style> html,body{background:#0b1220;color:#e2e8f0} </style>
@@ -24,12 +26,20 @@
   <script type="text/babel">
     const { useMemo, useState, useEffect } = React;
 
-    // ================= PWA: manifest din·mico + SW =================
-    (function ensureManifest(){
+    // ================= PWA: manifest est√°tico o din√°mico + SW =================
+    (async function ensureManifest(){
       try{
         const base = document.querySelector('base')?.getAttribute('href') || './';
+        const linkEl = document.getElementById('dynamic-manifest-link');
+        // 1) Intentar manifest est√°tico si existe (mejor para Lighthouse/Chrome DevTools)
+        const staticUrl = base + 'manifest.webmanifest';
+        try {
+          const headRes = await fetch(staticUrl, { method: 'HEAD' });
+          if (headRes.ok) { linkEl.setAttribute('href', staticUrl); return; }
+        } catch {}
+        // 2) Si no existe, inyectar din√°mico como antes
         const manifest = {
-          name: 'F˙tbol 5',
+          name: 'F√∫tbol 5',
           short_name: 'Futbol5',
           start_url: base,
           display: 'standalone',
@@ -42,14 +52,15 @@
         };
         const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
         const url = URL.createObjectURL(blob);
-        document.getElementById('dynamic-manifest-link').setAttribute('href', url);
-      }catch(e){ console.log('[PWA] manifest din·mico fallo', e); }
+        linkEl.setAttribute('href', url);
+      }catch(e){ console.log('[PWA] manifest din√°mico fall√≥', e); }
     })();
 
     (function registerSW(){
       if ('serviceWorker' in navigator) {
         const base = document.querySelector('base')?.getAttribute('href') || './';
-        const swUrl = new URL('sw.js', location.origin + location.pathname).pathname; // ./sw.js relativo
+        // Registrar /sw.js relativo a la p√°gina actual
+        const swUrl = new URL('sw.js', location.href).pathname;
         navigator.serviceWorker.register(swUrl, { scope: base }).then(
           reg => console.log('[PWA] SW OK (scope=', base, ')', reg),
           err => console.log('[PWA] SW FAIL', err)
@@ -63,7 +74,7 @@
     /** @type {Jugador[]} */
     const SEED_JUGADORES = [
       { id: '1', nombre: 'Leo',  equipoPropio: 'La 10', equipoFavorito: 'Barcelona',   fotoUrl: 'https://i.pravatar.cc/150?img=1',  ATA:10,PAS:9, REG:10,VEL:9, DEF:4, FIS:7, ARQ:3, EQP:8 },
-      { id: '2', nombre: 'Fabi', equipoPropio: 'La 10', equipoFavorito: 'ColÛn',       fotoUrl: 'https://i.pravatar.cc/150?img=6',  ATA:7, PAS:8, REG:7, VEL:7, DEF:7, FIS:7, ARQ:4, EQP:9 },
+      { id: '2', nombre: 'Fabi', equipoPropio: 'La 10', equipoFavorito: 'Col√≥n',       fotoUrl: 'https://i.pravatar.cc/150?img=6',  ATA:7, PAS:8, REG:7, VEL:7, DEF:7, FIS:7, ARQ:4, EQP:9 },
       { id: '3', nombre: 'Cuti', equipoPropio: 'Muralla', equipoFavorito: 'Belgrano',   fotoUrl: 'https://i.pravatar.cc/150?img=4',  ATA:5, PAS:6, REG:5, VEL:7, DEF:10,FIS:9, ARQ:4, EQP:7 },
       { id: '4', nombre: 'Dibu', equipoPropio: 'Muralla', equipoFavorito: 'Arsenal',    fotoUrl: 'https://i.pravatar.cc/150?img=5',  ATA:3, PAS:5, REG:4, VEL:5, DEF:8, FIS:8, ARQ:10,EQP:7 },
       { id: '5', nombre: 'Papu', equipoPropio: 'Tiki',    equipoFavorito: 'San Lorenzo', fotoUrl: 'https://i.pravatar.cc/150?img=9',  ATA:8, PAS:8, REG:9, VEL:8, DEF:5, FIS:6, ARQ:3, EQP:7 },
@@ -77,7 +88,7 @@
     ];
 
     const STAT_KEYS = ['ATA','PAS','REG','VEL','DEF','FIS','ARQ','EQP'];
-    const STAT_LABEL = { ATA:'Ataque', PAS:'Pase', REG:'Regate', VEL:'Velocidad', DEF:'Defensa', FIS:'FÌsico', ARQ:'Arco', EQP:'Equipo' };
+    const STAT_LABEL = { ATA:'Ataque', PAS:'Pase', REG:'Regate', VEL:'Velocidad', DEF:'Defensa', FIS:'F√≠sico', ARQ:'Arco', EQP:'Equipo' };
     const TEAM_COLORS = {
       A: { stroke: 'rgba(16,185,129,1)', fill: 'rgba(16,185,129,0.18)', dotClass: 'bg-emerald-500', hex: '#10b981' },
       B: { stroke: 'rgba(59,130,246,1)', fill: 'rgba(59,130,246,0.18)', dotClass: 'bg-blue-500',    hex: '#3b82f6' },
@@ -149,14 +160,14 @@
           </div>
           <div className="mb-3 grid grid-cols-3 gap-2 text-sm">
             <div className="rounded-xl bg-slate-800/70 p-2 text-center"><div className="text-slate-400">Global</div><div className="text-lg font-bold">{g}</div></div>
-            <div className="rounded-xl bg-slate-800/70 p-2 text-center"><div className="text-slate-400">QuÌmica</div><div className="text-lg font-bold">{c}</div></div>
+            <div className="rounded-xl bg-slate-800/70 p-2 text-center"><div className="text-slate-400">Qu√≠mica</div><div className="text-lg font-bold">{c}</div></div>
             <div className="rounded-xl bg-slate-800/70 p-2 text-center"><div className="text-slate-400">Score</div><div className="text-lg font-bold">{s}</div></div>
           </div>
           <ul className="space-y-1 text-sm">
             {ids.map(id => (
               <li key={id} className="flex items-center justify-between rounded-lg bg-slate-800/60 px-2 py-1">
                 <button onClick={()=>onOpenPlayer(map[id])} className="truncate text-left hover:underline">{map[id].nombre}</button>
-                <span className="text-slate-300">G:{map[id]._GLOBAL} ï EQP:{map[id].EQP}</span>
+                <span className="text-slate-300">G:{map[id]._GLOBAL} - EQP:{map[id].EQP}</span>
               </li>
             ))}
           </ul>
@@ -208,7 +219,7 @@
               <img src={player.fotoUrl} alt={player.nombre} className="h-12 w-12 rounded-xl object-cover ring-1 ring-slate-700" />
               <div className="min-w-0">
                 <div className="truncate text-lg font-semibold">{player.nombre}</div>
-                <div className="text-xs text-slate-400">Global: {player._GLOBAL} ï Propio: {player.equipoPropio||'-'} ï Fav: {player.equipoFavorito||'-'}</div>
+                <div className="text-xs text-slate-400">Global: {player._GLOBAL} - Propio: {player.equipoPropio||'-'} - Fav: {player.equipoFavorito||'-'}</div>
               </div>
               <button onClick={onClose} className="ml-auto rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">Cerrar</button>
             </div>
@@ -260,7 +271,7 @@
             <div className="text-xs opacity-80">Diff: {diff}</div>
           </div>
           <div className="mt-1 text-sm">Resultado: <span className="font-semibold">{label}</span> <span className="opacity-80">(A: {sA} vs B: {sB})</span></div>
-          <div className="mt-1 text-xs opacity-80">Umbrales: Parejo &lt; 0.30 ï Aceptable &lt; 0.80 ï Desbalanceado = 0.80</div>
+          <div className="mt-1 text-xs opacity-80">Umbrales: Parejo < 0.30 - Aceptable < 0.80 - Desbalanceado >= 0.80</div>
         </div>
       );
     }
@@ -276,7 +287,7 @@
             <div className="font-bold">{g}</div>
           </div>
           <div>
-            <div className="text-slate-400 text-xs">QuÌmica</div>
+            <div className="text-slate-400 text-xs">Qu√≠mica</div>
             <div className="font-bold">{c}</div>
           </div>
           <div>
@@ -297,10 +308,20 @@
       const [tab, setTab] = useState('partido');
       const [modalPlayer, setModalPlayer] = useState(null);
 
+      // Bot√≥n de instalar universal (Android muestra prompt, iOS muestra instrucciones)
       const [deferredPrompt, setDeferredPrompt] = useState(null);
+      const [showInstallInfo, setShowInstallInfo] = useState(false);
+      const [swReady, setSwReady] = useState(false);
+      const [hasManifest, setHasManifest] = useState(false);
+
       useEffect(()=>{
         const handler = (e) => { e.preventDefault(); setDeferredPrompt(e); };
         window.addEventListener('beforeinstallprompt', handler);
+        // estado SW + manifest
+        if (navigator.serviceWorker?.getRegistration) {
+          navigator.serviceWorker.getRegistration().then(r => setSwReady(!!r));
+        }
+        setHasManifest(!!document.querySelector('link[rel="manifest"][href]'));
         return () => window.removeEventListener('beforeinstallprompt', handler);
       },[]);
 
@@ -312,11 +333,23 @@
 
       useEffect(()=>{ runDevTests(players, map, chem); },[players, map, chem]);
 
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      const isAndroid = /android/i.test(navigator.userAgent);
+
+      const onInstallClick = async () => {
+        if (deferredPrompt) {
+          try { await deferredPrompt.prompt(); await deferredPrompt.userChoice; } catch {} finally { setDeferredPrompt(null); }
+        } else {
+          setShowInstallInfo(true);
+        }
+      };
+
       return (
         <div className="mx-auto max-w-screen-md p-3 text-slate-100">
           <header className="sticky top-0 z-10 mb-3 rounded-xl bg-slate-950/90 p-3 ring-1 ring-slate-800 backdrop-blur">
             <div className="flex items-center justify-between">
-              <h1 className="text-lg font-bold">F˙tbol 5 ñ Generador</h1>
+              <h1 className="text-lg font-bold">F√∫tbol 5 - Generador</h1>
               <div className={`rounded-xl px-3 py-1 text-sm ring-1 ${convocados.length<10?'bg-amber-600/20 text-amber-200 ring-amber-500/40': convocados.length>10?'bg-rose-600/20 text-rose-200 ring-rose-500/40':'bg-emerald-600/20 text-emerald-200 ring-emerald-500/40'}`}>
                 Convocados: {convocados.length}/10
               </div>
@@ -343,7 +376,7 @@
             <section className="space-y-3">
               {!canMake && (
                 <div className="rounded-xl bg-amber-600/15 p-3 text-amber-100 ring-1 ring-amber-600/30">
-                  Necesit·s exactamente 10 convocados. Elegilos en la pestaÒa <span className="font-semibold">Plantel</span>.
+                  Necesit√°s exactamente 10 convocados. Elegilos en la pesta√±a <span className="font-semibold">Plantel</span>.
                 </div>
               )}
 
@@ -357,11 +390,11 @@
                   <TeamRadarCompare A={teams.A} B={teams.B} map={map} />
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-                      <div className="mb-2 font-semibold">Barras ñ Equipo A (promedios)</div>
+                      <div className="mb-2 font-semibold">Barras - Equipo A (promedios)</div>
                       <BarsChart values={teamAverages(teams.A, map)} accent={TEAM_COLORS.A.hex} />
                     </div>
                     <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-                      <div className="mb-2 font-semibold">Barras ñ Equipo B (promedios)</div>
+                      <div className="mb-2 font-semibold">Barras - Equipo B (promedios)</div>
                       <BarsChart values={teamAverages(teams.B, map)} accent={TEAM_COLORS.B.hex} />
                     </div>
                   </div>
@@ -377,13 +410,50 @@
             </div>
           )}
 
-          {deferredPrompt && (
-            <button onClick={async ()=>{ try{ await deferredPrompt.prompt(); await deferredPrompt.userChoice; }catch{} finally{ setDeferredPrompt(null); } }} className="fixed bottom-20 right-3 z-50 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg ring-1 ring-emerald-500 hover:bg-emerald-500">?? Instalar app</button>
+          {/* Bot√≥n flotante SIEMPRE visible */}
+          {!isStandalone && (
+            <button onClick={onInstallClick} className="fixed bottom-20 right-3 z-50 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg ring-1 ring-emerald-500 hover:bg-emerald-500">?? Instalar</button>
+          )}
+
+          {/* Modal de ayuda de instalaci√≥n */}
+          {showInstallInfo && (
+            <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={()=>setShowInstallInfo(false)}>
+              <div className="w-full max-w-md rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700" onClick={e=>e.stopPropagation()}>
+                <div className="mb-2 text-lg font-semibold">Instalar como app</div>
+                <div className="space-y-2 text-sm text-slate-300">
+                  <div><span className="font-semibold">Estado PWA:</span> SW: {swReady? 'ok':'faltante'} - Manifest: {hasManifest? 'ok':'faltante'}</div>
+                  {isAndroid && (
+                    <div>
+                      <div className="font-semibold">Android (Chrome)</div>
+                      <ol className="list-decimal pl-5 space-y-1">
+                        <li>Asegurate de tener <code>/sw.js</code> y <code>/icons/</code> subidos.</li>
+                        <li>Si no aparece el prompt autom√°tico, abr√≠ el men√∫ (?) y eleg√≠ <b>Agregar a pantalla de inicio</b>.</li>
+                      </ol>
+                    </div>
+                  )}
+                  {isIOS && (
+                    <div>
+                      <div className="font-semibold">iOS (Safari)</div>
+                      <ol className="list-decimal pl-5 space-y-1">
+                        <li>Toc√° <b>Compartir</b> y luego <b>A√±adir a pantalla de inicio</b>.</li>
+                        <li>iOS no muestra bot√≥n de instalar autom√°tico por pol√≠tica de Apple.</li>
+                      </ol>
+                    </div>
+                  )}
+                  {!isAndroid && !isIOS && (
+                    <div>Pod√©s instalar desde el men√∫ del navegador: <b>Instalar app</b> o <b>Agregar a pantalla de inicio</b>.</div>
+                  )}
+                </div>
+                <div className="mt-4 text-right">
+                  <button onClick={()=>setShowInstallInfo(false)} className="rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">Cerrar</button>
+                </div>
+              </div>
+            </div>
           )}
 
           <footer className="mt-6 rounded-xl bg-slate-900/60 p-3 text-[12px] text-slate-300 ring-1 ring-slate-800">
             <div className="font-semibold">Leyenda:</div>
-            <div>ATA=Ataque ï PAS=Pase ï REG=Regate ï VEL=Velocidad ï DEF=Defensa ï FIS=FÌsico ï ARQ=Arco ï EQP=Trabajo en equipo</div>
+            <div>ATA=Ataque - PAS=Pase - REG=Regate - VEL=Velocidad - DEF=Defensa - FIS=F√≠sico - ARQ=Arco - EQP=Trabajo en equipo</div>
           </footer>
 
           <PlayerModal player={modalPlayer} onClose={()=>setModalPlayer(null)} />
@@ -402,8 +472,8 @@
         const {A:ba, B:bb, m:{sA, sB}} = balancedSplit(ids10, map, chem); assert(ba.length===5 && bb.length===5, 'balancedSplit 5/5'); const diff=Math.abs(sA-sB); assert(diff>=0, `balancedSplit diff>=0 (${diff.toFixed(2)})`);
         const qc = teamChemistry(ba, chem); assert(qc>=1 && qc<=10, `teamChemistry 1..10 (${qc})`);
         const sc = teamScore(ba, map, chem); const gg = teamGlobal(ba, map); assert(Number.isFinite(sc), `teamScore finito (${sc})`); assert(sc >= gg + 0.6, `teamScore (${sc}) >= teamGlobal (${gg}) + 0.6`);
-        const ta = teamAverages(ba, map); assert(STAT_KEYS.every(k=>typeof ta[k]==='number'), `teamAverages claves numÈricas (${JSON.stringify(ta)})`);
-        const a=players[0].id, b=players[1].id; assert(chem[a][b]===chem[b][a], `quÌmica simÈtrica (chem[${a}][${b}]==chem[${b}][${a}])`);
+        const ta = teamAverages(ba, map); assert(STAT_KEYS.every(k=>typeof ta[k]==='number'), `teamAverages claves num√©ricas (${JSON.stringify(ta)})`);
+        const a=players[0].id, b=players[1].id; assert(chem[a][b]===chem[b][a], `qu√≠mica sim√©trica (chem[${a}][${b}]==chem[${b}][${a}])`);
         const ids12 = players.map(p=>p.id); const [r12a,r12b]=randomSplit(ids12); assert(r12a.length===6 && r12b.length===6, `randomSplit 12?6/6 (got ${r12a.length}/${r12b.length})`);
         const before = JSON.stringify(ids10); balancedSplit(ids10, map, chem); const after = JSON.stringify(ids10); assert(before===after, 'balancedSplit no muta input');
       }catch(err){ console.error('[DEV TEST ERROR]', err); }
@@ -414,13 +484,5 @@
     root.render(<App/>);
   </script>
 
-  <!-- SW de ejemplo (colocalo como /sw.js y /icons en el repo para PWA completa) -->
-  <!--
-  // /sw.js
-  const CACHE='futbol5-cache-v1';
-  self.addEventListener('install',e=>{ self.skipWaiting(); e.waitUntil(caches.open(CACHE)); });
-  self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))); self.clients.claim(); });
-  self.addEventListener('fetch',e=>{ const req=e.request, url=new URL(req.url); if(req.method!=='GET'||url.origin!==location.origin) return; e.respondWith(caches.match(req).then(c=>c||fetch(req).then(r=>{ const copy=r.clone(); caches.open(CACHE).then(cc=>cc.put(req,copy)); return r; }).catch(()=>c))); });
-  -->
 </body>
 </html>
