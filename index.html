@@ -1,15 +1,17 @@
 import React, { useMemo, useState, useEffect } from "react";
 
 /**
- * App Fútbol 5 – MVP v2.3.0 (mobile-first + responsive + PWA-ready)
- * Cambios clave:
- * - ?? PWA-ready: inyección dinámica de `manifest` + registro de Service Worker (si existe `/sw.js`).
- * - ?? Botón flotante "Instalar app" cuando el navegador dispara `beforeinstallprompt`.
- * - ?? Mantengo todos los tests previos de helpers.
+ * App Fútbol 5 – MVP v2.3.1 (mobile-first + responsive + PWA-ready + GitHub Pages base fix)
  *
- * Nota: Para tener instalación 100% en Android (Chrome) se necesita un Service Worker real en `/sw.js`.
- *   ?? Te dejé un template de `sw.js` al final del archivo (en comentario) para copiar/crear.
- *   iOS permite "Añadir a pantalla de inicio" sin SW.
+ * ?? Qué arregla esto respecto a tu error en GitHub Pages:
+ * - Los mensajes tipo "<svg> attribute width: Expected length, \"{size}\"" aparecen cuando el navegador
+ *   está sirviendo **JSX sin compilar** (ve las llaves `{}` como texto literal). Este archivo sigue siendo JSX
+ *   (para el canvas/tu bundler), pero además:
+ *   - Incluye **fix de basePath** para GitHub Pages (scope del Service Worker, rutas de manifest e iconos),
+ *     que te va a servir cuando publiques el build real (`dist/`).
+ *
+ * ? Para que NO veas `{size}` en producción: *hacé build* (Vite, CRA o Next) y subí **`dist/`** a Pages.
+ *    Si querés publicar sin build, usá un `index.html` con **Babel Standalone** (te paso plantilla si la querés).
  */
 
 // ======== Tipos ========
@@ -69,6 +71,22 @@ const globalOf = (p) => {
   return Number((s/w).toFixed(2));
 };
 
+// ======== Base path detection (GitHub Pages friendly) ========
+function getBase(){
+  if (typeof window === 'undefined') return '/';
+  try {
+    const baseTag = document.querySelector('base[href]');
+    if (baseTag) return baseTag.getAttribute('href');
+    const p = window.location.pathname;
+    // Si termina con "/", ya es una base (ej: /Futbol-5-Coronda-APP/)
+    if (p.endsWith('/')) return p;
+    // Si no, recortamos el último segmento (index.html)
+    return p.slice(0, p.lastIndexOf('/') + 1) || '/';
+  } catch { return '/'; }
+}
+const BASE = getBase();
+const prefix = (path) => (path.startsWith('http') || path.startsWith('data:') ? path : (BASE.replace(/\/$/, '') + '/' + path.replace(/^\//, '')));
+
 // ======== PWA helpers (manifest + SW register) ========
 function ensureThemeMeta(color="#10b981"){
   if (typeof document === 'undefined') return;
@@ -84,13 +102,13 @@ function ensureManifestTag(){
   const manifest = {
     name: 'Fútbol 5',
     short_name: 'Futbol5',
-    start_url: '.',
+    start_url: BASE || '.',
     display: 'standalone',
     background_color: '#0f172a',
     theme_color: '#10b981',
     icons: [
-      { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' }
+      { src: prefix('icons/icon-192.png'), sizes: '192x192', type: 'image/png' },
+      { src: prefix('icons/icon-512.png'), sizes: '512x512', type: 'image/png' }
     ]
   };
   const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
@@ -105,8 +123,9 @@ async function tryRegisterSW(){
   if (typeof window === 'undefined') return;
   if ('serviceWorker' in navigator) {
     try {
-      const reg = await navigator.serviceWorker.register('/sw.js');
-      console.log('[PWA] SW registrado', reg);
+      const swUrl = prefix('sw.js');
+      const reg = await navigator.serviceWorker.register(swUrl, { scope: BASE });
+      console.log('[PWA] SW registrado', reg, 'scope=', BASE);
     } catch (err){
       console.log('[PWA] SW no encontrado o falló el registro (ok para dev/iOS):', err?.message || err);
     }
@@ -323,7 +342,6 @@ function TeamRadarCompare({ A, B, map }){
   return (
     <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
       <div className="mb-2 text-center text-sm text-slate-300">Radar comparativo (promedio por stat)</div>
-      {/* FIX JSX: dataSeries debe ser una expresión entre llaves */}
       <RadarChart dataSeries={[
         { label:"A", values: avgA, stroke: TEAM_COLORS.A.stroke, fill: TEAM_COLORS.A.fill },
         { label:"B", values: avgB, stroke: TEAM_COLORS.B.stroke, fill: TEAM_COLORS.B.fill },
@@ -558,4 +576,6 @@ function runDevTests(players, map, chem){
     console.error("[DEV TEST ERROR]", err);
   }
 }
+
+/*
 
