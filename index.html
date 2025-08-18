@@ -363,7 +363,8 @@
     const[teams,setTeams]=useState(()=>J(localStorage.getItem(KEYS.teams),null));
     const[kChem,setKChem]=useState(()=>+(localStorage.getItem(KEYS.kchem)??K));
     const[pinA,setPinA]=useState(()=>new Set(J(localStorage.getItem(KEYS.pinA),[])));
-    const[pinB,setPinB]=useState(()=>new Set(J(localocation?.getItem?localStorage.getItem(KEYS.pinB):null)||[])); // fallback raro móviles
+    // ✅ Correcto
+    const [pinB, setPinB] = useState(() => new Set(J(localStorage.getItem(KEYS.pinB), [])));
     const[chemOverrides,setChemOverrides]=useState(()=>J(localStorage.getItem(KEYS.chemOv),{}));
     const[history,setHistory]=useState(()=>{const h=J(localStorage.getItem(KEYS.history),[]);return Array.isArray(h)?h:[]});
     const[parallaxOn,setParallaxOn]=useState(()=>{const s=localStorage.getItem(KEYS.parallax);if(s!=null)try{return JSON.parse(s)}catch{}return !window.matchMedia('(min-width:1024px)').matches});
