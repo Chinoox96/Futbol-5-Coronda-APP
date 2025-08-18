@@ -1,5 +1,5 @@
-// SW ultra simple cache-first con versión
-const CACHE = 'f5-cache-v1';
+// Service Worker cache-first
+const CACHE = 'f5-cache-v2';
 self.addEventListener('install', e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./'])));
   self.skipWaiting();
