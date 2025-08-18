@@ -1,5 +1,5 @@
 (()=>{
-  const CACHE='f5-cache-v12';
+  const CACHE='f5-cache-v13';
   self.addEventListener('install',e=>{
     e.waitUntil((async()=>{
       const c=await caches.open(CACHE);
