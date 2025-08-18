@@ -1,5 +1,5 @@
 // SW cache-first con precache básico y runtime cache
-const CACHE = 'f5-cache-v4';
+const CACHE = 'f5-cache-v9';
 const PRECACHE = ['./']; // raíz
 
 self.addEventListener('install', (e)=>{
@@ -7,7 +7,8 @@ self.addEventListener('install', (e)=>{
     const c = await caches.open(CACHE);
     await c.addAll(PRECACHE);
     // Intento de cachear el fondo si existe (no falla si falta)
-    try{ const res = await fetch('./assets/cesped-vert.webp', {cache:'no-cache'}); if(res.ok) await c.put('./assets/cesped-vert.webp', res.clone()); }catch{}
+    try{ const r1 = await fetch('./assets/cesped-vert.webp', {cache:'no-cache'}); if(r1.ok) await c.put('./assets/cesped-vert.webp', r1.clone()); }catch{}
+    try{ const r2 = await fetch('./assets/cesped-horiz.webp', {cache:'no-cache'}); if(r2.ok) await c.put('./assets/cesped-horiz.webp', r2.clone()); }catch{}
   })());
   self.skipWaiting();
 });
