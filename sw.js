@@ -1,5 +1,5 @@
 // SW cache-first con precache básico y runtime cache
-const CACHE = 'f5-cache-v3';
+const CACHE = 'f5-cache-v4';
 const PRECACHE = ['./']; // raíz
 
 self.addEventListener('install', (e)=>{
