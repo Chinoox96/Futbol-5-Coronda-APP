@@ -13,7 +13,7 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
     :root{
-      --py: 0px; /* desplazamiento del parallax */
+      --bp: 0px; /* desplazamiento del parallax */
       --pitch-image: url('assets/cesped-vert.webp'); /* tu imagen vertical */
       --pitch-darken: 0.50; /* 0..1, oscurecido para legibilidad */
     }
@@ -25,11 +25,13 @@
       background-image:
         linear-gradient(rgba(11,18,32,var(--pitch-darken)), rgba(11,18,32,var(--pitch-darken))),
         var(--pitch-image);
-      background-size:auto 220vh; /* más alto que el viewport para tener recorrido */
-      background-repeat:no-repeat; background-position:center top;
-      transform:translateY(var(--py)); will-change:transform;
+      /* infinito: repetición vertical del césped + del oscurecido */
+      background-repeat: repeat-y, repeat-y;
+      background-size: auto 100vh, auto 100vh;
+      background-position: center var(--bp), center var(--bp);
+      will-change: background-position;
     }
-    @media (min-width:1024px){ #bg-parallax{ background-size:auto 180vh; } }
+    @media (min-width:1024px){ #bg-parallax{ background-size:auto 90vh, auto 90vh; } }
     #root{ position:relative; z-index:1; }
   </style>
 </head>
@@ -60,7 +62,7 @@
   <script>
   (function(){
     let tick=false; const speed=0.35; // menor = más lento (más parallax)
-    function onScroll(){ if(tick) return; tick=true; requestAnimationFrame(()=>{ document.documentElement.style.setProperty('--py', (-window.scrollY*speed)+'px'); tick=false; }); }
+    function onScroll(){ if(tick) return; tick=true; requestAnimationFrame(()=>{ document.documentElement.style.setProperty('--bp', (-window.scrollY*speed)+'px'); tick=false; }); }
     window.addEventListener('scroll', onScroll, {passive:true}); onScroll();
   })();
   </script>
@@ -263,8 +265,8 @@
 
     // --- Algoritmos con pins ---
     const invalidPins = pinA.size>5 || pinB.size>5;
-    const makeR=()=>{ if(!canMake||invalidPins) return; const {A,B}=balancedWithPins(convocados,map,chem,0, pinA,pinB); setTeams({A,B}); };
-    const makeB=()=>{ if(!canMake||invalidPins) return; const {A,B}=balancedWithPins(convocados,map,chem,kChem, pinA,pinB); setTeams({A,B}); };
+    const makeR=()=>{ if(!canMake||invalidPins) return; const {A,B}=balancedWithPins(convocados,map,chem,0, pinA,pinB); setTeams({A,B}); try{window.scrollTo({top:0,behavior:'smooth'})}catch{}; };
+    const makeB=()=>{ if(!canMake||invalidPins) return; const {A,B}=balancedWithPins(convocados,map,chem,kChem, pinA,pinB); setTeams({A,B}); try{window.scrollTo({top:0,behavior:'smooth'})}catch{}; };
 
     // CRUD jugadores
     const onAdd=()=>setForm({});
@@ -440,4 +442,3 @@
   </script>
 </body>
 </html>
-
