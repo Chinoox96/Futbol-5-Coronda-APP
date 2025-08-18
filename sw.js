@@ -1,5 +1,5 @@
 // sw.js — cache simple para GitHub Pages
-const CACHE = 'f5-cache-v15';
+const CACHE = 'f5-cache-v14';
 
 self.addEventListener('install', (e) => {
   e.waitUntil((async () => {
