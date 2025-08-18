@@ -14,8 +14,14 @@
   <style>
     :root{
       --bp: 0px; /* desplazamiento del parallax */
-      --pitch-image: url('assets/cesped-vert.webp'); /* tu imagen vertical */
+      --pitch-image: var(--pitch-image-mobile); /* actual aplicada */
+      --pitch-image-mobile: url('assets/cesped-vert.webp');
+      --pitch-image-desktop: var(--pitch-image-mobile); /* tu imagen vertical */
       --pitch-darken: 0.50; /* 0..1, oscurecido para legibilidad */
+      --parallax-speed: 0.35; /* móvil/tablet: parallax activo */
+    }
+    @media (min-width:1024px){
+      :root{ --parallax-speed: 0; } /* PC: desactiva parallax */
     }
     html,body{background:#0b1220;color:#e2e8f0;margin:0;overflow-x:hidden}
     img,svg{max-width:100%;height:auto}
@@ -25,13 +31,21 @@
       background-image:
         linear-gradient(rgba(11,18,32,var(--pitch-darken)), rgba(11,18,32,var(--pitch-darken))),
         var(--pitch-image);
-      /* infinito: repetición vertical del césped + del oscurecido */
+      /* móvil: parallax vertical infinito */
       background-repeat: repeat-y, repeat-y;
       background-size: 100% auto, 100% auto;
       background-position: center var(--bp), center var(--bp);
       will-change: background-position;
     }
-    @media (min-width:1024px){ #bg-parallax{ background-size: 100% auto, 100% auto; } }
+    /* PC: sin parallax, imagen fija y a pantalla completa */
+    @media (min-width:1024px){
+      #bg-parallax{
+        background-repeat: no-repeat, no-repeat;
+        background-size: cover, cover;          /* ocupa todo el ancho y alto */
+        background-position: center center, center center; /* fija al centro */
+      }
+    }
+    @media (min-width:1024px){ #bg-parallax{ background-repeat: no-repeat, no-repeat; background-size: cover, cover; background-position: center center, center center; } }
     #root{ position:relative; z-index:1; }
   </style>
 </head>
@@ -58,12 +72,47 @@
   })();
   </script>
 
+  <!-- Selector de imagen de fondo (vertical móvil / horizontal desktop, si existe) -->
+  <script>
+  (function(){
+    try{
+      const base = location.pathname.endsWith('/') ? location.pathname : location.pathname.replace(/[^/]+$/,'');
+      const m = base + 'assets/cesped-vert.webp';
+      const d = base + 'assets/cesped-horiz.webp';
+      document.documentElement.style.setProperty('--pitch-image-mobile', `url('${m}')`);
+      // Detectar si existe la horizontal; si no, usar la misma que móvil
+      function setDesktop(val){ document.documentElement.style.setProperty('--pitch-image-desktop', val); apply(); }
+      fetch(d, {method:'HEAD'}).then(r=> setDesktop((r&&r.ok)?`url('${d}')`:'var(--pitch-image-mobile)')).catch(()=> setDesktop('var(--pitch-image-mobile)'));
+      function apply(){
+        const isDesk = window.matchMedia('(min-width:1024px)').matches;
+        const img = isDesk ? 'var(--pitch-image-desktop)' : 'var(--pitch-image-mobile)';
+        document.documentElement.style.setProperty('--pitch-image', img);
+      }
+      window.addEventListener('resize', apply);
+      apply();
+    }catch(e){}
+  })();
+  </script>
+
   <!-- Parallax (suave y performante) -->
   <script>
   (function(){
-    let tick=false; const speed=0.35; // menor = más lento (más parallax)
-    function onScroll(){ if(tick) return; tick=true; requestAnimationFrame(()=>{ document.documentElement.style.setProperty('--bp', (-window.scrollY*speed)+'px'); tick=false; }); }
-    window.addEventListener('scroll', onScroll, {passive:true}); onScroll();
+    let tick=false;
+    function getSpeed(){
+      const v=getComputedStyle(document.documentElement).getPropertyValue('--parallax-speed');
+      const n=parseFloat(v); return isNaN(n)?0:n;
+    }
+    function onScroll(){
+      if(tick) return; tick=true;
+      requestAnimationFrame(()=>{
+        const speed=getSpeed();
+        document.documentElement.style.setProperty('--bp', (-window.scrollY*speed)+'px');
+        tick=false;
+      });
+    }
+    window.addEventListener('scroll', onScroll, {passive:true});
+    window.addEventListener('resize', onScroll);
+    onScroll();
   })();
   </script>
 
@@ -216,7 +265,15 @@
 
   const PlayerFormModal=({initial,onCancel,onSave})=>{const[form,setForm]=useState(()=>initial||{nombre:'',equipoPropio:'',equipoFavorito:'',fotoUrl:'',ATA:5,PAS:5,REG:5,VEL:5,DEF:5,FIS:5,ARQ:5,EQP:5});const ref=useRef(null);const set=(k,v)=>setForm(f=>({...f,[k]:v}));const onFile=e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>set('fotoUrl',r.result);r.readAsDataURL(f)};const onSubmit=e=>{e.preventDefault();const c={...form};STAT.forEach(k=>c[k]=clamp(parseInt(c[k]||0,10),1,10));if(!c.nombre.trim())return;onSave(c)};return(<div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={onCancel}><form className="w-full max-w-md space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700" onSubmit={onSubmit} onClick={e=>e.stopPropagation()}><div className="text-lg font-semibold">{initial?'Editar jugador':'Añadir jugador'}</div><div className="grid grid-cols-2 gap-2 text-sm"><label className="space-y-1"><span>Nombre</span><input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.nombre} onChange={e=>set('nombre',e.target.value)} required/></label><label className="space-y-1"><span>Foto URL</span><input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.fotoUrl||''} placeholder="https://..." onChange={e=>set('fotoUrl',e.target.value)}/></label><label className="space-y-1 col-span-2"><span>o subir imagen</span><input ref={ref} type="file" accept="image/*" onChange={onFile} className="w-full text-xs"/></label><label className="space-y-1"><span>Equipo propio</span><input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.equipoPropio||''} onChange={e=>set('equipoPropio',e.target.value)}/></label><label className="space-y-1"><span>Equipo favorito</span><input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.equipoFavorito||''} onChange={e=>set('equipoFavorito',e.target.value)}/></label></div><div className="grid grid-cols-4 gap-2 text-sm">{STAT.map(k=>(<label key={k} className="space-y-1"><span title={SL[k]}>{k}</span><input type="number" min="1" max="10" className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form[k]} onChange={e=>set(k,e.target.value)}/></label>))}</div><div className="flex justify-end gap-2"><button type="button" onClick={onCancel} className="rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">Cancelar</button><button type="submit" className="rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">Guardar</button></div></form></div>)};
 
-  const SettingsModal=({onClose,kChem,setKChem,onExport,onImport,onReset})=>{const input=useRef(null);return(<div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={onClose}><div className="w-full max-w-md space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700" onClick={e=>e.stopPropagation()}><div className="mb-1 text-lg font-semibold">Ajustes</div><div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700"><div className="mb-1 text-sm font-semibold">Peso de Química en Score</div><input type="range" min="0" max="1" step="0.05" value={kChem} onChange={e=>setKChem(+e.target.value)} className="w-full"/><div className="text-xs text-slate-300 mt-1">k = {kChem.toFixed(2)} (UI)</div></div><div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700 space-y-2"><div className="text-sm font-semibold">Importar / Exportar</div><div className="flex flex-wrap gap-2"><button onClick={onExport} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">Exportar JSON</button><button onClick={()=>input.current?.click()} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">Importar JSON</button><input ref={input} type="file" accept="application/json" className="hidden" onChange={onImport}/><button onClick={onReset} className="ml-auto rounded-xl bg-rose-700 px-3 py-1 text-sm text-white ring-1 ring-rose-500 hover:bg-rose-600">Restablecer seed</button></div><div className="text-xs text-slate-400">El JSON incluye fotos (si subiste archivo se guarda base64).</div></div><div className="text-right"><button onClick={onClose} className="rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">Cerrar</button></div></div></div>)};
+  const SettingsModal=({onClose,kChem,setKChem,onExport,onImport,onReset,parallaxOn,setParallaxOn})=>{const input=useRef(null);return(<div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={onClose}><div className="w-full max-w-md space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700" onClick={e=>e.stopPropagation()}><div className="mb-1 text-lg font-semibold">Ajustes</div><div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700"><div className="mb-1 text-sm font-semibold">Peso de Química en Score</div><input type="range" min="0" max="1" step="0.05" value={kChem} onChange={e=>setKChem(+e.target.value)} className="w-full"/><div className="text-xs text-slate-300 mt-1">k = {kChem.toFixed(2)} (UI)</div></div><div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700 space-y-2"><div className="text-sm font-semibold">Importar / Exportar</div><div className="flex flex-wrap gap-2"><button onClick={onExport} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">Exportar JSON</button><button onClick={()=>input.current?.click()} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">Importar JSON</button><input ref={input} type="file" accept="application/json" className="hidden" onChange={onImport}/><button onClick={onReset} className="ml-auto rounded-xl bg-rose-700 px-3 py-1 text-sm text-white ring-1 ring-rose-500 hover:bg-rose-600">Restablecer seed</button></div><div className="text-xs text-slate-400">El JSON incluye fotos (si subiste archivo se guarda base64).</div></div><div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700">
+        <div className="mb-1 text-sm font-semibold">Parallax de fondo</div>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={parallaxOn} onChange={e=>setParallaxOn(e.target.checked)} />
+          <span>{parallaxOn?'Activado':'Desactivado'}</span>
+        </label>
+        <div className="text-xs text-slate-400 mt-1">En PC con parallax desactivado, el césped queda fijo a pantalla completa.</div>
+      </div>
+      <div className="text-right"><button onClick={onClose} className="rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">Cerrar</button></div></div></div>)};
 
   // ====== App ======
   const App=()=>{
@@ -231,6 +288,13 @@
     const [pinB,setPinB]=useState(()=>new Set(J(localStorage.getItem(KEYS.pinB),[])));
     const [chemOverrides,setChemOverrides]=useState(()=>J(localStorage.getItem(KEYS.chemOv),{}));
     const [history,setHistory]=useState(()=>J(localStorage.getItem(KEYS.history),[]));
+
+    // Parallax ON/OFF (persistente)
+    const [parallaxOn,setParallaxOn]=useState(()=>{
+      const s=localStorage.getItem('f5.parallax');
+      if(s!=null) try{return JSON.parse(s)}catch{}
+      return !window.matchMedia('(min-width:1024px)').matches; // por defecto: móvil ON, desktop OFF
+    });
 
     const map=useMemo(()=>Object.fromEntries(players.map(p=>[p.id,p])),[players]);
     const chem=useMemo(()=>applyOverrides(chemBuildBase(players),chemOverrides),[players,chemOverrides]);
@@ -257,6 +321,18 @@
     useEffect(()=>localStorage.setItem(KEYS.pinB,JSON.stringify([...pinB])),[pinB]);
     useEffect(()=>localStorage.setItem(KEYS.chemOv,JSON.stringify(chemOverrides)),[chemOverrides]);
     useEffect(()=>localStorage.setItem(KEYS.history,JSON.stringify(history)),[history]);
+    useEffect(()=>localStorage.setItem('f5.parallax', JSON.stringify(parallaxOn)),[parallaxOn]);
+    // Ajustar velocidad del parallax según toggle + tamaño
+    useEffect(()=>{
+      const apply=()=>{
+        const isDesk=window.matchMedia('(min-width:1024px)').matches;
+        const sp = parallaxOn ? (isDesk?0:0.35) : 0; // en desktop lo dejamos fijo por defecto
+        document.documentElement.style.setProperty('--parallax-speed', String(sp));
+      };
+      apply();
+      window.addEventListener('resize', apply);
+      return ()=>window.removeEventListener('resize', apply);
+    },[parallaxOn]);
 
     const convocados=[...selected];
     const canMake=convocados.length===10;
@@ -419,7 +495,7 @@
 
         <PlayerModal player={modal} onClose={()=>setModal(null)} players={players} chem={chem} teamIdsA={teams?.A||[]} teamIdsB={teams?.B||[]} onEditChem={(a,b,cur)=>editChem(a,b,cur)}/>
         {form && <PlayerFormModal initial={form.id?form:null} onCancel={()=>setForm(null)} onSave={onSave}/>} 
-        {settings && <SettingsModal onClose={()=>setSettings(false)} kChem={kChem} setKChem={setKChem} onExport={onExport} onImport={onImport} onReset={reset}/>}
+        {settings && <SettingsModal onClose={()=>setSettings(false)} kChem={kChem} setKChem={setKChem} onExport={onExport} onImport={onImport} onReset={reset} parallaxOn={parallaxOn} setParallaxOn={setParallaxOn}/>}
       </div>
     );
   };
@@ -442,4 +518,3 @@
   </script>
 </body>
 </html>
-
