@@ -6,6 +6,8 @@
   <title>Fútbol 5</title>
   <meta name="theme-color" content="#10b981"/>
   <link rel="manifest" id="mf"/>
+  <!-- Favicon inline para evitar 404 -->
+  <link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='24' fill='%2310b981'/%3E%3Ctext x='50%25' y='54%25' font-family='system-ui,Segoe UI,Roboto,sans-serif' font-size='64' text-anchor='middle' dominant-baseline='middle' font-weight='700' fill='%230b1220'%3EF5%3C/text%3E%3C/svg%3E"/>
 
   <!-- Tailwind y React -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -24,101 +26,57 @@
       --pitch-image-desktop: var(--pitch-image-mobile);
       --pitch-darken: 0.50;
       --parallax-speed: 0.35;
-      --header-h: 96px; /* fallback */
+      --header-h: 96px;
     }
     html,body{background:#0b1220;color:#e2e8f0;margin:0;overflow-x:hidden}
     img,svg{max-width:100%;height:auto}
 
     /* Fondo */
     #bg-parallax{position:fixed;inset:0;z-index:0;
-      background-image:
-        linear-gradient(rgba(11,18,32,var(--pitch-darken)),rgba(11,18,32,var(--pitch-darken))),
-        var(--pitch-image);
-      background-repeat:repeat-y,repeat-y;
-      background-size:100% auto,100% auto;
-      background-position:center var(--bp),center var(--bp);
-      will-change:background-position}
+      background-image:linear-gradient(rgba(11,18,32,var(--pitch-darken)),rgba(11,18,32,var(--pitch-darken))),var(--pitch-image);
+      background-repeat:repeat-y,repeat-y;background-size:100% auto,100% auto;
+      background-position:center var(--bp),center var(--bp);will-change:background-position}
     @media (min-width:1024px){
       :root{--parallax-speed:0}
       #bg-parallax{background-repeat:no-repeat,no-repeat;background-size:cover,cover;background-position:center center,center center}
     }
     #root{position:relative;z-index:1}
 
-    /* Header fijo */
-    .app-header{
-      position:fixed;top:0;left:0;right:0;z-index:40;
-      backdrop-filter:blur(10px);
-      background:rgba(2,6,23,.9);
-      border-bottom:1px solid rgba(30,41,59,.8)
-    }
+    /* Header */
+    .app-header{position:fixed;top:0;left:0;right:0;z-index:40;backdrop-filter:blur(10px);
+      background:rgba(2,6,23,.9);border-bottom:1px solid rgba(30,41,59,.8)}
     .header-spacer{height:var(--header-h)}
 
-    /* Tabs */
-    .tab-btn{
-      padding:.6rem .8rem;font-size:.95rem;border-radius:.9rem;
-      border:1px solid rgba(51,65,85,.8);background:rgba(2,6,23,.6);color:#cbd5e1;
-      transition:transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
-    }
-    .tab-btn.active{
-      background:#0b1220;color:#fff;border-color:#4ade80;
-      box-shadow:0 0 0 1px rgba(74,222,128,.25) inset;
-      transform:translateY(-1px);
-    }
+    .tab-btn{padding:.6rem .8rem;font-size:.95rem;border-radius:.9rem;border:1px solid rgba(51,65,85,.8);
+      background:rgba(2,6,23,.6);color:#cbd5e1;transition:transform .18s,background .18s,color .18s,border-color .18s}
+    .tab-btn.active{background:#0b1220;color:#fff;border-color:#4ade80;box-shadow:0 0 0 1px rgba(74,222,128,.25) inset;transform:translateY(-1px)}
     .tab-nav{position:relative}
-    .tab-indicator{
-      position:absolute;left:0;bottom:-2px;height:3px;width:50%;
-      background:linear-gradient(90deg,#34d399,#22d3ee);
-      border-radius:9999px;
-      transition:transform .28s cubic-bezier(.22,.7,.12,1);
-      will-change:transform;
-    }
+    .tab-indicator{position:absolute;left:0;bottom:-2px;height:3px;width:50%;
+      background:linear-gradient(90deg,#34d399,#22d3ee);border-radius:9999px;transition:transform .28s cubic-bezier(.22,.7,.12,1)}
 
     /* Carrusel tabs */
     .tabs-viewport{overflow:hidden}
-    .tabs-track{display:flex;width:200%;transition:transform .32s cubic-bezier(.22,.7,.12,1);will-change:transform}
+    .tabs-track{display:flex;width:200%;transition:transform .32s cubic-bezier(.22,.7,.12,1)}
     .tabs-page{width:100%;padding:12px}
 
-    /* Card rectangular */
+    /* Cards */
     .card-rect{position:relative;border-radius:16px;padding:8px;overflow:hidden}
     .card-inner{position:relative;z-index:2}
-
-    /* Rarezas */
     .rarity-bronze{background:linear-gradient(180deg,#d3a076,#7a5438)}
     .rarity-silver{background:linear-gradient(180deg,#e5e7eb,#9ca3af)}
     .rarity-gold{background:linear-gradient(180deg,#fde68a,#d97706)}
     .rarity-special{background:transparent}
-    .rarity-special::before{
-      content:"";position:absolute;inset:-2px;border-radius:18px;
-      background:conic-gradient(from 0deg,#22d3ee,#a78bfa,#f472b6,#22d3ee);
-      animation:spin 6s linear infinite;filter:saturate(1.2) brightness(1.05);z-index:1;
-    }
-    .rarity-special::after{
-      content:"";position:absolute;inset:2px;border-radius:14px;
-      background:linear-gradient(180deg,rgba(15,23,42,.9),rgba(30,41,59,.85));z-index:1;
-    }
+    .rarity-special::before{content:"";position:absolute;inset:-2px;border-radius:18px;background:conic-gradient(from 0deg,#22d3ee,#a78bfa,#f472b6,#22d3ee);animation:spin 6s linear infinite;filter:saturate(1.2) brightness(1.05);z-index:1}
+    .rarity-special::after{content:"";position:absolute;inset:2px;border-radius:14px;background:linear-gradient(180deg,rgba(15,23,42,.9),rgba(30,41,59,.85));z-index:1}
     @keyframes spin{to{transform:rotate(1turn)}}
 
     /* Formación responsiva */
-    .board {
-      position: relative;
-      width: 100%;
-      max-width: 900px;       /* límite desktop */
-      aspect-ratio: 5 / 3;    /* 900 x 540 */
-      border-radius: 16px;
-      overflow: hidden;
-    }
-    .board img.field {
-      position:absolute;inset:0;
-      width:100%;height:100%;object-fit:cover;
-    }
-    .board .layer { position:absolute; inset:0; }
+    .board{position:relative;width:100%;max-width:900px;aspect-ratio:5/3;border-radius:16px;overflow:hidden}
+    .board img.field{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .board .layer{position:absolute;inset:0}
 
-    /* Evitar que PLANTEL se desborde */
-    .plantel-scroll {
-      max-height: calc(100vh - var(--header-h) - 190px);
-      overflow-y: auto;
-      padding-right: 4px;
-    }
+    /* Listado PLANTEL con scroll */
+    .plantel-scroll{max-height:calc(100vh - var(--header-h) - 190px);overflow-y:auto;padding-right:4px}
   </style>
 </head>
 <body>
@@ -176,21 +134,9 @@
   <script>
     (function(){
       let ticking=false;
-      function sp(){
-        const v=getComputedStyle(document.documentElement).getPropertyValue('--parallax-speed');
-        const n=parseFloat(v);return isNaN(n)?0:n
-      }
-      function onScroll(){
-        if(ticking)return;
-        ticking=true;
-        requestAnimationFrame(()=>{
-          document.documentElement.style.setProperty('--bp',(-window.scrollY*sp())+'px');
-          ticking=false
-        })
-      }
-      window.addEventListener('scroll',onScroll,{passive:true});
-      window.addEventListener('resize',onScroll);
-      onScroll();
+      function sp(){const v=getComputedStyle(document.documentElement).getPropertyValue('--parallax-speed');const n=parseFloat(v);return isNaN(n)?0:n}
+      function onScroll(){if(ticking)return; ticking=true; requestAnimationFrame(()=>{document.documentElement.style.setProperty('--bp',(-window.scrollY*sp())+'px'); ticking=false})}
+      window.addEventListener('scroll',onScroll,{passive:true}); window.addEventListener('resize',onScroll); onScroll();
     })();
   </script>
 
@@ -198,13 +144,9 @@
   <script type="text/babel">
     const {useMemo,useState,useEffect} = React;
 
-    /* ================== Helpers y Constantes ================== */
+    /* ========= Constantes/Helpers ========= */
     const STAT=['ATA','PAS','REG','VEL','DEF','FIS','ARQ','EQP'];
     const SL={ATA:'Ataque',PAS:'Pase',REG:'Regate',VEL:'Velocidad',DEF:'Defensa',FIS:'Físico',ARQ:'Arco',EQP:'Equipo'};
-    const TC={
-      A:{stroke:'rgba(16,185,129,1)',fill:'rgba(16,185,129,0.18)',dot:'bg-emerald-500',hex:'#10b981'},
-      B:{stroke:'rgba(59,130,246,1)',fill:'rgba(59,130,246,0.18)',dot:'bg-blue-500',hex:'#3b82f6'}
-    };
     const Wt={ATA:.18,DEF:.16,PAS:.14,REG:.14,VEL:.14,FIS:.10,ARQ:.07,EQP:.07};
     const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
     const avg=a=>a.length?a.reduce((p,c)=>p+c,0)/a.length:0;
@@ -213,93 +155,70 @@
     const withG=a=>a.map(p=>({...p,_GLOBAL:globalOf(p)}));
     const rarityOf=p=>{const r=Math.round((p._GLOBAL||globalOf(p))*10);if(p.especial||r>=90)return 'special';if(r>=80)return 'gold';if(r>=70)return 'silver';return 'bronze'};
 
-    const SUBS={
-      ATA:['Posición','Definición','Potencia'], PAS:['Visión','Corto','Largo'],
-      REG:['Agilidad','Control','Equilibrio'], VEL:['Aceleración','Punta','Arranque'],
-      DEF:['Marcaje','Anticipación','Entradas'], FIS:['Resistencia','Fuerza','Salto'],
-      ARQ:['Reflejos','Manos','Saque'], EQP:['Colaboración','Disciplina','Liderazgo']
-    };
-    const hR=s=>{let h=0;for(let i=0;i<s.length;i++)h=(h*33+s.charCodeAt(i))>>>0;return (h%1000)/1000};
-    const substatsOf=p=>{const o={};for(const k of STAT){o[k]=(SUBS[k]||[]).map((n,i)=>{const base=p[k]||5;const noise=(hR((p.id||'')+k+i)-.5)*2;const v=clamp(Math.round(base+noise),1,10);return{n,v}})}return o};
+    const SUBS={ATA:['Posición','Definición','Potencia'], PAS:['Visión','Corto','Largo'], REG:['Agilidad','Control','Equilibrio'],
+      VEL:['Aceleración','Punta','Arranque'], DEF:['Marcaje','Anticipación','Entradas'], FIS:['Resistencia','Fuerza','Salto'],
+      ARQ:['Reflejos','Manos','Saque'], EQP:['Colaboración','Disciplina','Liderazgo']};
 
-    /* ========= Avatares base64 para evitar CORS ========= */
     const colorOf = name=>{
       const colors=['#22c55e','#06b6d4','#a78bfa','#f59e0b','#ef4444','#14b8a6','#8b5cf6','#f97316','#10b981','#38bdf8'];
       let h=0; for(let i=0;i<name.length;i++) h=(h*31+name.charCodeAt(i))>>>0;
       return colors[h%colors.length];
     };
     const mkAvatar = (name)=>{
-      const initials = (name||'F5').split(/\s+/).map(s=>s[0]||'').join('').slice(0,2).toUpperCase();
-      const bg = colorOf(name||'F5');
-      const svg = `
-        <svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'>
-          <rect width='100%' height='100%' rx='24' ry='24' fill='${bg}'/>
-          <text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle'
-                font-family='system-ui,Segoe UI,Roboto,sans-serif' font-size='72' fill='white'
-                style='font-weight:700'>${initials}</text>
-        </svg>`;
+      const initials=(name||'F5').split(/\s+/).map(s=>s[0]||'').join('').slice(0,2).toUpperCase();
+      const bg=colorOf(name||'F5');
+      const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><rect width='100%' height='100%' rx='24' ry='24' fill='${bg}'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui,Segoe UI,Roboto,sans-serif' font-size='72' fill='white' style='font-weight:700'>${initials}</text></svg>`;
       return 'data:image/svg+xml;utf8,'+encodeURIComponent(svg);
     };
 
-    const SEED=[
-      {id:'1', nombre:'Leo',  equipoPropio:'La 10',  equipoFavorito:'Barcelona', fotoUrl:mkAvatar('Leo'),  ATA:10,PAS:9, REG:10,VEL:9, DEF:4,FIS:7,ARQ:3, EQP:8, pie:'Izquierdo',estrellas:5,especial:true},
-      {id:'2', nombre:'Fabi', equipoPropio:'La 10',  equipoFavorito:'Colón',     fotoUrl:mkAvatar('Fabi'), ATA:7, PAS:8, REG:7, VEL:7, DEF:7,FIS:7,ARQ:4, EQP:9, pie:'Derecho',estrellas:4},
-      {id:'3', nombre:'Cuti', equipoPropio:'Muralla', equipoFavorito:'Belgrano',  fotoUrl:mkAvatar('Cuti'), ATA:5, PAS:6, REG:5, VEL:7, DEF:10,FIS:9,ARQ:4,EQP:7,pie:'Derecho',estrellas:4},
-      {id:'4', nombre:'Dibu', equipoPropio:'Muralla', equipoFavorito:'Arsenal',   fotoUrl:mkAvatar('Dibu'), ATA:3, PAS:5, REG:4, VEL:5, DEF:8,FIS:8,ARQ:10,EQP:7,pie:'Derecho',estrellas:5},
-      {id:'5', nombre:'Papu', equipoPropio:'Tiki',    equipoFavorito:'San Lorenzo',fotoUrl:mkAvatar('Papu'),ATA:8,PAS:8,REG:9,VEL:8,DEF:5,FIS:6,ARQ:3,EQP:7,pie:'Derecho',estrellas:4},
-      {id:'6', nombre:'Nico', equipoPropio:'Tiki',    equipoFavorito:'Boca',      fotoUrl:mkAvatar('Nico'), ATA:7,PAS:7,REG:7,VEL:8,DEF:6,FIS:7,ARQ:4,EQP:6,pie:'Derecho',estrellas:4},
-      {id:'7', nombre:'Chino',equipoPropio:'Muralla', equipoFavorito:"Newell's",  fotoUrl:mkAvatar('Chino'),ATA:5,PAS:6,REG:5,VEL:6,DEF:8,FIS:7,ARQ:8,EQP:6,pie:'Izquierdo',estrellas:3},
-      {id:'8', nombre:'Joa',  equipoPropio:'La 10',  equipoFavorito:'River',     fotoUrl:mkAvatar('Joa'),  ATA:6,PAS:6,REG:6,VEL:7,DEF:8,FIS:8,ARQ:5,EQP:7,pie:'Derecho',estrellas:3},
-      {id:'9', nombre:'Fideo',equipoPropio:'Tiki',   equipoFavorito:'Rosario C.',fotoUrl:mkAvatar('Fideo'),ATA:8,PAS:9,REG:9,VEL:8,DEF:6,FIS:6,ARQ:3,EQP:8,pie:'Izquierdo',estrellas:5},
-      {id:'10',nombre:'Kuni', equipoPropio:'La 10',  equipoFavorito:'Independiente',fotoUrl:mkAvatar('Kuni'),ATA:9,PAS:7,REG:8,VEL:9,DEF:5,FIS:7,ARQ:3,EQP:7,pie:'Derecho',estrellas:4},
-      {id:'11',nombre:'Tomi', equipoPropio:'Muralla',equipoFavorito:'Talleres',  fotoUrl:mkAvatar('Tomi'), ATA:6,PAS:7,REG:6,VEL:7,DEF:7,FIS:7,ARQ:5,EQP:6,pie:'Derecho',estrellas:3},
-      {id:'12',nombre:'Gonza',equipoPropio:'Tiki',   equipoFavorito:'Racing',    fotoUrl:mkAvatar('Gonza'),ATA:7,PAS:6,REG:7,VEL:8,DEF:6,FIS:7,ARQ:4,EQP:6,pie:'Derecho',estrellas:3}
+    /* ========= Seed sin CORS ========= */
+    const SEED=[ /* como antes, con mkAvatar(...) */ 
+      {id:'1',nombre:'Leo',equipoPropio:'La 10',equipoFavorito:'Barcelona',fotoUrl:mkAvatar('Leo'),ATA:10,PAS:9,REG:10,VEL:9,DEF:4,FIS:7,ARQ:3,EQP:8,pie:'Izquierdo',estrellas:5,especial:true},
+      {id:'2',nombre:'Fabi',equipoPropio:'La 10',equipoFavorito:'Colón',fotoUrl:mkAvatar('Fabi'),ATA:7,PAS:8,REG:7,VEL:7,DEF:7,FIS:7,ARQ:4,EQP:9,pie:'Derecho',estrellas:4},
+      {id:'3',nombre:'Cuti',equipoPropio:'Muralla',equipoFavorito:'Belgrano',fotoUrl:mkAvatar('Cuti'),ATA:5,PAS:6,REG:5,VEL:7,DEF:10,FIS:9,ARQ:4,EQP:7,pie:'Derecho',estrellas:4},
+      {id:'4',nombre:'Dibu',equipoPropio:'Muralla',equipoFavorito:'Arsenal',fotoUrl:mkAvatar('Dibu'),ATA:3,PAS:5,REG:4,VEL:5,DEF:8,FIS:8,ARQ:10,EQP:7,pie:'Derecho',estrellas:5},
+      {id:'5',nombre:'Papu',equipoPropio:'Tiki',equipoFavorito:'San Lorenzo',fotoUrl:mkAvatar('Papu'),ATA:8,PAS:8,REG:9,VEL:8,DEF:5,FIS:6,ARQ:3,EQP:7,pie:'Derecho',estrellas:4},
+      {id:'6',nombre:'Nico',equipoPropio:'Tiki',equipoFavorito:'Boca',fotoUrl:mkAvatar('Nico'),ATA:7,PAS:7,REG:7,VEL:8,DEF:6,FIS:7,ARQ:4,EQP:6,pie:'Derecho',estrellas:4},
+      {id:'7',nombre:'Chino',equipoPropio:'Muralla',equipoFavorito:"Newell's",fotoUrl:mkAvatar('Chino'),ATA:5,PAS:6,REG:5,VEL:6,DEF:8,FIS:7,ARQ:8,EQP:6,pie:'Izquierdo',estrellas:3},
+      {id:'8',nombre:'Joa',equipoPropio:'La 10',equipoFavorito:'River',fotoUrl:mkAvatar('Joa'),ATA:6,PAS:6,REG:6,VEL:7,DEF:8,FIS:8,ARQ:5,EQP:7,pie:'Derecho',estrellas:3},
+      {id:'9',nombre:'Fideo',equipoPropio:'Tiki',equipoFavorito:'Rosario C.',fotoUrl:mkAvatar('Fideo'),ATA:8,PAS:9,REG:9,VEL:8,DEF:6,FIS:6,ARQ:3,EQP:8,pie:'Izquierdo',estrellas:5},
+      {id:'10',nombre:'Kuni',equipoPropio:'La 10',equipoFavorito:'Independiente',fotoUrl:mkAvatar('Kuni'),ATA:9,PAS:7,REG:8,VEL:9,DEF:5,FIS:7,ARQ:3,EQP:7,pie:'Derecho',estrellas:4},
+      {id:'11',nombre:'Tomi',equipoPropio:'Muralla',equipoFavorito:'Talleres',fotoUrl:mkAvatar('Tomi'),ATA:6,PAS:7,REG:6,VEL:7,DEF:7,FIS:7,ARQ:5,EQP:6,pie:'Derecho',estrellas:3},
+      {id:'12',nombre:'Gonza',equipoPropio:'Tiki',equipoFavorito:'Racing',fotoUrl:mkAvatar('Gonza'),ATA:7,PAS:6,REG:7,VEL:8,DEF:6,FIS:7,ARQ:4,EQP:6,pie:'Derecho',estrellas:3},
     ];
 
-    /* ================== Química y Emparejado ================== */
+    /* ========= Química / Emparejado ========= */
     const chemBuildBase=arr=>{const q={};for(const a of arr){q[a.id]={};for(const b of arr){
       if(a.id===b.id){q[a.id][b.id]=10;continue}
       if(q[b.id]?.[a.id]!=null){q[a.id][b.id]=q[b.id][a.id];continue}
-      let v=5;
-      if(a.equipoPropio&&b.equipoPropio&&a.equipoPropio===b.equipoPropio)v+=1.2;
+      let v=5;if(a.equipoPropio&&b.equipoPropio&&a.equipoPropio===b.equipoPropio)v+=1.2;
       if(a.equipoFavorito&&b.equipoFavorito&&a.equipoFavorito===b.equipoFavorito)v+=.8;
-      v+=(((a.EQP+b.EQP)/2)-5)*.15;
-      q[a.id][b.id]=clamp(+v.toFixed(2),1,10)
-    }}return q};
+      v+=(((a.EQP+b.EQP)/2)-5)*.15;q[a.id][b.id]=clamp(+v.toFixed(2),1,10)}}return q};
     const applyOverrides=(base,ov)=>{if(!ov)return base;const q=JSON.parse(JSON.stringify(base));for(const a in ov){for(const b in ov[a]){const v=clamp(+ov[a][b],1,10);if(!q[a])q[a]={};if(!q[b])q[b]={};q[a][b]=q[b][a]=v}}return q};
     const chemTeam=(ids,chem)=>{const arr=Array.isArray(ids)?ids.filter(Boolean):[];if(arr.length<=1)return 10;let t=0,p=0;for(let i=0;i<arr.length;i++)for(let j=i+1;j<arr.length;j++){t+=chem[arr[i]]?.[arr[j]]??5;p++}return +(t/(p||1)).toFixed(2)};
     const teamGlobal=(ids,map)=>{const arr=Array.isArray(ids)?ids.filter(id=>map[id]):[];return +avg(arr.map(id=>map[id]._GLOBAL)).toFixed(2)};
     const teamScoreUI=(ids,map,chem,k)=>+(teamGlobal(ids,map,chem)+chemTeam(ids,chem)*k).toFixed(2);
     const shuffle=a=>{const x=[...a];for(let i=x.length-1;i>0;i--){const j=(Math.random()*(i+1)|0);[x[i],x[j]]=[x[j],x[i]]}return x};
-    const scoreDiff=(A,B,map,chem,k)=>{const sA=teamScoreUI(A,map,chem,k),sB=teamScoreUI(B,map,chem,k);return{A:[...A],B:[...B],diff:Math.abs(sA-sB),m:{sA,sB}}};
     const seedWithPins=(ids,pA,pB)=>{const A=ids.filter(id=>pA.has(id));const B=ids.filter(id=>pB.has(id));const rest=ids.filter(id=>!pA.has(id)&&!pB.has(id));return{A,B,rest}};
     const fillRandom=(A,B,rest)=>{const r=shuffle(rest);for(const id of r){(A.length<B.length?A:B).push(id);if(A.length===5&&B.length===5)break}};
-    const balancedWithPins=(ids,map,chem,k,pA,pB)=>{
-      const{A,B,rest}=seedWithPins(ids,pA,pB);fillRandom(A,B,rest);
+    const scoreDiff=(A,B,map,chem,k)=>{const sA=teamScoreUI(A,map,chem,k),sB=teamScoreUI(B,map,chem,k);return{A:[...A],B:[...B],diff:Math.abs(sA-sB),m:{sA,sB}}};
+    const balancedWithPins=(ids,map,chem,k,pA,pB)=>{const{A,B,rest}=seedWithPins(ids,pA,pB);fillRandom(A,B,rest);
       while((A.length<5||B.length<5)&&rest.length>0){const id=rest.pop();(A.length<B.length?A:B).push(id)}
       let best=scoreDiff(A,B,map,chem,k);
       const freeA=best.A.map((id,i)=>pA.has(id)?-1:i).filter(i=>i>=0);
       const freeB=best.B.map((id,i)=>pB.has(id)?-1:i).filter(i=>i>=0);
-      for(let t=0;t<900;t++){
-        if(!freeA.length||!freeB.length)break;
-        const i=freeA[(Math.random()*freeA.length)|0];
-        const j=freeB[(Math.random()*freeB.length)|0];
-        [best.A[i],best.B[j]]=[best.B[j],best.A[i]];
-        const cur=scoreDiff(best.A,best.B,map,chem,k);
-        if(cur.diff<=best.diff||Math.random()<.12)best=cur;else[best.A[i],best.B[j]]=[best.B[j],best.A[i]]
-      }
-      return{A:best.A,B:best.B,m:best.m}
-    };
+      for(let t=0;t<900;t++){if(!freeA.length||!freeB.length)break;const i=freeA[(Math.random()*freeA.length)|0];const j=freeB[(Math.random()*freeB.length)|0];
+        [best.A[i],best.B[j]]=[best.B[j],best.A[i]];const cur=scoreDiff(best.A,best.B,map,chem,k);if(cur.diff<=best.diff||Math.random()<.12)best=cur;else[best.A[i],best.B[j]]=[best.B[j],best.A[i]]}
+      return{A:best.A,B:best.B,m:best.m}};
 
-    /* ================== UI ================== */
+    /* ========= UI ========= */
     const Pill=({children,className=''})=> <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${className}`}>{children}</span>;
     const Stars=({n=0})=>{const s=clamp(Math.round(n),0,5);return(<div className="flex gap-1 text-amber-300" title={`${s} estrellas`}>{Array.from({length:5}).map((_,i)=>(<span key={i}>{i<s?'★':'☆'}</span>))}</div>)};
 
-    /* Card principal */
     const FifaCard=({p,small=false})=>{
       const rate=Math.round((p._GLOBAL||globalOf(p))*10);
       const rare=rarityOf(p);
-      const sizeClass= small ? 'w-36' : 'w-44';
+      const sizeClass= small ? 'w-36' : 'w-44'; // base: 144 / 176
       const ring = rare==='bronze'?'ring-yellow-800':rare==='silver'?'ring-slate-300':rare==='gold'?'ring-yellow-500':'ring-cyan-300';
       const rareClass = rare==='special' ? 'rarity-special' : `rarity-${rare}`;
       return (
@@ -331,29 +250,57 @@
       );
     };
 
-    /* === Formación: misma FifaCard, escalada y posicionada por porcentaje === */
-    const FormationBoard = ({teamA=[], teamB=[], map, scale=0.62}) => {
-      // Posiciones en % (referencia 900x540)
-      const posA = [{x:7.8,y:7.4},{x:10.6,y:25.9},{x:9.4,y:48.1},{x:10.6,y:70.4},{x:7.8,y:88.9}];
-      const posB = [{x:92.2,y:7.4},{x:89.4,y:25.9},{x:90.6,y:48.1},{x:89.4,y:70.4},{x:92.2,y:88.9}];
+    /* ============ Radar simple (SVG) ============ */
+    const RadarChart=({size=260,max=10,keys=STAT,dataSeries})=>{
+      const cx=size/2,cy=size/2,r=size*.4,N=keys.length;
+      const ang=i=>Math.PI*2*i/N-Math.PI/2;
+      const pt=(i,v)=>{const a=ang(i),rr=r*(v/max);return[cx+rr*Math.cos(a),cy+rr*Math.sin(a)]};
+      const lv=[2,4,6,8,10];
+      return(<svg viewBox={`0 0 ${size} ${size}`} width="100%" className="mx-auto block">
+        {lv.map((L,i)=>{const d=keys.map((_,j)=>pt(j,L)).map(([x,y])=>`${x},${y}`).join(' ');return <polygon key={i} points={d} fill="none" stroke="rgba(148,163,184,.25)" strokeWidth={1}/>})}
+        {keys.map((k,i)=>{const[x,y]=pt(i,max);return <line key={k} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(148,163,184,.3)" strokeWidth={1}/>})}
+        {keys.map((k,i)=>{const[x,y]=pt(i,max+.9);return <text key={k} x={x} y={y} textAnchor="middle" dominantBaseline="middle" fontSize={11} fill="#cbd5e1">{k}</text>})}
+        {dataSeries.map((srs,i)=>{const d=keys.map((k,j)=>pt(j,srs.values[k]??0)).map(([x,y])=>`${x},${y}`).join(' ');return(<g key={i}><polygon points={d} fill={srs.fill} stroke={srs.stroke} strokeWidth={2}/></g>)})}
+      </svg>);
+    };
+    const TC={A:{stroke:'rgba(16,185,129,1)',fill:'rgba(16,185,129,0.18)',dot:'bg-emerald-500',hex:'#10b981'},B:{stroke:'rgba(59,130,246,1)',fill:'rgba(59,130,246,0.18)',dot:'bg-blue-500',hex:'#3b82f6'}};
+    const teamAvg=(ids,map)=>{const o={};const arr=Array.isArray(ids)?ids.filter(id=>map[id]):[];STAT.forEach(k=>o[k]=+avg(arr.map(id=>map[id][k]??0)).toFixed(2));return o};
 
+    const TeamRadarCompare=({A,B,map})=>{
+      const a=teamAvg(A,map),b=teamAvg(B,map);
+      return(
+        <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
+          <div className="mb-2 text-center text-sm text-slate-300">Radar comparativo (promedio por stat)</div>
+          <RadarChart dataSeries={[{label:'A',values:a,stroke:TC.A.stroke,fill:TC.A.fill},{label:'B',values:b,stroke:TC.B.stroke,fill:TC.B.fill}]}/>
+          <div className="mt-2 flex justify-center gap-4 text-xs text-slate-300">
+            <span className="inline-flex items-center gap-1"><span className={`h-2 w-2 rounded-full ${TC.A.dot}`}></span> A</span>
+            <span className="inline-flex items-center gap-1"><span className={`h-2 w-2 rounded-full ${TC.B.dot}`}></span> B</span>
+          </div>
+        </div>
+      )
+    };
+
+    /* ============ Formación ============ 
+       IMPORTANTE: anclamos columnas a 24px de los bordes
+       y sólo variamos la Y en %. Con scale ajustable. */
+    const FormationBoard = ({teamA=[], teamB=[], map, scale=0.62}) => {
+      const yList=[8,26,50,74,92]; // posiciones verticales en %
       const exportar = async ()=>{
         const el=document.getElementById('formation-board'); if(!el) return;
         const canvas=await html2canvas(el,{backgroundColor:null,scale:2});
         const url=canvas.toDataURL('image/png');
         const a=document.createElement('a');a.href=url;a.download='formacion_f5.png';a.click();
       };
-
-      const CardOnField = ({id,xy})=>{
+      const CardLeft = ({id,idx})=>{
         const p=map[id]; if(!p) return null;
-        const t=`translate(-50%, -50%) scale(${scale})`;
-        return (
-          <div style={{position:'absolute',left:xy.x+'%',top:xy.y+'%',transform:t,transformOrigin:'top left'}}>
-            <FifaCard p={p}/>
-          </div>
-        );
+        const t=`translate(0,-50%) scale(${scale})`; // anclado por la izquierda
+        return (<div style={{position:'absolute',left:'24px',top:yList[idx]+'%',transform:t,transformOrigin:'top left'}}><FifaCard p={p}/></div>);
       };
-
+      const CardRight = ({id,idx})=>{
+        const p=map[id]; if(!p) return null;
+        const t=`translate(0,-50%) scale(${scale})`; // anclado por la derecha
+        return (<div style={{position:'absolute',right:'24px',top:yList[idx]+'%',transform:t,transformOrigin:'top right'}}><FifaCard p={p}/></div>);
+      };
       return (
         <div className="w-full">
           <div id="formation-board" className="board ring-1 ring-slate-700 shadow-xl mx-auto bg-slate-900/30">
@@ -362,12 +309,11 @@
               <div className="absolute top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-xl bg-slate-900/70 text-white text-sm sm:text-base font-bold">
                 Partido F5 - Formación
               </div>
-              {teamA.map((id,i)=><CardOnField key={'A'+id} id={id} xy={posA[i]||posA[posA.length-1]}/>)}
-              {teamB.map((id,i)=><CardOnField key={'B'+id} id={id} xy={posB[i]||posB[posB.length-1]}/>)}
+              {teamA.map((id,i)=><CardLeft key={'A'+id} id={id} idx={i}/>)}
+              {teamB.map((id,i)=><CardRight key={'B'+id} id={id} idx={i}/>)}
               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[12px] text-slate-200">Generado con Fútbol 5</div>
             </div>
           </div>
-
           <div className="flex justify-center mt-2">
             <button onClick={exportar} className="rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">
               Descargar imagen de la formación
@@ -377,24 +323,7 @@
       );
     };
 
-    /* ====== Resto de componentes (Player list, modales) ====== */
-    const PlayerChemList=({player,players,chem,teamIdsA=[],teamIdsB=[],onEditChem})=>{
-      const list=players.filter(p=>p.id!==player.id).map(p=>({...p,_chem:chem[player.id]?.[p.id]??5,onA:teamIdsA.includes(p.id),onB:teamIdsB.includes(p.id)})).sort((a,b)=>b._chem-a._chem);
-      return(
-        <div className="space-y-3">
-          <div className="flex justify-center"><FifaCard p={player} small/></div>
-          <div className="max-h-72 overflow-auto space-y-1">
-            {list.map(o=>(
-              <div key={o.id} className={`flex items-center justify-between rounded-lg px-2 py-1 text-sm ${o.onA?'bg-emerald-600/15 ring-1 ring-emerald-500/30':o.onB?'bg-blue-600/15 ring-1 ring-blue-500/30':'bg-slate-800/60 ring-1 ring-slate-700'}`}>
-                <div className="flex items-center gap-2 min-w-0"><img src={o.fotoUrl} className="h-7 w-7 rounded-full object-cover ring-1 ring-slate-700" alt=""/><span className="truncate">{o.nombre}</span></div>
-                <div className="flex items-center gap-2"><span className="font-semibold w-6 text-right">{o._chem}</span>{onEditChem&&<button onClick={()=>onEditChem(player.id,o.id,o._chem)} className="rounded px-2 py-0.5 text-xs ring-1 ring-slate-600 bg-slate-800 hover:bg-slate-700">✏️</button>}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    };
-
+    /* ====== Resto de componentes (listado, edición) ====== */
     const PinButtons=({id,pinA,pinB,setPinA,setPinB})=>{
       const onA=pinA.has(id), onB=pinB.has(id);
       const toggle=t=>{
@@ -420,8 +349,6 @@
                   <Pill className="bg-slate-800/80 text-slate-200">Rating: {Math.round(p._GLOBAL*10)}</Pill>
                   {p.equipoPropio&&<Pill className="bg-indigo-600/20 text-indigo-200">Propio: {p.equipoPropio}</Pill>}
                   {p.equipoFavorito&&<Pill className="bg-cyan-600/20 text-cyan-200">Fav: {p.equipoFavorito}</Pill>}
-                  {p.pie&&<Pill className="bg-amber-600/20 text-amber-200">Pie: {p.pie}</Pill>}
-                  {(p.estrellas!=null)&&<Pill className="bg-yellow-600/20 text-yellow-100">★ {p.estrellas}</Pill>}
                 </div>
               </button>
               <div className="flex items-center gap-2">
@@ -440,7 +367,7 @@
     };
 
     const PlayerDetails=({p})=>{
-      const s=p.subs||substatsOf(p);
+      const s=p.subs||(Object.fromEntries(STAT.map(k=>[k, (SUBS[k]||[]).map(n=>({n,v:p[k]}))])));
       return(
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           <div className="flex justify-center"><FifaCard p={p}/></div>
@@ -450,17 +377,12 @@
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="rounded-lg bg-slate-900/60 p-2">Propio:<div className="font-semibold">{p.equipoPropio||'-'}</div></div>
                 <div className="rounded-lg bg-slate-900/60 p-2">Favorito:<div className="font-semibold">{p.equipoFavorito||'-'}</div></div>
-                <div className="rounded-lg bg-slate-900/60 p-2">Pie hábil:<div className="font-semibold">{p.pie||'-'}</div></div>
-                <div className="rounded-lg bg-slate-900/60 p-2">Valoración:<div className="font-semibold"><Stars n={p.estrellas||0}/></div></div>
               </div>
             </div>
             {STAT.map(k=>(
               <div key={k} className="rounded-xl bg-slate-800/60 p-2 ring-1 ring-slate-700">
                 <div className="mb-1 text-sm font-semibold">{SL[k]} <span className="opacity-75">({p[k]})</span></div>
-                {(s[k]||[]).map((it,idx)=>(<div key={idx} className="mb-1">
-                  <div className="flex justify-between text-xs"><span>{it.n}</span><span className="font-semibold">{it.v}</span></div>
-                  <div className="h-1.5 rounded bg-slate-700"><div className="h-1.5 rounded" style={{width:`${it.v*10}%`,backgroundColor:'#22c55e'}}/></div>
-                </div>))}
+                <div className="h-1.5 rounded bg-slate-700"><div className="h-1.5 rounded" style={{width:`${p[k]*10}%`,backgroundColor:'#22c55e'}}/></div>
               </div>
             ))}
           </div>
@@ -469,243 +391,77 @@
     };
 
     const PlayerFormModal=({initial,onCancel,onSave})=>{
-      const base={nombre:'',equipoPropio:'',equipoFavorito:'',fotoUrl:'',escudoUrl:'',bandera:'',pos:'',ATA:5,PAS:5,REG:5,VEL:5,DEF:5,FIS:5,ARQ:5,EQP:5,subs:null,pie:'Derecho',estrellas:3,especial:false};
-      const [form,setForm]=useState(()=>{const f=initial?{...initial}:{...base}; if(!f.subs) f.subs=substatsOf(f); if(!f.fotoUrl) f.fotoUrl=mkAvatar(f.nombre||'F5'); return f;});
-      const [showFlags,setShowFlags]=useState(false);
+      const base={nombre:'',equipoPropio:'',equipoFavorito:'',fotoUrl:'',escudoUrl:'',bandera:'',pos:'',ATA:5,PAS:5,REG:5,VEL:5,DEF:5,FIS:5,ARQ:5,EQP:5,pie:'Derecho',estrellas:3,especial:false};
+      const [form,setForm]=useState(()=>initial?{...initial}:{...base});
       const set=(k,v)=>setForm(f=>({...f,[k]:v}));
       const onFile=e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>set('fotoUrl',r.result);r.readAsDataURL(f)};
-      const onSubmit=e=>{
-        e.preventDefault();
-        const c={...form};
-        STAT.forEach(k=>{
-          const arr=(c.subs?.[k]||[]).map(it=>clamp(+it.v||0,1,10));
-          c[k]=arr.length?clamp(Math.round(avg(arr)),1,10):clamp(parseInt(c[k]||0,10),1,10);
-        });
-        if(!c.nombre.trim()) return;
-        if(!c.fotoUrl) c.fotoUrl=mkAvatar(c.nombre);
-        onSave(c);
-      };
-      const FLAGS='🇦🇷,🇧🇷,🇺🇾,🇵🇾,🇨🇱,🇧🇴,🇵🇪,🇨🇴,🇪🇨,🇲🇽,🇪🇸,🇵🇹,🇮🇹,🇫🇷,🇩🇪,🇬🇧,🇺🇸,🇯🇵'.split(',');
-
+      const onSubmit=e=>{e.preventDefault(); if(!form.nombre.trim()) return; if(!form.fotoUrl) form.fotoUrl=mkAvatar(form.nombre); onSave(form);};
       return(
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={onCancel}>
           <form className="w-full max-w-2xl space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700 max-h-[85vh] overflow-auto" onSubmit={onSubmit} onClick={e=>e.stopPropagation()}>
             <div className="text-lg font-semibold">{initial?'Editar jugador':'Añadir jugador'}</div>
-
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <label className="space-y-1 col-span-2">
-                <span>Nombre</span>
-                <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.nombre} onChange={e=>{set('nombre',e.target.value); if(!form.fotoUrl) set('fotoUrl',mkAvatar(e.target.value||'F5'));}} required/>
-              </label>
-
-              <label className="space-y-1 col-span-2">
-                <span>Foto URL</span>
-                <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.fotoUrl||''} placeholder="https://... (o deja el avatar automático)" onChange={e=>set('fotoUrl',e.target.value)}/>
+              <label className="space-y-1 col-span-2"><span>Nombre</span>
+                <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.nombre} onChange={e=>{set('nombre',e.target.value)}} required/></label>
+              <label className="space-y-1 col-span-2"><span>Foto URL</span>
+                <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.fotoUrl||''} onChange={e=>set('fotoUrl',e.target.value)} placeholder="https://... (o deja vacío para avatar)"/>
                 <span className="text-xs opacity-80">o subir imagen</span>
-                <input type="file" accept="image/*" onChange={onFile} className="w-full text-xs"/>
-              </label>
-
-              <label className="space-y-1">
-                <span>Equipo propio</span>
-                <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.equipoPropio||''} onChange={e=>set('equipoPropio',e.target.value)}/>
-              </label>
-
-              <label className="space-y-1">
-                <span>Equipo favorito</span>
-                <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.equipoFavorito||''} onChange={e=>set('equipoFavorito',e.target.value)}/>
-              </label>
-
-              <label className="space-y-1">
-                <span>Escudo URL</span>
-                <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.escudoUrl||''} placeholder="https://..." onChange={e=>set('escudoUrl',e.target.value)}/>
-              </label>
-
-              <label className="space-y-1">
-                <span>Posición</span>
-                <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.pos||''} placeholder="DC, MC, DF..." onChange={e=>set('pos',e.target.value)}/>
-              </label>
-
-              <label className="space-y-1 col-span-2">
-                <span>Bandera (emoji)</span>
-                <div className="flex gap-2">
-                  <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.bandera||''} placeholder="🇦🇷" onChange={e=>set('bandera',e.target.value)}/>
-                  <button type="button" onClick={()=>setShowFlags(s=>!s)} className="rounded bg-slate-800 px-2 ring-1 ring-slate-700">Elegir</button>
-                </div>
-                {showFlags&&(
-                  <div className="mt-1 max-h-24 overflow-auto rounded bg-slate-800 p-2 ring-1 ring-slate-700 flex flex-wrap gap-1">
-                    {FLAGS.map(f=>(<button type="button" key={f} onClick={()=>{set('bandera',f);setShowFlags(false)}} className="rounded bg-slate-700 px-2 text-base">{f}</button>))}
-                  </div>
-                )}
-              </label>
-
-              <label className="space-y-1">
-                <span>Pie hábil</span>
-                <select className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.pie||'Derecho'} onChange={e=>set('pie',e.target.value)}>
-                  <option>Derecho</option><option>Izquierdo</option><option>Ambidiestro</option>
-                </select>
-              </label>
-
-              <label className="space-y-1">
-                <span>Estrellas (1..5)</span>
-                <input type="number" min="1" max="5" className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.estrellas||3} onChange={e=>set('estrellas',clamp(parseInt(e.target.value||0,10),1,5))}/>
-              </label>
-
-              <label className="space-y-1">
-                <span>Especial</span>
-                <div>
-                  <input type="checkbox" checked={!!form.especial} onChange={e=>set('especial',e.target.checked)}/> 
-                  <span className="text-xs opacity-80"> Rareza animada (borde)</span>
-                </div>
-              </label>
+                <input type="file" accept="image/*" onChange={onFile} className="w-full text-xs"/></label>
+              <label className="space-y-1"><span>Equipo propio</span><input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.equipoPropio||''} onChange={e=>set('equipoPropio',e.target.value)}/></label>
+              <label className="space-y-1"><span>Equipo favorito</span><input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.equipoFavorito||''} onChange={e=>set('equipoFavorito',e.target.value)}/></label>
+              <label className="space-y-1"><span>Posición</span><input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.pos||''} onChange={e=>set('pos',e.target.value)} placeholder="DC, MC, DF..."/></label>
             </div>
-
-            <div className="space-y-2">
-              {STAT.map(k=>(
-                <div key={k} className="rounded-xl bg-slate-800/60 p-2 ring-1 ring-slate-700">
-                  <div className="mb-1 text-sm font-semibold">
-                    {SL[k]} <span className="opacity-60 text-xs">(se promedia en {k})</span> — 
-                    <span className="opacity-80"> Actual: {form[k]}</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    {(form.subs?.[k]||SUBS[k].map(n=>({n,v:5}))).map((it,idx)=>(
-                      <label key={idx} className="space-y-1">
-                        <span className="text-xs">{it.n}</span>
-                        <input
-                          type="number" min="1" max="10"
-                          className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700"
-                          value={it.v}
-                          onChange={e=>{
-                            const v=clamp(parseInt(e.target.value||0,10),1,10);
-                            setForm(f=>{
-                              const subs={...(f.subs||{})};
-                              const arr=[...((subs[k]||SUBS[k].map(n=>({n,v:5}))))];
-                              arr[idx]={...arr[idx],v};
-                              subs[k]=arr;
-                              const gen=clamp(Math.round(avg(arr.map(x=>+x.v||0))),1,10);
-                              return {...f,subs,[k]:gen};
-                            });
-                          }}
-                        />
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-
             <div className="flex justify-end gap-2">
-              <button type="button" onClick={onCancel} className="rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">
-                Cancelar
-              </button>
-              <button type="submit" className="rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">
-                Guardar
-              </button>
+              <button type="button" onClick={onCancel} className="rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">Cancelar</button>
+              <button type="submit" className="rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">Guardar</button>
             </div>
           </form>
         </div>
       );
     };
 
-    const PlayerModal=({player,onClose,players,chem,teamIdsA=[],teamIdsB=[],onEditChem})=>{
-      const[mode,setMode]=useState('det'); if(!player)return null;
-      return(
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={onClose}>
-          <div className="w-full max-w-5xl max-h-[88vh] overflow-auto rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700"
-               onClick={e=>e.stopPropagation()}>
-            <div className="mb-2 flex items-center gap-3">
-              <div className="text-sm opacity-80">Jugador</div>
-              <div className="truncate font-semibold">{player.nombre}</div>
-              <button onClick={onClose}
-                      className="ml-auto rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">
-                Cerrar
-              </button>
-            </div>
-            <div className="mb-3 flex flex-wrap gap-2">
-              <button onClick={()=>setMode('det')}
-                      className={`rounded-xl px-3 py-1 text-sm ring-1 ${mode==='det'?'bg-cyan-600 text-white ring-cyan-500':'bg-slate-800 text-slate-200 ring-slate-700'}`}>
-                Detalles
-              </button>
-              <button onClick={()=>setMode('quim')}
-                      className={`rounded-xl px-3 py-1 text-sm ring-1 ${mode==='quim'?'bg-cyan-600 text-white ring-cyan-500':'bg-slate-800 text-slate-200 ring-slate-700'}`}>
-                Química
-              </button>
-            </div>
-            {mode==='det'
-              ? <PlayerDetails p={player}/>
-              : <PlayerChemList player={player} players={players} chem={chem}
-                                teamIdsA={teamIdsA} teamIdsB={teamIdsB}
-                                onEditChem={onEditChem}/>}
-          </div>
-        </div>
-      );
-    };
-
-    /* =================== Ajustes =================== */
+    /* ========= Ajustes ========= */
     const SettingsModal=({onClose,kChem,setKChem,onExport,onImport,onReset,parallaxOn,setParallaxOn,formScale,setFormScale})=>{
       const input=React.useRef(null);
       return(
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={onClose}>
-          <div className="w-full max-w-md space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700"
-               onClick={e=>e.stopPropagation()}>
+          <div className="w-full max-w-md space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700" onClick={e=>e.stopPropagation()}>
             <div className="mb-1 text-lg font-semibold">Ajustes</div>
-
             <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700">
               <div className="mb-1 text-sm font-semibold">Peso de Química en Score</div>
-              <input type="range" min="0" max="1" step="0.05" value={kChem}
-                     onChange={e=>setKChem(+e.target.value)} className="w-full"/>
-              <div className="text-xs text-slate-300 mt-1">k = {kChem.toFixed(2)} (UI)</div>
+              <input type="range" min="0" max="1" step="0.05" value={kChem} onChange={e=>setKChem(+e.target.value)} className="w-full"/>
+              <div className="text-xs text-slate-300 mt-1">k = {kChem.toFixed(2)}</div>
             </div>
-
             <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700">
               <div className="mb-1 text-sm font-semibold">Tamaño tarjeta en formación</div>
-              <input type="range" min="0.45" max="0.9" step="0.01" value={formScale}
-                     onChange={e=>setFormScale(+e.target.value)} className="w-full"/>
+              <input type="range" min="0.45" max="0.9" step="0.01" value={formScale} onChange={e=>setFormScale(+e.target.value)} className="w-full"/>
               <div className="text-xs text-slate-300 mt-1">escala = {formScale.toFixed(2)}</div>
             </div>
-
             <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700 space-y-2">
               <div className="text-sm font-semibold">Importar / Exportar</div>
               <div className="flex flex-wrap gap-2">
-                <button onClick={onExport}
-                        className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">
-                  Exportar JSON
-                </button>
-                <button onClick={()=>input.current?.click()}
-                        className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">
-                  Importar JSON
-                </button>
+                <button onClick={onExport} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">Exportar JSON</button>
+                <button onClick={()=>input.current?.click()} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">Importar JSON</button>
                 <input ref={input} type="file" accept="application/json" className="hidden" onChange={onImport}/>
-                <button onClick={onReset}
-                        className="ml-auto rounded-xl bg-rose-700 px-3 py-1 text-sm text-white ring-1 ring-rose-500 hover:bg-rose-600">
-                  Restablecer seed
-                </button>
+                <button onClick={onReset} className="ml-auto rounded-xl bg-rose-700 px-3 py-1 text-sm text-white ring-1 ring-rose-500 hover:bg-rose-600">Restablecer seed</button>
               </div>
-              <div className="text-xs text-slate-400">El JSON incluye fotos (si subiste archivo se guarda base64).</div>
             </div>
-
             <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700">
               <div className="mb-1 text-sm font-semibold">Parallax de fondo</div>
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={parallaxOn} onChange={e=>setParallaxOn(e.target.checked)}/>
                 <span>{parallaxOn?'Activado':'Desactivado'}</span>
               </label>
-              <div className="text-xs text-slate-400 mt-1">
-                En PC con parallax desactivado, el césped queda fijo a pantalla completa.
-              </div>
             </div>
-
             <div className="text-right">
-              <button onClick={onClose}
-                      className="rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">
-                Cerrar
-              </button>
+              <button onClick={onClose} className="rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">Cerrar</button>
             </div>
           </div>
         </div>
       );
     };
 
-    /* =================== APP =================== */
+    /* ========= APP ========= */
     const App=()=>{
       const storeP=J(localStorage.getItem('f5.players'),null);
       const initP=withG(Array.isArray(storeP)&&storeP.length?storeP:SEED);
@@ -719,7 +475,7 @@
       const[history,setHistory]=useState(()=>{const h=J(localStorage.getItem('f5.history'),[]);return Array.isArray(h)?h:[]});
       const[parallaxOn,setParallaxOn]=useState(()=>{const s=localStorage.getItem('f5.parallax');if(s!=null)try{return JSON.parse(s)}catch{}return !window.matchMedia('(min-width:1024px)').matches});
       const[formScale,setFormScale]=useState(()=>+(localStorage.getItem('f5.formScale')??0.62));
-      const[tab,setTab]=useState('partido'); // partido | plantel
+      const[tab,setTab]=useState('partido');
       const[modal,setModal]=useState(null);
       const[form,setForm]=useState(null);
       const[settings,setSettings]=useState(false);
@@ -729,7 +485,6 @@
       const map=useMemo(()=>Object.fromEntries(players.map(p=>[p.id,p])),[players]);
       const chem=useMemo(()=>applyOverrides(chemBuildBase(players),chemOverrides),[players,chemOverrides]);
 
-      // Persistencia
       useEffect(()=>localStorage.setItem('f5.players',JSON.stringify(players)),[players]);
       useEffect(()=>localStorage.setItem('f5.selected',JSON.stringify([...selected])),[selected]);
       useEffect(()=>localStorage.setItem('f5.teams',JSON.stringify(teams)),[teams]);
@@ -741,14 +496,12 @@
       useEffect(()=>localStorage.setItem('f5.parallax',JSON.stringify(parallaxOn)),[parallaxOn]);
       useEffect(()=>localStorage.setItem('f5.formScale',String(formScale)),[formScale]);
 
-      // Aplicar parallaxOn a la variable CSS
       useEffect(()=>{
         const isDesk=window.matchMedia('(min-width:1024px)').matches;
         const speed = parallaxOn ? (isDesk ? 0 : 0.35) : 0;
         document.documentElement.style.setProperty('--parallax-speed', String(speed));
       },[parallaxOn]);
 
-      // medir header para spacer
       useEffect(()=>{
         const el=document.querySelector('.app-header');
         const setH=()=>{ if(el){ document.documentElement.style.setProperty('--header-h', el.offsetHeight+'px'); } };
@@ -765,12 +518,8 @@
       const makeB=()=>{if(!canMake||invalidPins)return;const{A,B}=balancedWithPins(convocados,map,chem,kChem,pinA,pinB);setTeams({A,B})};
 
       const onSave=data=>{
-        if(form&&form.id){
-          setPlayers(p=>withG(p.map(x=>x.id===form.id?{...x,...data}:x)))
-        }else{
-          const id=String(Date.now());
-          setPlayers(p=>withG([...p,{id,...data}]))
-        }
+        if(form&&form.id){ setPlayers(p=>withG(p.map(x=>x.id===form.id?{...x,...data}:x))) }
+        else{ const id=String(Date.now()); setPlayers(p=>withG([...p,{id,...data}])) }
         setForm(null);
       };
       const onDel=id=>{
@@ -798,30 +547,17 @@
 
       const reset=()=>{setPlayers(withG(SEED));setSelected(new Set());setTeams(null);setKChem(0.6);setPinA(new Set());setPinB(new Set());setChemOverrides({});setHistory([])};
 
-      const editChem=(a,b,cur)=>{
-        const nameA=map[a]?.nombre||a;
-        const nameB=map[b]?.nombre||b;
-        const v=prompt(`Química ${nameA} ↔ ${nameB} (1..10)`,String(cur??5));
-        if(v==null)return;const n=clamp(parseFloat(v),1,10);
-        setChemOverrides(o=>{const c={...o};if(!c[a])c[a]={};if(!c[b])c[b]={};c[a][b]=c[b][a]=+n.toFixed(2);return c})
-      };
-
       const filtered=[...players].filter(p=>{
         const t=q.trim().toLowerCase();if(!t)return true;
         return(p.nombre||'').toLowerCase().includes(t)||(p.equipoPropio||'').toLowerCase().includes(t)||(p.equipoFavorito||'').toLowerCase().includes(t)
       });
-      filtered.sort((a,b)=>{switch(sort){
-        case'global-asc':return a._GLOBAL-b._GLOBAL;
-        case'nombre':return a.nombre.localeCompare(b.nombre);
-        default:return b._GLOBAL-a._GLOBAL;
-      }});
+      filtered.sort((a,b)=>{switch(sort){case'global-asc':return a._GLOBAL-b._GLOBAL;case'nombre':return a.nombre.localeCompare(b.nombre);default:return b._GLOBAL-a._GLOBAL;}});
 
       const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
       const install=()=>alert('En Android: menú (⋮) → Agregar a pantalla de inicio.\nEn iOS: Compartir → Añadir a pantalla de inicio.');
 
       return (
         <div className="mx-auto max-w-screen-md text-slate-100">
-          {/* HEADER */}
           <header className="app-header">
             <div className="px-3 py-2 flex items-center justify-between gap-2">
               <div className="text-sm opacity-75">⚽</div>
@@ -829,8 +565,7 @@
               <div className={`rounded-xl px-3 py-1 text-sm ring-1 ${selected.size<10?'bg-amber-600/20 text-amber-200 ring-amber-500/40':'bg-emerald-600/20 text-emerald-200 ring-emerald-500/40'}`}>
                 Convocados: {selected.size}/10
               </div>
-              <button onClick={()=>setSettings(true)}
-                      className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">⚙️</button>
+              <button onClick={()=>setSettings(true)} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">⚙️</button>
             </div>
             <nav className="tab-nav px-3 pb-2 grid grid-cols-2 gap-2">
               <button onClick={()=>setTab('partido')} className={`tab-btn ${tab==='partido'?'active':''}`}>PARTIDO</button>
@@ -840,11 +575,10 @@
           </header>
           <div className="header-spacer"></div>
 
-          {/* CONTENEDOR animado */}
           <div className="tabs-viewport">
             <div className="tabs-track" style={{transform:`translateX(${tab==='partido'?'0%':'-50%'})`}}>
 
-              {/* Página PARTIDO */}
+              {/* PARTIDO */}
               <section className="tabs-page space-y-3">
                 {selected.size!==10 && (
                   <div className="rounded-xl bg-amber-600/15 p-3 text-amber-100 ring-1 ring-amber-600/30">
@@ -854,45 +588,40 @@
 
                 {teams && (
                   <>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-800">
-                        <div className="flex items-center gap-2 font-semibold"><span className={`h-2.5 w-2.5 rounded-full ${TC.A.dot}`}/> <span>Equipo A</span></div>
-                      </div>
-                      <div className="rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-800">
-                        <div className="flex items-center gap-2 font-semibold"><span className={`h-2.5 w-2.5 rounded-full ${TC.B.dot}`}/> <span>Equipo B</span></div>
-                      </div>
-                    </div>
-
                     <FormationBoard teamA={teams.A} teamB={teams.B} map={map} scale={formScale}/>
 
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {/* Listas de jugadores por equipo */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-                        <div className="mb-2 font-semibold">Barras - A</div>
-                        <div className="space-y-2">
-                          {STAT.map(k=>(
-                            <div key={k}>
-                              <div className="mb-1 flex items-center justify-between text-sm"><span className="text-slate-300">{k}</span><span className="font-semibold">{Math.round(avg(teams.A.map(id=>map[id][k]))*10)/10}</span></div>
-                              <div className="h-2 w-full rounded bg-slate-700"><div className="h-2 rounded" style={{width:`${Math.max(0,Math.min(100,(avg(teams.A.map(id=>map[id][k]))/10)*100))}%`,backgroundColor:TC.A.hex}}/></div>
-                            </div>
+                        <div className="mb-2 font-semibold flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${TC.A.dot}`}></span>Equipo A</div>
+                        <ul className="space-y-1 text-sm">
+                          {teams.A.map(id=>(
+                            <li key={id} className="flex items-center justify-between rounded-lg bg-slate-800/60 px-2 py-1">
+                              <span>{map[id].nombre}</span>
+                              <span className="text-slate-300">R:{Math.round(map[id]._GLOBAL*10)} – EQP:{map[id].EQP}</span>
+                            </li>
                           ))}
-                        </div>
+                        </ul>
                       </div>
                       <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-                        <div className="mb-2 font-semibold">Barras - B</div>
-                        <div className="space-y-2">
-                          {STAT.map(k=>(
-                            <div key={k}>
-                              <div className="mb-1 flex items-center justify-between text-sm"><span className="text-slate-300">{k}</span><span className="font-semibold">{Math.round(avg(teams.B.map(id=>map[id][k]))*10)/10}</span></div>
-                              <div className="h-2 w-full rounded bg-slate-700"><div className="h-2 rounded" style={{width:`${Math.max(0,Math.min(100,(avg(teams.B.map(id=>map[id][k]))/10)*100))}%`,backgroundColor:TC.B.hex}}/></div>
-                            </div>
+                        <div className="mb-2 font-semibold flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${TC.B.dot}`}></span>Equipo B</div>
+                        <ul className="space-y-1 text-sm">
+                          {teams.B.map(id=>(
+                            <li key={id} className="flex items-center justify-between rounded-lg bg-slate-800/60 px-2 py-1">
+                              <span>{map[id].nombre}</span>
+                              <span className="text-slate-300">R:{Math.round(map[id]._GLOBAL*10)} – EQP:{map[id].EQP}</span>
+                            </li>
                           ))}
-                        </div>
+                        </ul>
                       </div>
                     </div>
+
+                    {/* Radar comparativo */}
+                    <TeamRadarCompare A={teams.A} B={teams.B} map={map}/>
                   </>
                 )}
 
-                {/* Acciones de armado */}
+                {/* Botones de armado */}
                 <div className="sticky bottom-2 mt-4 grid grid-cols-2 gap-2">
                   <button onClick={makeR}
                           disabled={!(selected.size===10)}
@@ -907,55 +636,35 @@
                 </div>
               </section>
 
-              {/* Página PLANTEL */}
+              {/* PLANTEL */}
               <section className="tabs-page space-y-2">
                 <div className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  <input value={q} onChange={e=>setQ(e.target.value)}
-                         placeholder="Buscar nombre / club / favorito"
+                  <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Buscar nombre / club / favorito"
                          className="rounded-xl bg-slate-900/70 p-2 text-sm ring-1 ring-slate-800"/>
-                  <select value={sort} onChange={e=>setSort(e.target.value)}
-                          className="rounded-xl bg-slate-900/70 p-2 text-sm ring-1 ring-slate-800">
+                  <select value={sort} onChange={e=>setSort(e.target.value)} className="rounded-xl bg-slate-900/70 p-2 text-sm ring-1 ring-slate-800">
                     <option value="global-desc">Orden: Global ↓</option>
                     <option value="global-asc">Orden: Global ↑</option>
                     <option value="nombre">Orden: Nombre</option>
                   </select>
                   <div className="flex gap-2">
-                    <button onClick={()=>setForm({})}
-                            className="flex-1 rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">
-                      + Añadir
-                    </button>
-                    <button onClick={()=>{setSelected(new Set());setTeams(null)}}
-                            className="flex-1 rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">
-                      Limpiar
-                    </button>
+                    <button onClick={()=>setForm({})} className="flex-1 rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">+ Añadir</button>
+                    <button onClick={()=>{setSelected(new Set());setTeams(null)}} className="flex-1 rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">Limpiar</button>
                   </div>
                 </div>
 
                 {(pinA.size>5||pinB.size>5)&&(
-                  <div className="rounded-xl bg-rose-600/15 p-2 text-sm text-rose-100 ring-1 ring-rose-500/30">
-                    No podés fijar más de 5 por equipo.
-                  </div>
+                  <div className="rounded-xl bg-rose-600/15 p-2 text-sm text-rose-100 ring-1 ring-rose-500/30">No podés fijar más de 5 por equipo.</div>
                 )}
 
                 <div className="plantel-scroll space-y-2">
                   {filtered.map(p=>(
                     <div key={p.id} className="space-y-2">
-                      <PlayerRow p={p}
-                                 selected={selected.has(p.id)}
-                                 onToggle={()=>toggle(p.id)}
-                                 onOpen={()=>setModal(p)}
-                                 pinA={pinA} pinB={pinB}
-                                 setPinA={setPinA} setPinB={setPinB}
+                      <PlayerRow p={p} selected={selected.has(p.id)} onToggle={()=>toggle(p.id)}
+                                 onOpen={()=>setModal(p)} pinA={pinA} pinB={pinB} setPinA={setPinA} setPinB={setPinB}
                                  disableAdd={selected.size>=10}/>
                       <div className="-mt-2 mb-2 flex gap-2 pl-14">
-                        <button onClick={()=>setForm(p)}
-                                className="rounded-xl bg-slate-800 px-2 py-1 text-xs ring-1 ring-slate-700 hover:bg-slate-700">
-                          Editar
-                        </button>
-                        <button onClick={()=>onDel(p.id)}
-                                className="rounded-xl bg-rose-700 px-2 py-1 text-xs text-white ring-1 ring-rose-500 hover:bg-rose-600">
-                          Borrar
-                        </button>
+                        <button onClick={()=>setForm(p)} className="rounded-xl bg-slate-800 px-2 py-1 text-xs ring-1 ring-slate-700 hover:bg-slate-700">Editar</button>
+                        <button onClick={()=>onDel(p.id)} className="rounded-xl bg-rose-700 px-2 py-1 text-xs text-white ring-1 ring-rose-500 hover:bg-rose-600">Borrar</button>
                       </div>
                     </div>
                   ))}
@@ -965,24 +674,24 @@
             </div>
           </div>
 
+          {/* CTA instalar PWA (opcional) */}
           {!isStandalone&&(
-            <button onClick={install}
-                    className="fixed bottom-20 right-3 z-50 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg ring-1 ring-emerald-500 hover:bg-emerald-500">
+            <button onClick={install} className="fixed bottom-20 right-3 z-50 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg ring-1 ring-emerald-500 hover:bg-emerald-500">
               📲 Instalar
             </button>
           )}
 
-          <footer className="mt-6 mx-3 rounded-xl bg-slate-900/60 p-3 text-[12px] text-slate-300 ring-1 ring-slate-800">
-            <div className="font-semibold">Leyenda:</div>
-            <div>ATA=Ataque — PAS=Pase — REG=Regate — VEL=Velocidad — DEF=Defensa — FIS=Físico — ARQ=Arco — EQP=Trabajo en equipo</div>
-            <div className="mt-1 text-[11px] opacity-80">Cada stat tiene 3 substats. Se editan en “Añadir/Editar”.</div>
-          </footer>
-
           {/* Modales */}
-          <PlayerModal player={modal} onClose={()=>setModal(null)}
-                       players={players} chem={chem}
-                       teamIdsA={teams?.A||[]} teamIdsB={teams?.B||[]}
-                       onEditChem={(a,b,cur)=>{editChem(a,b,cur)}}/>
+          {modal&&(<div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={()=>setModal(null)}>
+            <div className="w-full max-w-4xl max-h-[88vh] overflow-auto rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700" onClick={e=>e.stopPropagation()}>
+              <div className="mb-2 flex items-center gap-3">
+                <div className="text-sm opacity-80">Jugador</div>
+                <div className="truncate font-semibold">{modal.nombre}</div>
+                <button onClick={()=>setModal(null)} className="ml-auto rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">Cerrar</button>
+              </div>
+              <PlayerDetails p={map[modal.id]}/>
+            </div>
+          </div>)}
           {form&&<PlayerFormModal initial={form.id?form:null} onCancel={()=>setForm(null)} onSave={onSave}/>}
           {settings&&<SettingsModal onClose={()=>setSettings(false)} kChem={kChem} setKChem={setKChem}
                                     onExport={onExport} onImport={onImport} onReset={reset}
