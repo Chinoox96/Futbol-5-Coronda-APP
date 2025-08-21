@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>Fútbol 5</title>
+  <title>F5 App Coronda</title>
   <meta name="theme-color" content="#10b981"/>
   <link id="mf" rel="manifest"/>
-  <!-- Favicon inline para evitar 404 -->
+
+  <!-- Favicon (inline, evita 404) -->
   <link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='24' fill='%2310b981'/%3E%3Ctext x='50%25' y='54%25' font-family='system-ui,Segoe UI,Roboto,sans-serif' font-size='64' text-anchor='middle' dominant-baseline='middle' font-weight='700' fill='%230b1220'%3EF5%3C/text%3E%3C/svg%3E"/>
 
-  <!-- Tailwind + React -->
+  <!-- Tailwind + React + Babel -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -84,46 +85,31 @@
   <div id="bg-parallax" aria-hidden="true"></div>
   <div id="root"></div>
 
-  <!-- Manifest dinámico robusto -->
+  <!-- Manifest dinámico -->
   <script>
-  (async()=>{
-    try{
-      const mk=(n,c)=>{
-        const a=document.createElement('canvas');a.width=a.height=n;const x=a.getContext('2d');
-        x.fillStyle=c;x.fillRect(0,0,n,n);x.fillStyle='#0b1220';x.textAlign='center';x.textBaseline='middle';
-        x.font=`${Math.floor(n*.42)}px sans-serif`;x.fillText('F5',n/2,n/2);return a.toDataURL('image/png')
-      };
-      const baseURL = new URL('.', location.href);
-      const icon192 = new URL('icons/icon-192.png', baseURL).href;
-      const icon512 = new URL('icons/icon-512.png', baseURL).href;
-
-      const man = {
-        name:'Fútbol 5',
-        short_name:'Futbol5',
-        start_url: baseURL.pathname,
-        scope: baseURL.pathname,
-        display:'standalone',
-        background_color:'#0f172a',
-        theme_color:'#10b981',
-        icons:[
-          {src: icon192, sizes:'192x192', type:'image/png'},
-          {src: icon512, sizes:'512x512', type:'image/png'}
-        ]
-      };
+    (async()=>{
       try{
-        const r1=await fetch(icon192,{method:'HEAD',cache:'no-store'});
-        const r2=await fetch(icon512,{method:'HEAD',cache:'no-store'});
-        if(!r1.ok||!r2.ok) throw 0;
-      }catch{
-        man.icons=[
-          {src:mk(192,'#10b981'),sizes:'192x192',type:'image/png'},
-          {src:mk(512,'#10b981'),sizes:'512x512',type:'image/png'}
-        ];
-      }
-      const b=new Blob([JSON.stringify(man)],{type:'application/manifest+json'});
-      document.getElementById('mf').href=URL.createObjectURL(b);
-    }catch(e){console.log('[PWA]',e)}
-  })();
+        const base = location.pathname.endsWith('/')?location.pathname:location.pathname.replace(/[^/]+$/,'');
+        const L=document.getElementById('mf');
+        const mk=(n,c)=>{const a=document.createElement('canvas');a.width=a.height=n;const x=a.getContext('2d');
+          x.fillStyle=c;x.fillRect(0,0,n,n);x.fillStyle='#0b1220';x.textAlign='center';x.textBaseline='middle';
+          x.font=`${Math.floor(n*.42)}px sans-serif`;x.fillText('F5',n/2,n/2);return a.toDataURL('image/png')};
+        const man={name:'Fútbol 5',short_name:'Futbol5',start_url:base,scope:base,display:'standalone',
+          background_color:'#0f172a',theme_color:'#10b981',
+          icons:[{src:`${base}icons/icon-192.png`,sizes:'192x192',type:'image/png'},
+                 {src:`${base}icons/icon-512.png`,sizes:'512x512',type:'image/png'}]};
+        try{
+          const r1=await fetch(`${base}icons/icon-192.png`,{method:'HEAD'});
+          const r2=await fetch(`${base}icons/icon-512.png`,{method:'HEAD'});
+          if(!r1.ok||!r2.ok) throw 0;
+        }catch{
+          man.icons=[{src:mk(192,'#10b981'),sizes:'192x192',type:'image/png'},
+                     {src:mk(512,'#10b981'),sizes:'512x512',type:'image/png'}];
+        }
+        const b=new Blob([JSON.stringify(man)],{type:'application/manifest+json'});
+        L.href=URL.createObjectURL(b);
+      }catch(e){console.log('[PWA]',e)}
+    })();
   </script>
 
   <!-- Fondo responsive -->
@@ -175,7 +161,7 @@
       VEL:['Aceleración','Punta','Arranque'], DEF:['Marcaje','Anticipación','Entradas'], FIS:['Resistencia','Fuerza','Salto'],
       ARQ:['Reflejos','Manos','Saque'], EQP:['Colaboración','Disciplina','Liderazgo']};
 
-    // Colores/avatares sin CORS
+    // color/avatars sin CORS
     const colorOf = name=>{
       const colors=['#22c55e','#06b6d4','#a78bfa','#f59e0b','#ef4444','#14b8a6','#8b5cf6','#f97316','#10b981','#38bdf8'];
       let h=0; for(let i=0;i<name.length;i++) h=(h*31+name.charCodeAt(i))>>>0;
@@ -228,7 +214,7 @@
         [best.A[i],best.B[j]]=[best.B[j],best.A[i]];const cur=scoreDiff(best.A,best.B,map,chem,k);if(cur.diff<=best.diff||Math.random()<.12)best=cur;else[best.A[i],best.B[j]]=[best.B[j],best.A[i]]}
       return{A:best.A,B:best.B,m:best.m}};
 
-    /* ========= UI ========= */
+    /* ========= UI helpers ========= */
     const Pill=({children,className=''})=> <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${className}`}>{children}</span>;
     const Stars=({n=0})=>{const s=clamp(Math.round(n),0,5);return(<div className="flex gap-1 text-amber-300" title={`${s} estrellas`}>{Array.from({length:5}).map((_,i)=>(<span key={i}>{i<s?'★':'☆'}</span>))}</div>)};
 
@@ -314,7 +300,7 @@
       )
     };
 
-    /* ============ Formación (con pre-carga de fotos a dataURL) ============ */
+    /* ============ Formación (pre-carga de fotos a dataURL) ============ */
     const MiniCard = ({p,dataFotos})=>{
       if(!p) return null;
       const rare=rarityOf(p);
@@ -349,19 +335,25 @@
       );
     };
 
-    const FormationBoard = ({teamA=[], teamB=[], map, kChem, chem, scale=0.52, onReadyImage}) => {
+    const FormationBoard = ({teamA=[], teamB=[], map, kChem, chem, scale=0.50, onReadyImage}) => {
       const W = 900, H = 540;
       const ref = useRef(null);
 
-      // Posiciones 2-2-1 (F5) sobre la cancha
+      // Posiciones 2-2-1 (alineadas según la imagen de cancha isométrica)
       const posA = [
-        {x:110,y:H/2},      // AR
-        {x:260,y:150},      // DF izq
-        {x:260,y:H-150},    // DF der
-        {x:420,y:H/2},      // medio
-        {x:610,y:H/2}       // punta
+        {x:150,y:H-95},     // AR (arco cercano)
+        {x:290,y:H-210},    // DF izq
+        {x:330,y:H-120},    // DF der
+        {x:480,y:H-230},    // medio (casi centro)
+        {x:620,y:H-300},    // punta (hacia arco rival)
       ];
-      const posB = posA.map(p=>({x:W-p.x,y:p.y}));
+      const posB = [
+        {x:W-150,y:95},     // AR rival
+        {x:W-290,y:210},
+        {x:W-330,y:120},
+        {x:W-480,y:230},
+        {x:W-620,y:300},
+      ];
 
       // Preload fotos a dataURL para export sin CORS
       const [dataFotos, setDataFotos] = useState({});
@@ -396,25 +388,20 @@
       };
       const copiar = async ()=>{
         try{
-          const {canvas}=await makeCanvas();
-          const blob = await new Promise(resolve => canvas.toBlob(resolve,'image/png'));
-          await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
-          alert('Imagen copiada al portapapeles ✅');
+          const {canvas}=await makeCanvas(); canvas.toBlob(async b=>{
+            if(!b) return; await navigator.clipboard.write([new ClipboardItem({'image/png': b})]);
+            alert('Imagen copiada al portapapeles ✅');
+          });
         }catch{alert('Tu navegador no permite copiar imágenes. Usá "Descargar".')}
       };
       const compartir = async ()=>{
         try{
-          const {canvas} = await makeCanvas();
-          const blob = await new Promise(resolve => canvas.toBlob(resolve,'image/png'));
-          const file = new File([blob],'formacion_f5.png',{type:'image/png'});
-          if (navigator.canShare && navigator.canShare({files:[file]})) {
+          const {canvas}=await makeCanvas();
+          const file = await new Promise(res=>canvas.toBlob(b=>res(new File([b],'formacion_f5.png',{type:'image/png'})),'image/png'));
+          if(navigator.canShare && navigator.canShare({files:[file]})){
             await navigator.share({title:'Formación F5',files:[file],text:'Formación del partido'});
-          } else {
-            descargar();
-          }
-        }catch{
-          descargar();
-        }
+          }else{ descargar(); }
+        }catch{ descargar(); }
       };
 
       return (
@@ -452,7 +439,7 @@
       );
     };
 
-    /* ====== Listado / Detalles ====== */
+    /* ====== Listado / Detalles / Formularios ====== */
     const PinButtons=({id,pinA,pinB,setPinA,setPinB})=>{
       const onA=pinA.has(id), onB=pinB.has(id);
       const toggle=t=>{
@@ -608,8 +595,8 @@
                               subs[k]=arr;
                               const gen=clamp(Math.round(avg(arr.map(x=>+x.v||0))),1,10);
                               return {...f,subs,[k]:gen};
-                            })}}
-                        />
+                            });
+                          }}/>
                       </label>
                     ))}
                   </div>
@@ -626,8 +613,65 @@
       );
     };
 
+    /* ========= Glosario ========= */
+    const GlossaryModal = ({onClose}) => (
+      <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={onClose}>
+        <div className="w-full max-w-2xl space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700 text-sm"
+             onClick={e=>e.stopPropagation()}>
+          <div className="flex items-center justify-between">
+            <div className="text-lg font-semibold">Glosario</div>
+            <button onClick={onClose} className="rounded-lg bg-slate-800 px-2 py-1 ring-1 ring-slate-700">Cerrar</button>
+          </div>
+
+          <div className="space-y-3 leading-relaxed text-slate-200">
+            <div>
+              <div className="font-semibold">Rating (jugador)</div>
+              <div>Promedio ponderado de stats: ATA(.18), DEF(.16), PAS(.14), REG(.14), VEL(.14), FIS(.10), ARQ(.07), EQP(.07). Escala 1–100.</div>
+            </div>
+
+            <div>
+              <div className="font-semibold">Stats</div>
+              <ul className="list-disc pl-5 space-y-1">
+                <li><b>ATA</b>: Ataque</li>
+                <li><b>PAS</b>: Pase</li>
+                <li><b>REG</b>: Regate</li>
+                <li><b>VEL</b>: Velocidad</li>
+                <li><b>DEF</b>: Defensa</li>
+                <li><b>FIS</b>: Físico</li>
+                <li><b>ARQ</b>: Arco (portero)</li>
+                <li><b>EQP</b>: Trabajo en equipo</li>
+              </ul>
+            </div>
+
+            <div>
+              <div className="font-semibold">Substats</div>
+              <div>Desglose de cada stat (p. ej. ATA: Posición, Definición, Potencia). El <i>stat</i> es el promedio de sus substats.</div>
+            </div>
+
+            <div>
+              <div className="font-semibold">Química (equipo)</div>
+              <div>Promedio de afinidades entre parejas (1–10). Sube por equipo propio/favorito en común y por EQP.</div>
+            </div>
+
+            <div>
+              <div className="font-semibold">Rating (equipo)</div>
+              <div>Promedio de los Ratings individuales (1–100) de los 5 jugadores.</div>
+            </div>
+
+            <div>
+              <div className="font-semibold">Score</div>
+              <div>Combinación de <b>Rating</b> y <b>Química</b> con un peso ajustable <b>k</b>: <code>Score = Rating + (Química × k)</code>.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
     /* ========= Ajustes ========= */
-    const SettingsModal=({onClose,kChem,setKChem,onExport,onImport,onReset,parallaxOn,setParallaxOn,formScale,setFormScale})=>{
+    const SettingsModal=({
+      onClose,kChem,setKChem,onExport,onImport,onReset,parallaxOn,setParallaxOn,formScale,setFormScale,
+      listTwoCols,setListTwoCols,onOpenGlossary
+    })=>{
       const input=useRef(null);
       return(
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={onClose}>
@@ -646,14 +690,12 @@
               <div className="text-xs text-slate-300 mt-1">escala = {formScale.toFixed(2)}</div>
             </div>
 
-            <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700 space-y-2">
-              <div className="text-sm font-semibold">Importar / Exportar</div>
-              <div className="flex flex-wrap gap-2">
-                <button onClick={onExport} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">Exportar JSON</button>
-                <button onClick={()=>input.current?.click()} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">Importar JSON</button>
-                <input ref={input} type="file" accept="application/json" className="hidden" onChange={onImport}/>
-                <button onClick={onReset} className="ml-auto rounded-xl bg-rose-700 px-3 py-1 text-sm text-white ring-1 ring-rose-500 hover:bg-rose-600">Restablecer seed</button>
-              </div>
+            <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700">
+              <div className="mb-1 text-sm font-semibold">Vista de Listado</div>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={listTwoCols} onChange={e=>setListTwoCols(e.target.checked)}/>
+                <span>{listTwoCols? '2 columnas (compacto)': '1 columna (detallado)'}</span>
+              </label>
             </div>
 
             <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700">
@@ -664,7 +706,18 @@
               </label>
             </div>
 
-            <div className="text-right">
+            <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700 space-y-2">
+              <div className="text-sm font-semibold">Importar / Exportar</div>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={onExport} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">Exportar JSON</button>
+                <button onClick={()=>input.current?.click()} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">Importar JSON</button>
+                <input ref={input} type="file" accept="application/json" className="hidden" onChange={onImport}/>
+                <button onClick={onReset} className="ml-auto rounded-xl bg-rose-700 px-3 py-1 text-sm text-white ring-1 ring-rose-500 hover:bg-rose-600">Restablecer seed</button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <button onClick={onOpenGlossary} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">📘 Ver glosario</button>
               <button onClick={onClose} className="rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">Cerrar</button>
             </div>
           </div>
@@ -685,13 +738,16 @@
       const[chemOverrides,setChemOverrides]=useState(()=>J(localStorage.getItem('f5.chem.overrides'),{}));
       const[history,setHistory]=useState(()=>{const h=J(localStorage.getItem('f5.history'),[]);return Array.isArray(h)?h:[]});
       const[parallaxOn,setParallaxOn]=useState(()=>{const s=localStorage.getItem('f5.parallax');if(s!=null)try{return JSON.parse(s)}catch{}return !window.matchMedia('(min-width:1024px)').matches});
-      const[formScale,setFormScale]=useState(()=>+(localStorage.getItem('f5.formScale')??0.52));
+      const[formScale,setFormScale]=useState(()=>+(localStorage.getItem('f5.formScale')??0.50));
+      const[listTwoCols,setListTwoCols]=useState(()=>{try{return JSON.parse(localStorage.getItem('f5.listTwoCols')??'true')}catch{return true}});
       const[tab,setTab]=useState('partido');
       const[modal,setModal]=useState(null);
       const[form,setForm]=useState(null);
       const[settings,setSettings]=useState(false);
       const[q,setQ]=useState('');
       const[sort,setSort]=useState('global-desc');
+      const[showGlossary,setShowGlossary]=useState(false);
+      const[playerDetailId,setPlayerDetailId]=useState(null);
 
       const map=useMemo(()=>Object.fromEntries(players.map(p=>[p.id,p])),[players]);
       const chem=useMemo(()=>applyOverrides(chemBuildBase(players),chemOverrides),[players,chemOverrides]);
@@ -706,6 +762,7 @@
       useEffect(()=>localStorage.setItem('f5.history',JSON.stringify(history)),[history]);
       useEffect(()=>localStorage.setItem('f5.parallax',JSON.stringify(parallaxOn)),[parallaxOn]);
       useEffect(()=>localStorage.setItem('f5.formScale',String(formScale)),[formScale]);
+      useEffect(()=>localStorage.setItem('f5.listTwoCols',JSON.stringify(listTwoCols)),[listTwoCols]);
 
       useEffect(()=>{const el=document.querySelector('.app-header');const setH=()=>{ if(el){ document.documentElement.style.setProperty('--header-h', el.offsetHeight+'px'); } };setH();window.addEventListener('resize',setH);return()=>window.removeEventListener('resize',setH)},[]);
       useEffect(()=>{const isDesk=window.matchMedia('(min-width:1024px)').matches;const speed = parallaxOn ? (isDesk ? 0 : 0.35) : 0;document.documentElement.style.setProperty('--parallax-speed', String(speed));},[parallaxOn]);
@@ -760,15 +817,58 @@
 
       const teamAvgValues=(ids)=>{const o={};STAT.forEach(k=>o[k]=+avg(ids.map(id=>map[id][k]??0)).toFixed(2));return o};
 
+      // UI auxiliares
+      const TeamHeaderBox=({title,ids,colorKey})=>{
+        if(!ids) return null;
+        return (
+          <div className="rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-800">
+            <div className="flex items-center gap-2 font-semibold">
+              <span className={`h-2.5 w-2.5 rounded-full ${TC[colorKey].dot}`}></span>
+              <span>{title}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-1 text-center mt-1 text-sm">
+              <div><div className="text-slate-400 text-xs">Rating</div><div className="font-bold">{Math.round(teamGlobal(ids,map)*10)}</div></div>
+              <div><div className="text-slate-400 text-xs">Química</div><div className="font-bold">{chemTeam(ids,chem)}</div></div>
+              <div><div className="text-slate-400 text-xs">Score</div><div className="font-bold">{teamScoreUI(ids,map,chem,kChem)}</div></div>
+            </div>
+          </div>
+        );
+      };
+
+      const TeamList=({ids,colorKey})=>{
+        if(!ids) return null;
+        return (
+          <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
+            <div className="mb-2 font-semibold flex items-center gap-2">
+              <span className={`h-2.5 w-2.5 rounded-full ${TC[colorKey].dot}`}></span>
+              <span>Listado {colorKey}</span>
+            </div>
+            <ul className="space-y-1 text-sm">
+              {ids.map(id=>(
+                <li key={id} className="flex items-center justify-between rounded-lg bg-slate-800/60 px-2 py-1">
+                  <button className="text-left truncate" onClick={()=>{setPlayerDetailId(id); setModal('player')}}>
+                    {map[id].nombre}
+                  </button>
+                  <span className="text-slate-300">
+                    R:{Math.round(map[id]._GLOBAL*10)} · EQP:{map[id].EQP}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      };
+
       return (
         <div className="mx-auto max-w-screen-md text-slate-100">
           <header className="app-header">
             <div className="px-3 py-2 flex items-center justify-between gap-2">
-              <button onClick={()=>setSettings(true)} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">⚙️</button>
+              <div className="text-sm opacity-75">⚙️</div>
               <h1 className="text-lg font-bold text-center flex-1">F5 App Coronda</h1>
               <div className={`rounded-xl px-3 py-1 text-sm ring-1 ${selected.size<10?'bg-amber-600/20 text-amber-200 ring-amber-500/40':'bg-emerald-600/20 text-emerald-200 ring-emerald-500/40'}`}>
                 Convocados: {selected.size}/10
               </div>
+              <button onClick={()=>setSettings(true)} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">⚙️</button>
             </div>
             <nav className="tab-nav px-3 pb-2 grid grid-cols-2 gap-2">
               <button onClick={()=>setTab('partido')} className={`tab-btn ${tab==='partido'?'active':''}`}>PARTIDO</button>
@@ -789,140 +889,78 @@
                   </div>
                 )}
 
+                {/* Controles de armado */}
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={makeR} disabled={!canMake||invalidPins} className={`rounded-xl px-3 py-1 text-sm ring-1 ${canMake&&!invalidPins?'bg-slate-800 ring-slate-700 hover:bg-slate-700':'bg-slate-800/40 ring-slate-800 text-slate-500 cursor-not-allowed'}`}>🎲 Aleatorio</button>
+                  <button onClick={makeB} disabled={!canMake||invalidPins} className={`rounded-xl px-3 py-1 text-sm ring-1 ${canMake&&!invalidPins?'bg-emerald-600 text-white ring-emerald-500 hover:bg-emerald-500':'bg-emerald-600/30 ring-emerald-700 text-emerald-200 cursor-not-allowed'}`}>⚖️ Balanceado</button>
+                  <button onClick={()=>setShowGlossary(true)} className="ml-auto rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">📘 Glosario</button>
+                </div>
+
                 {teams && (
                   <>
-                    {/* Resumen equipos y leyenda */}
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-800">
-                        <div className="flex items-center gap-2 font-semibold"><span className={`h-2.5 w-2.5 rounded-full ${TC.A.dot}`}/> <span>Equipo A</span></div>
-                        <div className="grid grid-cols-3 gap-1 text-center mt-1">
-                          <div><div className="text-slate-400 text-xs">Rating</div><div className="font-bold">{Math.round(teamGlobal(teams.A,map)*10)}</div></div>
-                          <div><div className="text-slate-400 text-xs">Química</div><div className="font-bold">{chemTeam(teams.A,chem)}</div></div>
-                          <div><div className="text-slate-400 text-xs">Score</div><div className="font-bold">{teamScoreUI(teams.A,map,chem,kChem)}</div></div>
-                        </div>
-                      </div>
-                      <div className="rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-800">
-                        <div className="flex items-center gap-2 font-semibold"><span className={`h-2.5 w-2.5 rounded-full ${TC.B.dot}`}/> <span>Equipo B</span></div>
-                        <div className="grid grid-cols-3 gap-1 text-center mt-1">
-                          <div><div className="text-slate-400 text-xs">Rating</div><div className="font-bold">{Math.round(teamGlobal(teams.B,map)*10)}</div></div>
-                          <div><div className="text-slate-400 text-xs">Química</div><div className="font-bold">{chemTeam(teams.B,chem)}</div></div>
-                          <div><div className="text-slate-400 text-xs">Score</div><div className="font-bold">{teamScoreUI(teams.B,map,chem,kChem)}</div></div>
-                        </div>
-                      </div>
+                    {/* Encabezados con rating/química/score */}
+                    <div className={`grid gap-2 ${listTwoCols?'grid-cols-2':'grid-cols-1'}`}>
+                      <TeamHeaderBox title="Equipo A" ids={teams.A} colorKey="A"/>
+                      <TeamHeaderBox title="Equipo B" ids={teams.B} colorKey="B"/>
                     </div>
 
+                    {/* Listado primero */}
+                    <div className={`grid gap-3 ${listTwoCols?'grid-cols-2':'grid-cols-1'}`}>
+                      <TeamList ids={teams.A} colorKey="A"/>
+                      <TeamList ids={teams.B} colorKey="B"/>
+                    </div>
+
+                    {/* Semáforo */}
                     <BalanceIndicator A={teams.A} B={teams.B} map={map} chem={chem} kChem={kChem}/>
 
-                    {/* Radar comparativo y barras */}
+                    {/* Radar comparativo */}
                     <TeamRadarCompare A={teams.A} B={teams.B} map={map}/>
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+
+                    {/* Barras por equipo */}
+                    <div className={`grid gap-3 ${listTwoCols?'grid-cols-2':'grid-cols-1'}`}>
                       <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
                         <div className="mb-2 font-semibold">Barras - A</div>
-                        <BarsChart values={teamAvg(teams.A,map)} accent={TC.A.hex}/>
+                        <BarsChart values={teamAvgValues(teams.A)} accent={TC.A.hex}/>
                       </div>
                       <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
                         <div className="mb-2 font-semibold">Barras - B</div>
-                        <BarsChart values={teamAvg(teams.B,map)} accent={TC.B.hex}/>
+                        <BarsChart values={teamAvgValues(teams.B)} accent={TC.B.hex}/>
                       </div>
                     </div>
 
-                    {/* Listas por equipo */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-                        <div className="mb-2 font-semibold flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${TC.A.dot}`}></span>Equipo A</div>
-                        <ul className="space-y-1 text-sm">
-                          {teams.A.map(id=>(
-                            <li key={id} className="flex items-center justify-between rounded-lg bg-slate-800/60 px-2 py-1">
-                              <span>{map[id].nombre}</span>
-                              <span className="text-slate-300">R:{Math.round(map[id]._GLOBAL*10)} – EQP:{map[id].EQP}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-                        <div className="mb-2 font-semibold flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${TC.B.dot}`}></span>Equipo B</div>
-                        <ul className="space-y-1 text-sm">
-                          {teams.B.map(id=>(
-                            <li key={id} className="flex items-center justify-between rounded-lg bg-slate-800/60 px-2 py-1">
-                              <span>{map[id].nombre}</span>
-                              <span className="text-slate-300">R:{Math.round(map[id]._GLOBAL*10)} – EQP:{map[id].EQP}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-
-                    {/* LEYENDA A/B */}
-                    <div className="text-xs text-slate-400 text-center">Leyenda: <span className="inline-flex items-center gap-1"><span className={`h-2 w-2 rounded-full ${TC.A.dot}`}></span> A</span> · <span className="inline-flex items-center gap-1"><span className={`h-2 w-2 rounded-full ${TC.B.dot}`}></span> B</span></div>
-
-                    {/* Formación (va de último) */}
-                    <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-                      <div className="mb-2 font-semibold">Formación (compartible)</div>
-                      <FormationBoard teamA={teams.A} teamB={teams.B} map={map} kChem={kChem} chem={chem} scale={formScale}/>
-                    </div>
+                    {/* Formación al final */}
+                    <FormationBoard teamA={teams.A} teamB={teams.B} map={map} kChem={kChem} chem={chem} scale={formScale}/>
                   </>
                 )}
-
-                {/* Acciones de armado */}
-                <div className="sticky bottom-2 mt-4 grid grid-cols-2 gap-2">
-                  <button onClick={makeR}
-                          disabled={!(selected.size===10)}
-                          className={`rounded-2xl px-4 py-3 text-base font-semibold ring-1 ${selected.size===10?'bg-slate-800 text-slate-100 ring-slate-700 hover:bg-slate-700':'bg-slate-800/40 text-slate-500 ring-slate-800 cursor-not-allowed'}`}>
-                    🎲 Azar
-                  </button>
-                  <button onClick={makeB}
-                          disabled={!(selected.size===10)}
-                          className={`rounded-2xl px-4 py-3 text-base font-semibold ring-1 ${selected.size===10?'bg-emerald-600 text-white ring-emerald-500 hover:bg-emerald-500':'bg-emerald-600/40 text-emerald-200 ring-emerald-800 cursor-not-allowed'}`}>
-                    ⚖️ Equilibrado
-                  </button>
-                </div>
               </section>
 
-               {/* PLANTEL */}
+              {/* PLANTEL */}
               <section className="tabs-page space-y-2">
                 <div className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
                   <input value={q} onChange={e=>setQ(e.target.value)}
-                         placeholder="Buscar nombre / club / favorito"
-                         className="rounded-xl bg-slate-900/70 p-2 text-sm ring-1 ring-slate-800"/>
+                         className="rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-700" placeholder="Buscar jugador..."/>
                   <select value={sort} onChange={e=>setSort(e.target.value)}
-                          className="rounded-xl bg-slate-900/70 p-2 text-sm ring-1 ring-slate-800">
-                    <option value="global-desc">Orden: Global ↓</option>
-                    <option value="global-asc">Orden: Global ↑</option>
-                    <option value="nombre">Orden: Nombre</option>
+                          className="rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-700">
+                    <option value="global-desc">Ordenar por rating ⬇</option>
+                    <option value="global-asc">Ordenar por rating ⬆</option>
+                    <option value="nombre">Ordenar por nombre</option>
                   </select>
                   <div className="flex gap-2">
-                    <button onClick={()=>setForm({})}
-                            className="flex-1 rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">
-                      + Añadir
-                    </button>
-                    <button onClick={()=>{setSelected(new Set());setTeams(null)}}
-                            className="flex-1 rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">
-                      Limpiar
-                    </button>
+                    <button onClick={()=>setForm({})} className="flex-1 rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">+ Jugador</button>
+                    {!isStandalone && <button onClick={install} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">📲 Instalar</button>}
                   </div>
                 </div>
 
                 <div className="plantel-scroll space-y-2">
                   {filtered.map(p=>(
-                    <div key={p.id} className="space-y-2">
-                      <PlayerRow p={p}
-                                 selected={selected.has(p.id)}
-                                 onToggle={()=>toggle(p.id)}
-                                 onOpen={()=>setModal(p)}
-                                 pinA={pinA} pinB={pinB}
-                                 setPinA={setPinA} setPinB={setPinB}
-                                 disableAdd={selected.size>=10}/>
-                      <div className="-mt-2 mb-2 flex gap-2 pl-14">
-                        <button onClick={()=>setForm(p)}
-                                className="rounded-xl bg-slate-800 px-2 py-1 text-xs ring-1 ring-slate-700 hover:bg-slate-700">
-                          Editar
-                        </button>
-                        <button onClick={()=>onDel(p.id)}
-                                className="rounded-xl bg-rose-700 px-2 py-1 text-xs ring-1 ring-rose-500 hover:bg-rose-600">
-                          Eliminar
-                        </button>
-                      </div>
-                    </div>
+                    <PlayerRow key={p.id}
+                      p={p}
+                      selected={selected.has(p.id)}
+                      onToggle={()=>toggle(p.id)}
+                      onOpen={()=>{setPlayerDetailId(p.id);setModal('player')}}
+                      pinA={pinA} pinB={pinB} setPinA={setPinA} setPinB={setPinB}
+                      disableAdd={reachedMax && !selected.has(p.id)}
+                    />
                   ))}
                 </div>
               </section>
@@ -931,32 +969,41 @@
           </div>
 
           {/* Modales */}
-          {settings && <SettingsModal onClose={()=>setSettings(false)} kChem={kChem} setKChem={setKChem}
-                                      onExport={onExport} onImport={onImport} onReset={reset}
-                                      parallaxOn={parallaxOn} setParallaxOn={setParallaxOn}
-                                      formScale={formScale} setFormScale={setFormScale}/>}
-          {form && <PlayerFormModal initial={form.id?form:null} onCancel={()=>setForm(null)} onSave={onSave}/>}
-          {modal && (
+          {settings && (
+            <SettingsModal
+              onClose={()=>setSettings(false)}
+              kChem={kChem} setKChem={setKChem}
+              onExport={onExport} onImport={onImport} onReset={reset}
+              parallaxOn={parallaxOn} setParallaxOn={setParallaxOn}
+              formScale={formScale} setFormScale={setFormScale}
+              listTwoCols={listTwoCols} setListTwoCols={setListTwoCols}
+              onOpenGlossary={()=>{setSettings(false);setShowGlossary(true)}}
+            />
+          )}
+
+          {showGlossary && <GlossaryModal onClose={()=>setShowGlossary(false)}/>}
+
+          {modal==='player' && playerDetailId && (
             <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={()=>setModal(null)}>
-              <div className="w-full max-w-5xl max-h-[88vh] overflow-auto rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700"
-                   onClick={e=>e.stopPropagation()}>
-                <div className="mb-2 flex items-center gap-3">
-                  <div className="text-sm opacity-80">Jugador</div>
-                  <div className="truncate font-semibold">{modal.nombre}</div>
-                  <button onClick={()=>setModal(null)}
-                          className="ml-auto rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">
-                    Cerrar
-                  </button>
+              <div className="w-full max-w-3xl rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700 max-h-[90vh] overflow-auto" onClick={e=>e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-lg font-semibold">{map[playerDetailId]?.nombre}</div>
+                  <div className="flex gap-2">
+                    <button onClick={()=>{setForm(map[playerDetailId]); setModal(null)}} className="rounded-lg bg-slate-800 px-3 py-1 ring-1 ring-slate-700">Editar</button>
+                    <button onClick={()=>setModal(null)} className="rounded-lg bg-slate-800 px-3 py-1 ring-1 ring-slate-700">Cerrar</button>
+                  </div>
                 </div>
-                <PlayerDetails p={modal}/>
+                <PlayerDetails p={map[playerDetailId]}/>
               </div>
             </div>
           )}
 
-          {!isStandalone && (
-            <div className="fixed bottom-3 right-3">
-              <button onClick={install} className="rounded-full bg-emerald-600 text-white px-4 py-2 text-sm ring-1 ring-emerald-500 shadow-lg">📲 Instalar</button>
-            </div>
+          {form && (
+            <PlayerFormModal
+              initial={form.id?form:null}
+              onCancel={()=>setForm(null)}
+              onSave={onSave}
+            />
           )}
         </div>
       );
@@ -966,3 +1013,4 @@
   </script>
 </body>
 </html>
+
