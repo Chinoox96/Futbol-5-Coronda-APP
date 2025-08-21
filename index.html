@@ -97,13 +97,35 @@
       background:linear-gradient(180deg,rgba(15,23,42,.9),rgba(30,41,59,.85));z-index:1;
     }
     @keyframes spin{to{transform:rotate(1turn)}}
+
+    /* Formación responsiva */
+    .board {
+      position: relative;
+      width: 100%;
+      max-width: 900px;       /* límite desktop */
+      aspect-ratio: 5 / 3;    /* 900 x 540 */
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .board img.field {
+      position:absolute;inset:0;
+      width:100%;height:100%;object-fit:cover;
+    }
+    .board .layer { position:absolute; inset:0; }
+
+    /* Evitar que PLANTEL se desborde */
+    .plantel-scroll {
+      max-height: calc(100vh - var(--header-h) - 190px);
+      overflow-y: auto;
+      padding-right: 4px;
+    }
   </style>
 </head>
 <body>
   <div id="bg-parallax" aria-hidden="true"></div>
   <div id="root"></div>
 
-  <!-- Manifest dinámico + SW (opcional PWA) -->
+  <!-- Manifest dinámico -->
   <script>
     (async()=>{
       try{
@@ -174,7 +196,7 @@
 
   <!-- === APP === -->
   <script type="text/babel">
-    const {useMemo,useState,useEffect,useRef} = React;
+    const {useMemo,useState,useEffect} = React;
 
     /* ================== Helpers y Constantes ================== */
     const STAT=['ATA','PAS','REG','VEL','DEF','FIS','ARQ','EQP'];
@@ -200,25 +222,39 @@
     const hR=s=>{let h=0;for(let i=0;i<s.length;i++)h=(h*33+s.charCodeAt(i))>>>0;return (h%1000)/1000};
     const substatsOf=p=>{const o={};for(const k of STAT){o[k]=(SUBS[k]||[]).map((n,i)=>{const base=p[k]||5;const noise=(hR((p.id||'')+k+i)-.5)*2;const v=clamp(Math.round(base+noise),1,10);return{n,v}})}return o};
 
-    const SEED=[
-      {id:'1',nombre:'Leo',equipoPropio:'La 10',equipoFavorito:'Barcelona',fotoUrl:'https://i.pravatar.cc/150?img=1',ATA:10,PAS:9,REG:10,VEL:9,DEF:4,FIS:7,ARQ:3,EQP:8,pie:'Izquierdo',estrellas:5,especial:true},
-      {id:'2',nombre:'Fabi',equipoPropio:'La 10',equipoFavorito:'Colón',fotoUrl:'https://i.pravatar.cc/150?img=6',ATA:7,PAS:8,REG:7,VEL:7,DEF:7,FIS:7,ARQ:4,EQP:9,pie:'Derecho',estrellas:4},
-      {id:'3',nombre:'Cuti',equipoPropio:'Muralla',equipoFavorito:'Belgrano',fotoUrl:'https://i.pravatar.cc/150?img=4',ATA:5,PAS:6,REG:5,VEL:7,DEF:10,FIS:9,ARQ:4,EQP:7,pie:'Derecho',estrellas:4},
-      {id:'4',nombre:'Dibu',equipoPropio:'Muralla',equipoFavorito:'Arsenal',fotoUrl:'https://i.pravatar.cc/150?img=5',ATA:3,PAS:5,REG:4,VEL:5,DEF:8,FIS:8,ARQ:10,EQP:7,pie:'Derecho',estrellas:5},
-      {id:'5',nombre:'Papu',equipoPropio:'Tiki',equipoFavorito:'San Lorenzo',fotoUrl:'https://i.pravatar.cc/150?img=9',ATA:8,PAS:8,REG:9,VEL:8,DEF:5,FIS:6,ARQ:3,EQP:7,pie:'Derecho',estrellas:4},
-      {id:'6',nombre:'Nico',equipoPropio:'Tiki',equipoFavorito:'Boca',fotoUrl:'https://i.pravatar.cc/150?img=8',ATA:7,PAS:7,REG:7,VEL:8,DEF:6,FIS:7,ARQ:4,EQP:6,pie:'Derecho',estrellas:4},
-      {id:'7',nombre:'Chino',equipoPropio:'Muralla',equipoFavorito:"Newell's",fotoUrl:'https://i.pravatar.cc/150?img=10',ATA:5,PAS:6,REG:5,VEL:6,DEF:8,FIS:7,ARQ:8,EQP:6,pie:'Izquierdo',estrellas:3},
-      {id:'8',nombre:'Joa',equipoPropio:'La 10',equipoFavorito:'River',fotoUrl:'https://i.pravatar.cc/150?img=7',ATA:6,PAS:6,REG:6,VEL:7,DEF:8,FIS:8,ARQ:5,EQP:7,pie:'Derecho',estrellas:3},
-      {id:'9',nombre:'Fideo',equipoPropio:'Tiki',equipoFavorito:'Rosario C.',fotoUrl:'https://i.pravatar.cc/150?img=3',ATA:8,PAS:9,REG:9,VEL:8,DEF:6,FIS:6,ARQ:3,EQP:8,pie:'Izquierdo',estrellas:5},
-      {id:'10',nombre:'Kuni',equipoPropio:'La 10',equipoFavorito:'Independiente',fotoUrl:'https://i.pravatar.cc/150?img=2',ATA:9,PAS:7,REG:8,VEL:9,DEF:5,FIS:7,ARQ:3,EQP:7,pie:'Derecho',estrellas:4},
-      {id:'11',nombre:'Tomi',equipoPropio:'Muralla',equipoFavorito:'Talleres',fotoUrl:'https://i.pravatar.cc/150?img=11',ATA:6,PAS:7,REG:6,VEL:7,DEF:7,FIS:7,ARQ:5,EQP:6,pie:'Derecho',estrellas:3},
-      {id:'12',nombre:'Gonza',equipoPropio:'Tiki',equipoFavorito:'Racing',fotoUrl:'https://i.pravatar.cc/150?img=12',ATA:7,PAS:6,REG:7,VEL:8,DEF:6,FIS:7,ARQ:4,EQP:6,pie:'Derecho',estrellas:3}
-    ];
-
-    const KEYS={
-      players:'f5.players',selected:'f5.selected',teams:'f5.teams',kchem:'f5.kchem',
-      pinA:'f5.pins.A',pinB:'f5.pins.B',chemOv:'f5.chem.overrides',history:'f5.history',parallax:'f5.parallax'
+    /* ========= Avatares base64 para evitar CORS ========= */
+    const colorOf = name=>{
+      const colors=['#22c55e','#06b6d4','#a78bfa','#f59e0b','#ef4444','#14b8a6','#8b5cf6','#f97316','#10b981','#38bdf8'];
+      let h=0; for(let i=0;i<name.length;i++) h=(h*31+name.charCodeAt(i))>>>0;
+      return colors[h%colors.length];
     };
+    const mkAvatar = (name)=>{
+      const initials = (name||'F5').split(/\s+/).map(s=>s[0]||'').join('').slice(0,2).toUpperCase();
+      const bg = colorOf(name||'F5');
+      const svg = `
+        <svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'>
+          <rect width='100%' height='100%' rx='24' ry='24' fill='${bg}'/>
+          <text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle'
+                font-family='system-ui,Segoe UI,Roboto,sans-serif' font-size='72' fill='white'
+                style='font-weight:700'>${initials}</text>
+        </svg>`;
+      return 'data:image/svg+xml;utf8,'+encodeURIComponent(svg);
+    };
+
+    const SEED=[
+      {id:'1', nombre:'Leo',  equipoPropio:'La 10',  equipoFavorito:'Barcelona', fotoUrl:mkAvatar('Leo'),  ATA:10,PAS:9, REG:10,VEL:9, DEF:4,FIS:7,ARQ:3, EQP:8, pie:'Izquierdo',estrellas:5,especial:true},
+      {id:'2', nombre:'Fabi', equipoPropio:'La 10',  equipoFavorito:'Colón',     fotoUrl:mkAvatar('Fabi'), ATA:7, PAS:8, REG:7, VEL:7, DEF:7,FIS:7,ARQ:4, EQP:9, pie:'Derecho',estrellas:4},
+      {id:'3', nombre:'Cuti', equipoPropio:'Muralla', equipoFavorito:'Belgrano',  fotoUrl:mkAvatar('Cuti'), ATA:5, PAS:6, REG:5, VEL:7, DEF:10,FIS:9,ARQ:4,EQP:7,pie:'Derecho',estrellas:4},
+      {id:'4', nombre:'Dibu', equipoPropio:'Muralla', equipoFavorito:'Arsenal',   fotoUrl:mkAvatar('Dibu'), ATA:3, PAS:5, REG:4, VEL:5, DEF:8,FIS:8,ARQ:10,EQP:7,pie:'Derecho',estrellas:5},
+      {id:'5', nombre:'Papu', equipoPropio:'Tiki',    equipoFavorito:'San Lorenzo',fotoUrl:mkAvatar('Papu'),ATA:8,PAS:8,REG:9,VEL:8,DEF:5,FIS:6,ARQ:3,EQP:7,pie:'Derecho',estrellas:4},
+      {id:'6', nombre:'Nico', equipoPropio:'Tiki',    equipoFavorito:'Boca',      fotoUrl:mkAvatar('Nico'), ATA:7,PAS:7,REG:7,VEL:8,DEF:6,FIS:7,ARQ:4,EQP:6,pie:'Derecho',estrellas:4},
+      {id:'7', nombre:'Chino',equipoPropio:'Muralla', equipoFavorito:"Newell's",  fotoUrl:mkAvatar('Chino'),ATA:5,PAS:6,REG:5,VEL:6,DEF:8,FIS:7,ARQ:8,EQP:6,pie:'Izquierdo',estrellas:3},
+      {id:'8', nombre:'Joa',  equipoPropio:'La 10',  equipoFavorito:'River',     fotoUrl:mkAvatar('Joa'),  ATA:6,PAS:6,REG:6,VEL:7,DEF:8,FIS:8,ARQ:5,EQP:7,pie:'Derecho',estrellas:3},
+      {id:'9', nombre:'Fideo',equipoPropio:'Tiki',   equipoFavorito:'Rosario C.',fotoUrl:mkAvatar('Fideo'),ATA:8,PAS:9,REG:9,VEL:8,DEF:6,FIS:6,ARQ:3,EQP:8,pie:'Izquierdo',estrellas:5},
+      {id:'10',nombre:'Kuni', equipoPropio:'La 10',  equipoFavorito:'Independiente',fotoUrl:mkAvatar('Kuni'),ATA:9,PAS:7,REG:8,VEL:9,DEF:5,FIS:7,ARQ:3,EQP:7,pie:'Derecho',estrellas:4},
+      {id:'11',nombre:'Tomi', equipoPropio:'Muralla',equipoFavorito:'Talleres',  fotoUrl:mkAvatar('Tomi'), ATA:6,PAS:7,REG:6,VEL:7,DEF:7,FIS:7,ARQ:5,EQP:6,pie:'Derecho',estrellas:3},
+      {id:'12',nombre:'Gonza',equipoPropio:'Tiki',   equipoFavorito:'Racing',    fotoUrl:mkAvatar('Gonza'),ATA:7,PAS:6,REG:7,VEL:8,DEF:6,FIS:7,ARQ:4,EQP:6,pie:'Derecho',estrellas:3}
+    ];
 
     /* ================== Química y Emparejado ================== */
     const chemBuildBase=arr=>{const q={};for(const a of arr){q[a.id]={};for(const b of arr){
@@ -235,17 +271,31 @@
     const teamGlobal=(ids,map)=>{const arr=Array.isArray(ids)?ids.filter(id=>map[id]):[];return +avg(arr.map(id=>map[id]._GLOBAL)).toFixed(2)};
     const teamScoreUI=(ids,map,chem,k)=>+(teamGlobal(ids,map,chem)+chemTeam(ids,chem)*k).toFixed(2);
     const shuffle=a=>{const x=[...a];for(let i=x.length-1;i>0;i--){const j=(Math.random()*(i+1)|0);[x[i],x[j]]=[x[j],x[i]]}return x};
-    const randSplit=ids=>{const s=shuffle(ids);const m=Math.floor(s.length/2);return[s.slice(0,m),s.slice(m)]};
     const scoreDiff=(A,B,map,chem,k)=>{const sA=teamScoreUI(A,map,chem,k),sB=teamScoreUI(B,map,chem,k);return{A:[...A],B:[...B],diff:Math.abs(sA-sB),m:{sA,sB}}};
     const seedWithPins=(ids,pA,pB)=>{const A=ids.filter(id=>pA.has(id));const B=ids.filter(id=>pB.has(id));const rest=ids.filter(id=>!pA.has(id)&&!pB.has(id));return{A,B,rest}};
     const fillRandom=(A,B,rest)=>{const r=shuffle(rest);for(const id of r){(A.length<B.length?A:B).push(id);if(A.length===5&&B.length===5)break}};
-    const balancedWithPins=(ids,map,chem,k,pA,pB)=>{const{A,B,rest}=seedWithPins(ids,pA,pB);fillRandom(A,B,rest);while((A.length<5||B.length<5)&&rest.length>0){const id=rest.pop();(A.length<B.length?A:B).push(id)}let best=scoreDiff(A,B,map,chem,k);const freeA=best.A.map((id,i)=>pA.has(id)?-1:i).filter(i=>i>=0);const freeB=best.B.map((id,i)=>pB.has(id)?-1:i).filter(i=>i>=0);for(let t=0;t<900;t++){if(!freeA.length||!freeB.length)break;const i=freeA[(Math.random()*freeA.length)|0];const j=freeB[(Math.random()*freeB.length)|0];[best.A[i],best.B[j]]=[best.B[j],best.A[i]];const cur=scoreDiff(best.A,best.B,map,chem,k);if(cur.diff<=best.diff||Math.random()<.12)best=cur;else[best.A[i],best.B[j]]=[best.B[j],best.A[i]]}return{A:best.A,B:best.B,m:best.m}};
+    const balancedWithPins=(ids,map,chem,k,pA,pB)=>{
+      const{A,B,rest}=seedWithPins(ids,pA,pB);fillRandom(A,B,rest);
+      while((A.length<5||B.length<5)&&rest.length>0){const id=rest.pop();(A.length<B.length?A:B).push(id)}
+      let best=scoreDiff(A,B,map,chem,k);
+      const freeA=best.A.map((id,i)=>pA.has(id)?-1:i).filter(i=>i>=0);
+      const freeB=best.B.map((id,i)=>pB.has(id)?-1:i).filter(i=>i>=0);
+      for(let t=0;t<900;t++){
+        if(!freeA.length||!freeB.length)break;
+        const i=freeA[(Math.random()*freeA.length)|0];
+        const j=freeB[(Math.random()*freeB.length)|0];
+        [best.A[i],best.B[j]]=[best.B[j],best.A[i]];
+        const cur=scoreDiff(best.A,best.B,map,chem,k);
+        if(cur.diff<=best.diff||Math.random()<.12)best=cur;else[best.A[i],best.B[j]]=[best.B[j],best.A[i]]
+      }
+      return{A:best.A,B:best.B,m:best.m}
+    };
 
-    /* ================== UI: Pills y Cards ================== */
+    /* ================== UI ================== */
     const Pill=({children,className=''})=> <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${className}`}>{children}</span>;
     const Stars=({n=0})=>{const s=clamp(Math.round(n),0,5);return(<div className="flex gap-1 text-amber-300" title={`${s} estrellas`}>{Array.from({length:5}).map((_,i)=>(<span key={i}>{i<s?'★':'☆'}</span>))}</div>)};
 
-    /* Card principal normal */
+    /* Card principal */
     const FifaCard=({p,small=false})=>{
       const rate=Math.round((p._GLOBAL||globalOf(p))*10);
       const rare=rarityOf(p);
@@ -262,11 +312,11 @@
                 <div className="text-base">{p.bandera||''}</div>
               </div>
               {p.escudoUrl
-                ? <img src={p.escudoUrl} className="h-9 w-8 object-contain ring-1 ring-black/10 rounded"/>
+                ? <img src={p.escudoUrl} className="h-9 w-8 object-contain ring-1 ring-black/10 rounded" alt="escudo"/>
                 : <div className="h-9 w-8 grid place-items-center bg-white/70 text-xs font-extrabold ring-1 ring-black/10 rounded">{(p.equipoPropio||'').slice(0,2).toUpperCase()}</div>}
             </div>
             <div className="mt-2 grid place-items-center">
-              <img src={p.fotoUrl} className={`rounded-xl object-cover ring-2 ${ring} ${small?'h-20 w-20':'h-24 w-24'}`}/>
+              <img src={p.fotoUrl} className={`rounded-xl object-cover ring-2 ${ring} ${small?'h-20 w-20':'h-24 w-24'}`} alt={p.nombre}/>
             </div>
             <div className="mt-2 text-center text-sm font-extrabold truncate">{p.nombre}</div>
             <div className="mt-1 grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] font-semibold">
@@ -281,214 +331,41 @@
       );
     };
 
-    /* MiniCard para la formación exportable */
-    const MiniCard = ({p,dataFotos})=>{
-      if(!p) return null;
-      const rare=rarityOf(p);
-      const ring = rare==='bronze'?'ring-yellow-800':rare==='silver'?'ring-slate-300':rare==='gold'?'ring-yellow-500':'ring-cyan-300';
-      const rareClass = rare==='special' ? 'rarity-special' : `rarity-${rare}`;
-      const foto = (dataFotos && dataFotos[p.id]) ?? p.fotoUrl ?? '';
-      return (
-        <div className={`card-rect ${rareClass} text-slate-900 ring-1 ${ring} shadow w-[110px]`}>
-          <div className="card-inner">
-            <div className="flex justify-between items-start">
-              <div className="text-center leading-4">
-                <div className="text-2xl font-black">{Math.round((p._GLOBAL||globalOf(p))*10)}</div>
-                <div className="text-[10px] font-bold">{p.pos||'F5'}</div>
-              </div>
-              <div className="h-7 w-6 grid place-items-center bg-white/70 text-[10px] font-extrabold ring-1 ring-black/10 rounded">
-                {(p.equipoPropio||'').slice(0,2).toUpperCase()}
-              </div>
-            </div>
-            <div className="mt-1 grid place-items-center">
-              {foto
-                ? <img src={foto} crossOrigin="anonymous" className="h-16 w-16 rounded-lg object-cover ring-2"/>
-                : <div className="h-16 w-16 rounded-lg bg-slate-300 ring-2"/>
-              }
-            </div>
-            <div className="mt-1 text-center text-[11px] font-extrabold truncate px-1">{p.nombre}</div>
-            <div className="mt-1 grid grid-cols-2 gap-1 text-[9px] font-semibold px-1 pb-1">
-              {STAT.map(k=>(
-                <div key={k} className="flex items-center justify-between rounded bg-white/30 px-1 py-[1px]">
-                  <span>{k}</span><span className="tabular-nums">{p[k]}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      );
-    };
-
-    /* ====== Charts y Vistas ====== */
-    const Gauge=({label,v})=>(
-      <div className="mb-1">
-        <div className="flex justify-between text-xs"><span>{label}</span><span className="font-semibold">{v}</span></div>
-        <div className="h-1.5 rounded bg-slate-700"><div className="h-1.5 rounded" style={{width:`${v*10}%`,backgroundColor:'#22c55e'}}/></div>
-      </div>
-    );
-
-    const RadarChart=({size,max=10,keys=STAT,dataSeries})=>{
-      const w=(typeof window!=='undefined'&&window.innerWidth)||320;
-      const s=size??Math.max(180,Math.min(260,Math.floor(w*.85)));
-      const cx=s/2,cy=s/2,r=s*.4,N=keys.length;
-      const ang=i=>Math.PI*2*i/N-Math.PI/2;
-      const pt=(i,v)=>{const a=ang(i),rr=r*(v/max);return[cx+rr*Math.cos(a),cy+rr*Math.sin(a)]};
-      const lv=[2,4,6,8,10];
-      return(<svg viewBox={`0 0 ${s} ${s}`} width="100%" className="mx-auto block">
-        {lv.map((L,i)=>{const d=keys.map((_,j)=>pt(j,L)).map(([x,y])=>`${x},${y}`).join(' ');return <polygon key={i} points={d} fill="none" stroke="rgba(148,163,184,.25)" strokeWidth={1}/>})}
-        {keys.map((k,i)=>{const[x,y]=pt(i,max);return <line key={k} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(148,163,184,.3)" strokeWidth={1}/>})}
-        {keys.map((k,i)=>{const[x,y]=pt(i,max+.9);return <text key={k} x={x} y={y} textAnchor="middle" dominantBaseline="middle" fontSize={11} fill="#cbd5e1">{k}</text>})}
-        {dataSeries.map((srs,i)=>{const d=keys.map((k,j)=>pt(j,srs.values[k]??0)).map(([x,y])=>`${x},${y}`).join(' ');return(<g key={i}><polygon points={d} fill={srs.fill} stroke={srs.stroke} strokeWidth={2}/></g>)})}
-      </svg>);
-    };
-
-    const BarsChart=({values,max=10,accent})=>{
-      const c=accent||'#22d3ee';
-      return(<div className="space-y-2">
-        {STAT.map(k=>(
-          <div key={k}>
-            <div className="mb-1 flex items-center justify-between text-sm"><span className="text-slate-300" title={SL[k]}>{k}</span><span className="font-semibold">{values[k]}</span></div>
-            <div className="h-2 w-full rounded bg-slate-700"><div className="h-2 rounded" style={{width:`${Math.max(0,Math.min(100,(values[k]/max)*100))}%`,backgroundColor:c}}/></div>
-          </div>
-        ))}
-      </div>);
-    };
-
-    const teamAvg=(ids,map)=>{const o={};const arr=Array.isArray(ids)?ids.filter(id=>map[id]):[];STAT.forEach(k=>o[k]=+avg(arr.map(id=>map[id][k]??0)).toFixed(2));return o};
-
-    const TeamRadarCompare=({A,B,map})=>{
-      const a=teamAvg(A,map),b=teamAvg(B,map);
-      return(
-        <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-          <div className="mb-2 text-center text-sm text-slate-300">Radar comparativo (promedio por stat)</div>
-          <RadarChart dataSeries={[{label:'A',values:a,stroke:TC.A.stroke,fill:TC.A.fill},{label:'B',values:b,stroke:TC.B.stroke,fill:TC.B.fill}]}/>
-          <div className="mt-2 flex justify-center gap-4 text-xs text-slate-300">
-            <span className="inline-flex items-center gap-1"><span className={`h-2 w-2 rounded-full ${TC.A.dot}`}></span> A</span>
-            <span className="inline-flex items-center gap-1"><span className={`h-2 w-2 rounded-full ${TC.B.dot}`}></span> B</span>
-          </div>
-        </div>
-      )
-    };
-
-    const TeamMiniSummary=({ids,map,chem,kChem})=>{
-      const list=(Array.isArray(ids)?ids:[]).filter(id=>map[id]);
-      const g=teamGlobal(list,map),rating=Math.round(g*10);
-      const c=chemTeam(list,chem);
-      const s=teamScoreUI(list,map,chem,kChem);
-      return(
-        <div className="grid grid-cols-3 gap-1 text-center">
-          <div><div className="text-slate-400 text-xs">Rating</div><div className="font-bold">{rating}</div></div>
-          <div><div className="text-slate-400 text-xs">Química</div><div className="font-bold">{c}</div></div>
-          <div><div className="text-slate-400 text-xs">Score</div><div className="font-bold">{s}</div></div>
-        </div>
-      )
-    };
-
-    const BalanceIndicator=({A,B,map,chem,kChem})=>{
-      const a=(Array.isArray(A)?A:[]).filter(id=>map[id]);
-      const b=(Array.isArray(B)?B:[]).filter(id=>map[id]);
-      const sA=teamScoreUI(a,map,chem,kChem),sB=teamScoreUI(b,map,chem,kChem),d=+Math.abs(sA-sB).toFixed(2);
-      let lb='Parejo',cls='bg-emerald-600/15 text-emerald-200 ring-emerald-500/30';
-      if(d>=.8){lb='Desbalanceado';cls='bg-rose-600/15 text-rose-200 ring-rose-500/30'}
-      else if(d>=.3){lb='Aceptable';cls='bg-amber-600/15 text-amber-100 ring-amber-500/30'}
-      return(
-        <div className={`rounded-2xl p-3 ring-1 ${cls}`}>
-          <div className="flex items-center justify-between text-sm"><div className="font-semibold">Balance del partido</div><div className="text-xs opacity-80">Diff: {d}</div></div>
-          <div className="mt-1 text-sm">Resultado: <span className="font-semibold">{lb}</span> <span className="opacity-80">(A: {sA} vs B: {sB})</span></div>
-          <div className="mt-1 text-xs opacity-80">Umbrales: Parejo &lt; 0.30 — Aceptable &lt; 0.80 — Desbalanceado ≥ 0.80</div>
-        </div>
-      )
-    };
-
-    /* ========= TeamCard ========= */
-    const TeamCard=({title,teamKey,ids,map,chem,onOpenPlayer,kChem})=>{
-      const list=(Array.isArray(ids)?ids:[]).filter(id=>map[id]);
-      const g=teamGlobal(list,map),rating=Math.round(g*10);const c=chemTeam(list,chem);const s=teamScoreUI(list,map,chem,kChem);
-      const col=TC[teamKey]||TC.A;
-      return(
-        <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-          <div className="mb-2 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-base font-semibold"><span className={`h-2.5 w-2.5 rounded-full ${col.dot}`}/> {title}</h3>
-            <div className="text-xs text-slate-400">Jugadores: {list.length}</div>
-          </div>
-          <div className="mb-3 grid grid-cols-3 gap-2 text-sm">
-            <div className="rounded-xl bg-slate-800/70 p-2 text-center"><div className="text-slate-400">Rating</div><div className="text-lg font-bold">{rating}</div></div>
-            <div className="rounded-xl bg-slate-800/70 p-2 text-center"><div className="text-slate-400">Química</div><div className="text-lg font-bold">{c}</div></div>
-            <div className="rounded-xl bg-slate-800/70 p-2 text-center"><div className="text-slate-400">Score</div><div className="text-lg font-bold">{s}</div></div>
-          </div>
-          <ul className="space-y-1 text-sm">
-            {list.map(id=>(
-              <li key={id} className="flex items-center justify-between rounded-lg bg-slate-800/60 px-2 py-1">
-                <button onClick={()=>onOpenPlayer(map[id])} className="truncate text-left hover:underline">{map[id].nombre}</button>
-                <span className="text-slate-300">R:{Math.round(map[id]._GLOBAL*10)} - EQP:{map[id].EQP}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      );
-    };
-
-    /* === FormationBoard: cancha + FIFACards y export PNG === */
-    const FormationBoard = ({teamA=[], teamB=[], map, onReadyImage}) => {
-      const W = 900, H = 540;
-      const ref = React.useRef(null);
-      const posA = [{x:70,y:40},{x:95,y:140},{x:85,y:260},{x:95,y:380},{x:70,y:480}];
-      const posB = [{x:W-70,y:40},{x:W-95,y:140},{x:W-85,y:260},{x:W-95,y:380},{x:W-70,y:480}];
-
-      // Preload fotos -> dataURL para evitar CORS en html2canvas
-      const [dataFotos, setDataFotos] = React.useState({});
-      React.useEffect(()=>{
-        (async ()=>{
-          const ids=[...teamA,...teamB];
-          const out={};
-          for(const id of ids){
-            const p=map[id]; if(!p||!p.fotoUrl) continue;
-            const url=p.fotoUrl;
-            try{
-              if(/^data:image\//.test(url)){out[id]=url; continue;}
-              const r=await fetch(url,{mode:'cors'});
-              const blob=await r.blob();
-              out[id]=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(blob);});
-            }catch{out[id]=null}
-          }
-          setDataFotos(out);
-        })();
-      },[teamA.join(','),teamB.join(','),map]);
+    /* === Formación: misma FifaCard, escalada y posicionada por porcentaje === */
+    const FormationBoard = ({teamA=[], teamB=[], map, scale=0.62}) => {
+      // Posiciones en % (referencia 900x540)
+      const posA = [{x:7.8,y:7.4},{x:10.6,y:25.9},{x:9.4,y:48.1},{x:10.6,y:70.4},{x:7.8,y:88.9}];
+      const posB = [{x:92.2,y:7.4},{x:89.4,y:25.9},{x:90.6,y:48.1},{x:89.4,y:70.4},{x:92.2,y:88.9}];
 
       const exportar = async ()=>{
-        const el=ref.current; if(!el) return;
-        const canvas=await html2canvas(el,{backgroundColor:null,useCORS:true,scale:2});
+        const el=document.getElementById('formation-board'); if(!el) return;
+        const canvas=await html2canvas(el,{backgroundColor:null,scale:2});
         const url=canvas.toDataURL('image/png');
-        onReadyImage?.(url);
         const a=document.createElement('a');a.href=url;a.download='formacion_f5.png';a.click();
+      };
+
+      const CardOnField = ({id,xy})=>{
+        const p=map[id]; if(!p) return null;
+        const t=`translate(-50%, -50%) scale(${scale})`;
+        return (
+          <div style={{position:'absolute',left:xy.x+'%',top:xy.y+'%',transform:t,transformOrigin:'top left'}}>
+            <FifaCard p={p}/>
+          </div>
+        );
       };
 
       return (
         <div className="w-full">
-          <div
-            ref={ref}
-            className="relative mx-auto rounded-2xl overflow-hidden ring-1 ring-slate-700 shadow-xl"
-            style={{width: W, height: H}}
-          >
-            {/* Usa tu imagen en assets/cancha.png */}
-            <img src="assets/cancha.png" alt="Cancha" className="absolute inset-0 w-full h-full object-cover"/>
-
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl bg-slate-900/70 text-white text-lg font-bold">
-              Partido F5 - Formación
+          <div id="formation-board" className="board ring-1 ring-slate-700 shadow-xl mx-auto bg-slate-900/30">
+            <img src="assets/cancha.png" alt="Cancha" className="field"/>
+            <div className="layer pointer-events-none">
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-xl bg-slate-900/70 text-white text-sm sm:text-base font-bold">
+                Partido F5 - Formación
+              </div>
+              {teamA.map((id,i)=><CardOnField key={'A'+id} id={id} xy={posA[i]||posA[posA.length-1]}/>)}
+              {teamB.map((id,i)=><CardOnField key={'B'+id} id={id} xy={posB[i]||posB[posB.length-1]}/>)}
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[12px] text-slate-200">Generado con Fútbol 5</div>
             </div>
-
-            {teamA.map((id,i)=>{const p=map[id];const pos=posA[i]||{x:70,y:40+i*90};return(
-              <div key={id} className="absolute" style={{left: pos.x, top: pos.y}}>
-                <MiniCard p={p} dataFotos={dataFotos}/>
-              </div>
-            )})}
-            {teamB.map((id,i)=>{const p=map[id];const pos=posB[i]||{x:W-70,y:40+i*90};return(
-              <div key={id} className="absolute" style={{left: pos.x-110, top: pos.y}}>
-                <MiniCard p={p} dataFotos={dataFotos}/>
-              </div>
-            )})}
-
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[12px] text-slate-200">Generado con Fútbol 5</div>
           </div>
 
           <div className="flex justify-center mt-2">
@@ -509,7 +386,7 @@
           <div className="max-h-72 overflow-auto space-y-1">
             {list.map(o=>(
               <div key={o.id} className={`flex items-center justify-between rounded-lg px-2 py-1 text-sm ${o.onA?'bg-emerald-600/15 ring-1 ring-emerald-500/30':o.onB?'bg-blue-600/15 ring-1 ring-blue-500/30':'bg-slate-800/60 ring-1 ring-slate-700'}`}>
-                <div className="flex items-center gap-2 min-w-0"><img src={o.fotoUrl} className="h-7 w-7 rounded-full object-cover ring-1 ring-slate-700"/><span className="truncate">{o.nombre}</span></div>
+                <div className="flex items-center gap-2 min-w-0"><img src={o.fotoUrl} className="h-7 w-7 rounded-full object-cover ring-1 ring-slate-700" alt=""/><span className="truncate">{o.nombre}</span></div>
                 <div className="flex items-center gap-2"><span className="font-semibold w-6 text-right">{o._chem}</span>{onEditChem&&<button onClick={()=>onEditChem(player.id,o.id,o._chem)} className="rounded px-2 py-0.5 text-xs ring-1 ring-slate-600 bg-slate-800 hover:bg-slate-700">✏️</button>}</div>
               </div>
             ))}
@@ -577,14 +454,13 @@
                 <div className="rounded-lg bg-slate-900/60 p-2">Valoración:<div className="font-semibold"><Stars n={p.estrellas||0}/></div></div>
               </div>
             </div>
-            <div className="rounded-xl bg-slate-800/60 p-3 ring-1 ring-slate-700">
-              <div className="mb-2 text-sm font-semibold">Radar</div>
-              <RadarChart size={220} dataSeries={[{label:p.nombre,values:p,stroke:'rgba(34,211,238,1)',fill:'rgba(34,211,238,0.18)'}]}/>
-            </div>
             {STAT.map(k=>(
               <div key={k} className="rounded-xl bg-slate-800/60 p-2 ring-1 ring-slate-700">
                 <div className="mb-1 text-sm font-semibold">{SL[k]} <span className="opacity-75">({p[k]})</span></div>
-                {(s[k]||[]).map((it,idx)=>(<Gauge key={idx} label={it.n} v={it.v}/>))}
+                {(s[k]||[]).map((it,idx)=>(<div key={idx} className="mb-1">
+                  <div className="flex justify-between text-xs"><span>{it.n}</span><span className="font-semibold">{it.v}</span></div>
+                  <div className="h-1.5 rounded bg-slate-700"><div className="h-1.5 rounded" style={{width:`${it.v*10}%`,backgroundColor:'#22c55e'}}/></div>
+                </div>))}
               </div>
             ))}
           </div>
@@ -594,19 +470,19 @@
 
     const PlayerFormModal=({initial,onCancel,onSave})=>{
       const base={nombre:'',equipoPropio:'',equipoFavorito:'',fotoUrl:'',escudoUrl:'',bandera:'',pos:'',ATA:5,PAS:5,REG:5,VEL:5,DEF:5,FIS:5,ARQ:5,EQP:5,subs:null,pie:'Derecho',estrellas:3,especial:false};
-      const [form,setForm]=useState(()=>{const f=initial?{...initial}:{...base}; if(!f.subs) f.subs=substatsOf(f); return f;});
+      const [form,setForm]=useState(()=>{const f=initial?{...initial}:{...base}; if(!f.subs) f.subs=substatsOf(f); if(!f.fotoUrl) f.fotoUrl=mkAvatar(f.nombre||'F5'); return f;});
       const [showFlags,setShowFlags]=useState(false);
       const set=(k,v)=>setForm(f=>({...f,[k]:v}));
       const onFile=e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>set('fotoUrl',r.result);r.readAsDataURL(f)};
       const onSubmit=e=>{
         e.preventDefault();
         const c={...form};
-        // Si hay substats, promedian al stat padre
         STAT.forEach(k=>{
           const arr=(c.subs?.[k]||[]).map(it=>clamp(+it.v||0,1,10));
           c[k]=arr.length?clamp(Math.round(avg(arr)),1,10):clamp(parseInt(c[k]||0,10),1,10);
         });
         if(!c.nombre.trim()) return;
+        if(!c.fotoUrl) c.fotoUrl=mkAvatar(c.nombre);
         onSave(c);
       };
       const FLAGS='🇦🇷,🇧🇷,🇺🇾,🇵🇾,🇨🇱,🇧🇴,🇵🇪,🇨🇴,🇪🇨,🇲🇽,🇪🇸,🇵🇹,🇮🇹,🇫🇷,🇩🇪,🇬🇧,🇺🇸,🇯🇵'.split(',');
@@ -619,12 +495,12 @@
             <div className="grid grid-cols-2 gap-2 text-sm">
               <label className="space-y-1 col-span-2">
                 <span>Nombre</span>
-                <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.nombre} onChange={e=>set('nombre',e.target.value)} required/>
+                <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.nombre} onChange={e=>{set('nombre',e.target.value); if(!form.fotoUrl) set('fotoUrl',mkAvatar(e.target.value||'F5'));}} required/>
               </label>
 
               <label className="space-y-1 col-span-2">
                 <span>Foto URL</span>
-                <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.fotoUrl||''} placeholder="https://..." onChange={e=>set('fotoUrl',e.target.value)}/>
+                <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.fotoUrl||''} placeholder="https://... (o deja el avatar automático)" onChange={e=>set('fotoUrl',e.target.value)}/>
                 <span className="text-xs opacity-80">o subir imagen</span>
                 <input type="file" accept="image/*" onChange={onFile} className="w-full text-xs"/>
               </label>
@@ -657,9 +533,7 @@
                 </div>
                 {showFlags&&(
                   <div className="mt-1 max-h-24 overflow-auto rounded bg-slate-800 p-2 ring-1 ring-slate-700 flex flex-wrap gap-1">
-                    {FLAGS.map(f=>(
-                      <button type="button" key={f} onClick={()=>{set('bandera',f);setShowFlags(false)}} className="rounded bg-slate-700 px-2 text-base">{f}</button>
-                    ))}
+                    {FLAGS.map(f=>(<button type="button" key={f} onClick={()=>{set('bandera',f);setShowFlags(false)}} className="rounded bg-slate-700 px-2 text-base">{f}</button>))}
                   </div>
                 )}
               </label>
@@ -685,7 +559,6 @@
               </label>
             </div>
 
-            {/* Substats que promedian cada stat */}
             <div className="space-y-2">
               {STAT.map(k=>(
                 <div key={k} className="rounded-xl bg-slate-800/60 p-2 ring-1 ring-slate-700">
@@ -708,7 +581,6 @@
                               const arr=[...((subs[k]||SUBS[k].map(n=>({n,v:5}))))];
                               arr[idx]={...arr[idx],v};
                               subs[k]=arr;
-                              // Actualiza el stat padre con el promedio
                               const gen=clamp(Math.round(avg(arr.map(x=>+x.v||0))),1,10);
                               return {...f,subs,[k]:gen};
                             });
@@ -769,7 +641,7 @@
     };
 
     /* =================== Ajustes =================== */
-    const SettingsModal=({onClose,kChem,setKChem,onExport,onImport,onReset,parallaxOn,setParallaxOn})=>{
+    const SettingsModal=({onClose,kChem,setKChem,onExport,onImport,onReset,parallaxOn,setParallaxOn,formScale,setFormScale})=>{
       const input=React.useRef(null);
       return(
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={onClose}>
@@ -782,6 +654,13 @@
               <input type="range" min="0" max="1" step="0.05" value={kChem}
                      onChange={e=>setKChem(+e.target.value)} className="w-full"/>
               <div className="text-xs text-slate-300 mt-1">k = {kChem.toFixed(2)} (UI)</div>
+            </div>
+
+            <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700">
+              <div className="mb-1 text-sm font-semibold">Tamaño tarjeta en formación</div>
+              <input type="range" min="0.45" max="0.9" step="0.01" value={formScale}
+                     onChange={e=>setFormScale(+e.target.value)} className="w-full"/>
+              <div className="text-xs text-slate-300 mt-1">escala = {formScale.toFixed(2)}</div>
             </div>
 
             <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700 space-y-2">
@@ -839,6 +718,7 @@
       const[chemOverrides,setChemOverrides]=useState(()=>J(localStorage.getItem('f5.chem.overrides'),{}));
       const[history,setHistory]=useState(()=>{const h=J(localStorage.getItem('f5.history'),[]);return Array.isArray(h)?h:[]});
       const[parallaxOn,setParallaxOn]=useState(()=>{const s=localStorage.getItem('f5.parallax');if(s!=null)try{return JSON.parse(s)}catch{}return !window.matchMedia('(min-width:1024px)').matches});
+      const[formScale,setFormScale]=useState(()=>+(localStorage.getItem('f5.formScale')??0.62));
       const[tab,setTab]=useState('partido'); // partido | plantel
       const[modal,setModal]=useState(null);
       const[form,setForm]=useState(null);
@@ -859,8 +739,9 @@
       useEffect(()=>localStorage.setItem('f5.chem.overrides',JSON.stringify(chemOverrides)),[chemOverrides]);
       useEffect(()=>localStorage.setItem('f5.history',JSON.stringify(history)),[history]);
       useEffect(()=>localStorage.setItem('f5.parallax',JSON.stringify(parallaxOn)),[parallaxOn]);
+      useEffect(()=>localStorage.setItem('f5.formScale',String(formScale)),[formScale]);
 
-      // Aplicar parallaxOn a la variable CSS (override de media query)
+      // Aplicar parallaxOn a la variable CSS
       useEffect(()=>{
         const isDesk=window.matchMedia('(min-width:1024px)').matches;
         const speed = parallaxOn ? (isDesk ? 0 : 0.35) : 0;
@@ -874,30 +755,15 @@
         setH(); window.addEventListener('resize',setH); return ()=>window.removeEventListener('resize',setH);
       },[]);
 
-      // swipe / wheel tabs
-      useEffect(()=>{
-        let sx=0,sy=0;
-        const ts=e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY};
-        const te=e=>{const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
-          if(Math.abs(dx)>80 && Math.abs(dx)>Math.abs(dy)){ setTab(t=> dx<0 ? (t==='plantel'?'partido':'plantel') : (t==='partido'?'plantel':'partido')); }}
-        const wh=e=>{ if(Math.abs(e.deltaX)>Math.abs(e.deltaY) && Math.abs(e.deltaX)>30){ setTab(t=> e.deltaX>0 ? (t==='plantel'?'partido':'plantel') : (t==='partido'?'plantel':'partido')); } };
-        window.addEventListener('touchstart',ts,{passive:true});
-        window.addEventListener('touchend',te,{passive:true});
-        window.addEventListener('wheel',wh,{passive:true});
-        return()=>{window.removeEventListener('touchstart',ts);window.removeEventListener('touchend',te);window.removeEventListener('wheel',wh);};
-      },[]);
-
       const convocados=[...selected];
       const canMake=convocados.length===10;
       const reachedMax=convocados.length>=10;
       const invalidPins=pinA.size>5||pinB.size>5;
 
       const toggle=id=>setSelected(s=>{const n=new Set(s);if(n.has(id))n.delete(id);else{if(reachedMax)return n;n.add(id)}return n});
-      const makeR=()=>{if(!canMake||invalidPins)return;const{A,B}=balancedWithPins(convocados,map,chem,0,pinA,pinB);setTeams({A,B})};
+      const makeR=()=>{if(!canMake||invalidPins)return;const ids=[...convocados];ids.sort(()=>Math.random()-.5);setTeams({A:ids.slice(0,5),B:ids.slice(5)})};
       const makeB=()=>{if(!canMake||invalidPins)return;const{A,B}=balancedWithPins(convocados,map,chem,kChem,pinA,pinB);setTeams({A,B})};
 
-      const onAdd=()=>setForm({});
-      const onEdit=p=>setForm(p);
       const onSave=data=>{
         if(form&&form.id){
           setPlayers(p=>withG(p.map(x=>x.id===form.id?{...x,...data}:x)))
@@ -955,7 +821,7 @@
 
       return (
         <div className="mx-auto max-w-screen-md text-slate-100">
-          {/* HEADER fijo */}
+          {/* HEADER */}
           <header className="app-header">
             <div className="px-3 py-2 flex items-center justify-between gap-2">
               <div className="text-sm opacity-75">⚽</div>
@@ -986,39 +852,41 @@
                   </div>
                 )}
 
-                {/* Resumen y cards de equipos */}
                 {teams && (
                   <>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div className="rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-800">
                         <div className="flex items-center gap-2 font-semibold"><span className={`h-2.5 w-2.5 rounded-full ${TC.A.dot}`}/> <span>Equipo A</span></div>
-                        <TeamMiniSummary ids={teams.A} map={map} chem={chem} kChem={kChem}/>
                       </div>
                       <div className="rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-800">
                         <div className="flex items-center gap-2 font-semibold"><span className={`h-2.5 w-2.5 rounded-full ${TC.B.dot}`}/> <span>Equipo B</span></div>
-                        <TeamMiniSummary ids={teams.B} map={map} chem={chem} kChem={kChem}/>
                       </div>
                     </div>
 
-                    <TeamCard title="Equipo A" teamKey="A" ids={teams.A} map={map} chem={chem} onOpenPlayer={setModal} kChem={kChem}/>
-                    <TeamCard title="Equipo B" teamKey="B" ids={teams.B} map={map} chem={chem} onOpenPlayer={setModal} kChem={kChem}/>
-
-                    <BalanceIndicator A={teams.A} B={teams.B} map={map} chem={chem} kChem={kChem}/>
-
-                    {/* Cancha + FIFACards + botón exportar */}
-                    <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-                      <div className="mb-2 font-semibold">Formación (compartible)</div>
-                      <FormationBoard teamA={teams.A} teamB={teams.B} map={map}/>
-                    </div>
+                    <FormationBoard teamA={teams.A} teamB={teams.B} map={map} scale={formScale}/>
 
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                       <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
                         <div className="mb-2 font-semibold">Barras - A</div>
-                        <BarsChart values={teamAvg(teams.A,map)} accent={TC.A.hex}/>
+                        <div className="space-y-2">
+                          {STAT.map(k=>(
+                            <div key={k}>
+                              <div className="mb-1 flex items-center justify-between text-sm"><span className="text-slate-300">{k}</span><span className="font-semibold">{Math.round(avg(teams.A.map(id=>map[id][k]))*10)/10}</span></div>
+                              <div className="h-2 w-full rounded bg-slate-700"><div className="h-2 rounded" style={{width:`${Math.max(0,Math.min(100,(avg(teams.A.map(id=>map[id][k]))/10)*100))}%`,backgroundColor:TC.A.hex}}/></div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                       <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
                         <div className="mb-2 font-semibold">Barras - B</div>
-                        <BarsChart values={teamAvg(teams.B,map)} accent={TC.B.hex}/>
+                        <div className="space-y-2">
+                          {STAT.map(k=>(
+                            <div key={k}>
+                              <div className="mb-1 flex items-center justify-between text-sm"><span className="text-slate-300">{k}</span><span className="font-semibold">{Math.round(avg(teams.B.map(id=>map[id][k]))*10)/10}</span></div>
+                              <div className="h-2 w-full rounded bg-slate-700"><div className="h-2 rounded" style={{width:`${Math.max(0,Math.min(100,(avg(teams.B.map(id=>map[id][k]))/10)*100))}%`,backgroundColor:TC.B.hex}}/></div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </>
@@ -1069,80 +937,57 @@
                   </div>
                 )}
 
-                {filtered.map(p=>(
-                  <div key={p.id} className="space-y-2">
-                    <PlayerRow p={p}
-                               selected={selected.has(p.id)}
-                               onToggle={()=>toggle(p.id)}
-                               onOpen={()=>setModal(p)}
-                               pinA={pinA} pinB={pinB}
-                               setPinA={setPinA} setPinB={setPinB}
-                               disableAdd={selected.size>=10}/>
-                    <div className="-mt-2 mb-2 flex gap-2 pl-14">
-                      <button onClick={()=>setForm(p)}
-                              className="rounded-xl bg-slate-800 px-2 py-1 text-xs ring-1 ring-slate-700 hover:bg-slate-700">
-                        Editar
-                      </button>
-                                            <button onClick={()=>onDel(p.id)}
-                              className="rounded-xl bg-rose-700 px-2 py-1 text-xs text-white ring-1 ring-rose-500 hover:bg-rose-600">
-                        Borrar
-                      </button>
+                <div className="plantel-scroll space-y-2">
+                  {filtered.map(p=>(
+                    <div key={p.id} className="space-y-2">
+                      <PlayerRow p={p}
+                                 selected={selected.has(p.id)}
+                                 onToggle={()=>toggle(p.id)}
+                                 onOpen={()=>setModal(p)}
+                                 pinA={pinA} pinB={pinB}
+                                 setPinA={setPinA} setPinB={setPinB}
+                                 disableAdd={selected.size>=10}/>
+                      <div className="-mt-2 mb-2 flex gap-2 pl-14">
+                        <button onClick={()=>setForm(p)}
+                                className="rounded-xl bg-slate-800 px-2 py-1 text-xs ring-1 ring-slate-700 hover:bg-slate-700">
+                          Editar
+                        </button>
+                        <button onClick={()=>onDel(p.id)}
+                                className="rounded-xl bg-rose-700 px-2 py-1 text-xs text-white ring-1 ring-rose-500 hover:bg-rose-600">
+                          Borrar
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </section>
 
             </div>
           </div>
 
           {!isStandalone&&(
-            <button
-              onClick={install}
-              className="fixed bottom-20 right-3 z-50 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg ring-1 ring-emerald-500 hover:bg-emerald-500"
-            >
+            <button onClick={install}
+                    className="fixed bottom-20 right-3 z-50 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg ring-1 ring-emerald-500 hover:bg-emerald-500">
               📲 Instalar
             </button>
           )}
 
           <footer className="mt-6 mx-3 rounded-xl bg-slate-900/60 p-3 text-[12px] text-slate-300 ring-1 ring-slate-800">
             <div className="font-semibold">Leyenda:</div>
-            <div>
-              ATA=Ataque — PAS=Pase — REG=Regate — VEL=Velocidad — DEF=Defensa — FIS=Físico — ARQ=Arco — EQP=Trabajo en equipo
-            </div>
-            <div className="mt-1 text-[11px] opacity-80">
-              Cada stat tiene 3 substats. Se editan en “Añadir/Editar”.
-            </div>
+            <div>ATA=Ataque — PAS=Pase — REG=Regate — VEL=Velocidad — DEF=Defensa — FIS=Físico — ARQ=Arco — EQP=Trabajo en equipo</div>
+            <div className="mt-1 text-[11px] opacity-80">Cada stat tiene 3 substats. Se editan en “Añadir/Editar”.</div>
           </footer>
 
           {/* Modales */}
-          <PlayerModal
-            player={modal}
-            onClose={()=>setModal(null)}
-            players={players}
-            chem={chem}
-            teamIdsA={teams?.A||[]}
-            teamIdsB={teams?.B||[]}
-            onEditChem={(a,b,cur)=>{editChem(a,b,cur)}}
-          />
-          {form&&(
-            <PlayerFormModal
-              initial={form.id?form:null}
-              onCancel={()=>setForm(null)}
-              onSave={onSave}
-            />
-          )}
-          {settings&&(
-            <SettingsModal
-              onClose={()=>setSettings(false)}
-              kChem={kChem}
-              setKChem={setKChem}
-              onExport={onExport}
-              onImport={onImport}
-              onReset={reset}
-              parallaxOn={parallaxOn}
-              setParallaxOn={setParallaxOn}
-            />
-          )}
+          <PlayerModal player={modal} onClose={()=>setModal(null)}
+                       players={players} chem={chem}
+                       teamIdsA={teams?.A||[]} teamIdsB={teams?.B||[]}
+                       onEditChem={(a,b,cur)=>{editChem(a,b,cur)}}/>
+          {form&&<PlayerFormModal initial={form.id?form:null} onCancel={()=>setForm(null)} onSave={onSave}/>}
+          {settings&&<SettingsModal onClose={()=>setSettings(false)} kChem={kChem} setKChem={setKChem}
+                                    onExport={onExport} onImport={onImport} onReset={reset}
+                                    parallaxOn={parallaxOn} setParallaxOn={setParallaxOn}
+                                    formScale={formScale} setFormScale={setFormScale}/>}
         </div>
       );
     };
@@ -1151,4 +996,3 @@
   </script>
 </body>
 </html>
-
