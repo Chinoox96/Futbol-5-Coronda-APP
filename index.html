@@ -504,7 +504,20 @@
               </button>
               <div className="flex items-center gap-2">
                 <PinButtons id={p.id} pinA={pinA} pinB={pinB} setPinA={setPinA} setPinB={setPinB}/>
-                <button onClick={onToggle} disabled={disabled} className={`rounded-xl px-3 py-1 text-sm ring-1 ${selected?'bg-emerald-600 text-white ring-emerald-500':disabled?'bg-slate-800/40 text-slate-500 ring-slate-800 cursor-not-allowed':'bg-slate-800 text-slate-200 ring-slate-700 hover:bg-slate-700'}`}>{selected? '✓ Convocado' : '+ Convocar'}</button>
+                <button 
+  onClick={onToggle} 
+  disabled={disabled} 
+  className={`rounded-xl px-3 py-1 text-sm ring-1 ${
+    selected
+      ? 'bg-emerald-600 text-white ring-emerald-500'
+      : (disabled
+          ? 'bg-slate-800/40 text-slate-500 ring-slate-800 cursor-not-allowed'
+          : 'bg-slate-800 text-slate-200 ring-slate-700 hover:bg-slate-700')
+  }`}
+>
+  {selected ? '✓ Convocado' : '+ Convocar'}
+</button>
+
               </div>
             </div>
             <div className="mt-2 grid grid-cols-4 gap-1 text-[11px] text-slate-300">
