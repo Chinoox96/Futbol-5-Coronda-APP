@@ -27,7 +27,7 @@
       --pitch-image-desktop: var(--pitch-image-mobile);
       --pitch-darken: 0.50;
       --parallax-speed: 0.35;
-      --header-h: 122px;
+      --header-h: 108px;
     }
     html,body{background:#0b1220;color:#e2e8f0;margin:0;overflow-x:hidden}
     img,svg{max-width:100%;height:auto}
@@ -44,22 +44,30 @@
     #root{position:relative;z-index:1}
 
     /* Header */
-    .app-header{position:fixed;top:0;left:0;right:0;z-index:40;backdrop-filter:blur(10px);
-      background:rgba(2,6,23,.92);border-bottom:1px solid rgba(30,41,59,.8)}
+    .app-header{
+      position:fixed;top:0;left:0;right:0;z-index:40;backdrop-filter:blur(10px);
+      background:rgba(2,6,23,.92);border-bottom:1px solid rgba(30,41,59,.8)
+    }
+    .app-header::before{ /* textura sutil */
+      content:"";position:absolute;inset:0;pointer-events:none;opacity:.14;
+      background-image:
+        radial-gradient(circle at 10px 10px,rgba(255,255,255,.05) 2px,transparent 3px),
+        radial-gradient(circle at 35px 30px,rgba(255,255,255,.05) 2px,transparent 3px);
+      background-size:48px 48px,48px 48px;
+    }
     .header-spacer{height:var(--header-h)}
 
-    /* Tabs */
-    .tab-btn{padding:.6rem .8rem;font-size:.95rem;border-radius:.9rem;border:1px solid rgba(51,65,85,.8);
-      background:rgba(2,6,23,.6);color:#cbd5e1;transition:transform .18s,background .18s,color .18s,border-color .18s}
-    .tab-btn.active{background:#0b1220;color:#fff;border-color:#4ade80;box-shadow:0 0 0 1px rgba(74,222,128,.25) inset;transform:translateY(-1px)}
-    .tab-nav{position:relative}
-    .tab-indicator{position:absolute;left:0;bottom:-2px;height:3px;width:50%;
-      background:linear-gradient(90deg,#34d399,#22d3ee);border-radius:9999px;transition:transform .28s cubic-bezier(.22,.7,.12,1)}
+    /* Tabs grandes */
+    .tabs-bar{display:flex;gap:.75rem;margin-top:.35rem}
+    .tab-big{flex:1;padding:12px 14px;border-radius:12px;font-weight:700;text-align:center;
+      background:rgba(15,23,42,.7);border:1px solid rgba(51,65,85,.8);color:#cbd5e1;transition:.15s}
+    .tab-big.active{background:linear-gradient(180deg,#0f172a 0%,#0b1220 100%);
+      color:#fff;border-color:#4ade80;box-shadow:inset 0 0 0 1px rgba(74,222,128,.25)}
 
     /* Carrusel tabs + swipe */
     .tabs-viewport{overflow:hidden}
-    .tabs-track{display:flex;width:200%;transition:transform .32s cubic-bezier(.22,.7,.12,1);touch-action:pan-y}
-    .tabs-page{width:100%;padding:12px}
+    .tabs-track{display:flex;transition:transform .32s cubic-bezier(.22,.7,.12,1);touch-action:pan-y}
+    .tabs-page{width:100%;padding:12px;min-height:calc(100vh - var(--header-h));}
 
     /* Cards */
     .card-rect{position:relative;border-radius:16px;padding:8px;overflow:hidden}
@@ -77,8 +85,8 @@
     .board img.field{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
     .board .layer{position:absolute;inset:0}
 
-    /* Plantel scroll (más alto) */
-    .plantel-scroll{max-height:calc(100vh - var(--header-h) - 110px);overflow-y:auto;padding-right:4px}
+    /* Alturas de scroll afinadas */
+    .plantel-scroll{height:calc(100vh - var(--header-h) - 190px);overflow:auto;padding-right:4px}
 
     /* Botón instalar sticky */
     .install-pill{position:fixed;right:12px;bottom:12px;z-index:50}
@@ -186,7 +194,7 @@
       return 'data:image/svg+xml;utf8,'+encodeURIComponent(svg);
     };
 
-    /* ========= Seed sin CORS ========= */
+    /* ========= Seed ========= */
     const SEED=[
       {id:'1',nombre:'Leo',equipoPropio:'La 10',equipoFavorito:'Barcelona',fotoUrl:mkAvatar('Leo'),ATA:10,PAS:9,REG:10,VEL:9,DEF:4,FIS:7,ARQ:3,EQP:8,pie:'Izquierdo',estrellas:5,especial:true,bandera:'🇦🇷',pos:'LA'},
       {id:'2',nombre:'Fabi',equipoPropio:'La 10',equipoFavorito:'Colón',fotoUrl:mkAvatar('Fabi'),ATA:7,PAS:8,REG:7,VEL:7,DEF:7,FIS:7,ARQ:4,EQP:9,pie:'Derecho',estrellas:4,bandera:'🇦🇷',pos:'MU'},
@@ -227,7 +235,6 @@
       return{A:best.A,B:best.B,m:best.m}};
 
     /* ========= UI helpers ========= */
-    const Pill=({children,className=''})=> <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${className}`}>{children}</span>;
     const Stars=({n=0})=>{const s=clamp(Math.round(n),0,5);return(<div className="flex gap-1 text-amber-300" title={`${s} estrellas`}>{Array.from({length:5}).map((_,i)=>(<span key={i}>{i<s?'★':'☆'}</span>))}</div>)};
 
     const FifaCard=({p,small=false})=>{
@@ -251,7 +258,7 @@
               <img src={p.fotoUrl} className={`rounded-xl object-cover ring-2 ${ring} ${small?'h-20 w-20':'h-24 w-24'}`} alt={p.nombre}/>
             </div>
             <div className="mt-2 text-center text-sm font-extrabold">{p.nombre}</div>
-            {/* solo stats compactas (sin pills extras) */}
+            {/* solo stats compactas */}
             <div className="mt-1 grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] font-semibold">
               {STAT.map(k=>(
                 <div key={k} className="flex items-center justify-between rounded-lg bg-white/30 px-2 py-1">
@@ -311,7 +318,7 @@
       )
     };
 
-    /* ============ Formación (responsive + fotos) ============ */
+    /* ============ Formación (posiciones + copiar sin alert) ============ */
     const MiniCard = ({p,dataFotos})=>{
       if(!p) return null;
       const rare=rarityOf(p);
@@ -346,20 +353,20 @@
       );
     };
 
-    // posiciones relativas 2-2-1 (por lado); valores en %
+    // 2-2-1 alineado a tu imagen (espejo diagonal para el rival)
     const POS_A = [
-      {x: 12, y: 80}, // AR
-      {x: 28, y: 62}, // DF izq
-      {x: 28, y: 38}, // DF der
-      {x: 50, y: 50}, // Medio
-      {x: 70, y: 50}, // Punta
+      {x: 15, y: 74}, // AR propio
+      {x: 28, y: 58}, // DF izq
+      {x: 28, y: 42}, // DF der
+      {x: 49, y: 50}, // Medio
+      {x: 69, y: 46}, // Punta
     ];
-    const mirrorX = p => ({x: 100 - p.x, y: p.y});
-    const POS_B = POS_A.map(mirrorX);
+    const POS_B = POS_A.map(p=>({x:100-p.x,y:100-p.y}));
 
     const FormationBoard = ({teamA=[], teamB=[], map, kChem, chem, scale=0.50, onReadyImage}) => {
       const ref = useRef(null);
       const [dataFotos, setDataFotos] = useState({});
+      const [copied,setCopied]=useState(false);
 
       // Preload fotos a dataURL para export (si CORS deja)
       useEffect(()=>{
@@ -393,11 +400,12 @@
       };
       const copiar = async ()=>{
         try{
-          const {canvas}=await makeCanvas(); canvas.toBlob(async b=>{
-            if(!b) return; await navigator.clipboard.write([new ClipboardItem({'image/png': b})]);
-            alert('Imagen copiada al portapapeles ✅');
-          });
-        }catch{alert('Tu navegador no permite copiar imágenes. Usá "Descargar".')}
+          const {canvas}=await makeCanvas();
+          const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
+          if(!blob) return;
+          await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+          setCopied(true); setTimeout(()=>setCopied(false),1800);
+        }catch{}
       };
       const compartir = async ()=>{
         try{
@@ -407,28 +415,26 @@
             await navigator.share({title:'Formación F5',files:[file],text:'Formación del partido'});
           }
         }catch(e){
-          // si canceló el share en móvil, no forzar descarga
-          if(e && (e.name==='AbortError' || e.message?.includes('Abort'))) return;
-          // en otros errores podés descargar manual
-          // descargar();
+          // Si el usuario cancela, no forzamos descarga
         }
       };
 
-      // escala adaptativa en móvil/desktop
+      // escala adaptativa
       const isDesk = ()=>window.matchMedia('(min-width:768px)').matches;
       const scaleLive = isDesk()? scale : Math.max(0.42, Math.min(scale, 0.56));
 
       return (
         <div className="w-full">
+          {/* Título fuera de la imagen */}
+          <div className="mb-2 flex justify-center">
+            <div className="rounded-xl bg-slate-900/70 px-4 py-1.5 text-white text-sm sm:text-base font-bold flex items-center gap-2">
+              ⚽ Formación F5
+            </div>
+          </div>
+
           <div ref={ref} className="board ring-1 ring-slate-700 shadow-xl mx-auto bg-slate-900/30 relative">
             <img src="assets/cancha.png" alt="Cancha" className="field"/>
-
             <div className="layer">
-              <div className="absolute top-2 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-xl bg-slate-900/70 text-white text-sm sm:text-base font-bold flex items-center gap-2">
-                <span className="text-lg">⚽</span> <span>Formación F5</span>
-              </div>
-
-              {/* team A */}
               {teamA.map((id,i)=>{
                 const p=map[id]; const pos=POS_A[i]||POS_A[POS_A.length-1];
                 return (
@@ -438,7 +444,6 @@
                   </div>
                 );
               })}
-              {/* team B */}
               {teamB.map((id,i)=>{
                 const p=map[id]; const pos=POS_B[i]||POS_B[POS_B.length-1];
                 return (
@@ -455,7 +460,7 @@
 
           <div className="grid grid-cols-2 sm:flex sm:flex-row justify-center gap-2 mt-3">
             <button onClick={descargar} className="rounded-xl bg-emerald-600 px-3 py-2 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">⬇️ Descargar</button>
-            <button onClick={copiar} className="rounded-xl bg-slate-800 px-3 py-2 text-sm ring-1 ring-slate-700 hover:bg-slate-700">📋 Copiar</button>
+            <button onClick={copiar} className="rounded-xl bg-slate-800 px-3 py-2 text-sm ring-1 ring-slate-700 hover:bg-slate-700">{copied?'✔️ Copiado':'📋 Copiar'}</button>
             <button onClick={compartir} className="rounded-xl bg-cyan-600 px-3 py-2 text-sm text-white ring-1 ring-cyan-500 hover:bg-cyan-500">📤 Compartir</button>
           </div>
         </div>
@@ -481,7 +486,7 @@
         {STAT.map(k=>(
           <div key={k}>
             <div className="mb-1 flex items-center justify-between text-sm"><span className="text-slate-300" title={SL[k]}>{k}</span><span className="font-semibold">{values[k]}</span></div>
-            <div className="h-2 w-full rounded bg-slate-700"><div className="h-2 rounded" style={{width:`${Math.max(0,Math.min(100,(values[k]/max)*100))}%`,backgroundColor:c}}/></div>
+            <div className="h-2 w-full rounded bg-slate-700"><div className="h-2 rounded" style={{width:`${Math.max(0,Math.min(100,(values[k]/max)*100))}%`,backgroundColor:c}`}/></div>
           </div>
         ))}
       </div>);
@@ -511,6 +516,25 @@
         </div>
       );
     };
+
+    // Fila compacta para Partido (solo nombre + rating)
+    const CompactRow = ({p,onOpen,onDragStart}) => (
+      <div
+        className="flex items-center justify-between rounded-xl bg-slate-900/70 px-3 py-2 ring-1 ring-slate-700 cursor-move"
+        draggable
+        onDragStart={onDragStart}
+        data-id={p.id}
+      >
+        <button onClick={onOpen} className="min-w-0 text-left">
+          <div className="truncate text-base font-semibold">
+            {p.nombre} {p.bandera||''}
+          </div>
+        </button>
+        <div className="ml-2 shrink-0 rounded-md bg-slate-800 px-2 py-0.5 text-sm ring-1 ring-slate-700 tabular-nums">
+          {Math.round(p._GLOBAL*10)}
+        </div>
+      </div>
+    );
 
     const Gauge=({label,v})=>(<div className="mb-1"><div className="flex justify-between text-xs"><span>{label}</span><span className="font-semibold">{v}</span></div><div className="h-1.5 rounded bg-slate-700"><div className="h-1.5 rounded" style={{width:`${v*10}%`,backgroundColor:'#22c55e'}}/></div></div>);
 
@@ -547,9 +571,9 @@
     /* ========= Glosario ========= */
     const GlossaryModal = ({onClose}) => (
       <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={onClose}>
-        <div className="w-full max-w-3xl space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700 text-sm"
+        <div className="w-full max-w-3xl rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700 text-sm max-h-[85vh] overflow-y-auto"
              onClick={e=>e.stopPropagation()}>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-2">
             <div className="text-lg font-semibold">Glosario</div>
             <button onClick={onClose} className="rounded-lg bg-slate-800 px-2 py-1 ring-1 ring-slate-700">Cerrar</button>
           </div>
@@ -573,7 +597,7 @@
                 <li><b>ARQ</b> (Arco): Reflejos, Manos, Saque</li>
                 <li><b>EQP</b> (Equipo): Colaboración, Disciplina, Liderazgo</li>
               </ul>
-              <div className="mt-1 text-slate-300">Cada stat es el promedio de sus substats (redondeo al entero dentro de 1–10).</div>
+              <div className="mt-1 text-slate-300">Cada stat es el promedio de sus substats (se redondea en 1–10).</div>
             </div>
 
             <div>
@@ -588,7 +612,7 @@
 
             <div>
               <div className="font-semibold text-emerald-300">Score</div>
-              <div>Combina Rating y Química con un peso <b>k</b> (configurable):</div>
+              <div>Combinación de <b>Rating</b> y <b>Química</b> con un peso <b>k</b> (configurable):</div>
               <div><code>Score = Rating de equipo + (Química de equipo × k)</code></div>
             </div>
           </div>
@@ -670,7 +694,6 @@
       const[formScale,setFormScale]=useState(()=>+(localStorage.getItem('f5.formScale')??0.50));
       const[listTwoCols,setListTwoCols]=useState(()=>{try{return JSON.parse(localStorage.getItem('f5.listTwoCols')??'true')}catch{return true}});
       const[tab,setTab]=useState('partido');
-      const[modal,setModal]=useState(null);
       const[form,setForm]=useState(null);
       const[settings,setSettings]=useState(false);
       const[q,setQ]=useState('');
@@ -685,6 +708,12 @@
         window.addEventListener('beforeinstallprompt',onPrompt);
         return ()=>window.removeEventListener('beforeinstallprompt',onPrompt);
       },[]);
+      const doInstall=async ()=>{
+        if(!deferredPrompt) return;
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        setDeferredPrompt(null);
+      };
 
       const map=useMemo(()=>Object.fromEntries(players.map(p=>[p.id,p])),[players]);
       const chem=useMemo(()=>applyOverrides(chemBuildBase(players),chemOverrides),[players,chemOverrides]);
@@ -719,6 +748,7 @@
       },[]);
 
       const convocados=[...selected];
+      const convocadosCount=convocados.length;
       const canMake=convocados.length===10;
       const reachedMax=convocados.length>=10;
       const invalidPins=pinA.size>5||pinB.size>5;
@@ -763,337 +793,346 @@
       });
       filtered.sort((a,b)=>{switch(sort){case'global-asc':return a._GLOBAL-b._GLOBAL;case'nombre':return a.nombre.localeCompare(b.nombre);default:return b._GLOBAL-a._GLOBAL;}});
 
-      const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
-      const doInstall=async ()=>{
-        if(!deferredPrompt){alert('Si tu navegador lo permite, vuelve a abrir la app para ver el botón de instalar.');return;}
-        deferredPrompt.prompt();
-        const {outcome}=await deferredPrompt_userChoice(deferredPrompt);
-        if(outcome!=='accepted'){ /* usuario canceló, no hacemos nada */ }
-      };
-      const deferredPrompt_userChoice=(p)=>new Promise(res=>{
-        const i=setInterval(()=>{
-          if(p.userChoice){clearInterval(i);p.userChoice.then(res);} },50);
-      });
-
-      const teamAvgValues=(ids)=>{const o={};STAT.forEach(k=>o[k]=+avg(ids.map(id=>map[id][k]??0)).toFixed(2));return o};
-
-      // Drag & Drop simple entre listas A/B
-      const [dragInfo,setDragInfo]=useState(null); // {team:'A'|'B', id}
-      const onDragStart=(team,id)=>e=>{
-        e.dataTransfer.setData('text/plain', id);
-        setDragInfo({team,id});
-      };
+      // DnD con intercambio
+      const [dragInfo,setDragInfo]=useState(null);
+      const onDragStart=(team,id)=>e=>{ e.dataTransfer.setData('text/plain', id); setDragInfo({team,id}); };
       const onDragOver=e=>{ e.preventDefault(); };
-      const onDrop=targetTeam=>e=>{
+      const findClosestItemId = (container, clientY) => {
+        const items=[...container.querySelectorAll('[data-id]')];
+        if(!items.length) return null;
+        let best=null, bestDist=Infinity, bestId=null;
+        for(const el of items){
+          const r=el.getBoundingClientRect();
+          const cy=(r.top+r.bottom)/2;
+          const d=Math.abs(clientY-cy);
+          if(d<bestDist){bestDist=d;best=el;bestId=el.dataset.id;}
+        }
+        return bestId;
+      };
+      const onDrop = targetTeam => e => {
         e.preventDefault();
+        if(!teams) return;
         const id = e.dataTransfer.getData('text/plain');
-        if(!id || !teams) return;
-        const from=dragInfo?.team;
-        if(!from || from===targetTeam) return;
+        const from = dragInfo?.team;
+        if(!id || !from) return;
+
+        const container = e.currentTarget;
+        const targetId = findClosestItemId(container, e.clientY);
+
         setTeams(t=>{
           if(!t) return t;
-          if(t[targetTeam].length>=5) return t; // no sobrepasar 5
-          return {
-            ...t,
-            [from]: t[from].filter(x=>x!==id),
-            [targetTeam]: t[targetTeam].includes(id)? t[targetTeam] : [...t[targetTeam], id]
-          };
+          let A=[...t.A], B=[...t.B];
+
+          // quitar del origen
+          if(from==='A') A=A.filter(x=>x!==id); else B=B.filter(x=>x!==id);
+
+          if(targetTeam===from){
+            // mismo equipo: reordenar
+            const list = targetTeam==='A'?A:B;
+            const idx = targetId? list.indexOf(targetId) : list.length;
+            const cleaned = list.filter(x=>x!==id);
+            cleaned.splice(Math.max(0,idx),0,id);
+            if(targetTeam==='A') A=cleaned; else B=cleaned;
+          }else{
+            // equipos distintos: intercambio con targetId si existe
+            if(targetId){
+              if(targetTeam==='A'){
+                const iA = A.indexOf(targetId);
+                if(iA>=0){
+                  const replaced = A[iA];
+                  A[iA]=id;
+                  B.push(replaced);
+                }
+              }else{
+                const iB = B.indexOf(targetId);
+                if(iB>=0){
+                  const replaced = B[iB];
+                  B[iB]=id;
+                  A.push(replaced);
+                }
+              }
+            }else{
+              // sin target → insertar al final si hay espacio
+              if(targetTeam==='A'){ if(A.length<5) A.push(id); else return t; }
+              else { if(B.length<5) B.push(id); else return t; }
+            }
+          }
+          return {A,B};
         });
+
         setDragInfo(null);
       };
 
-      // helpers métricas
-      const Aids=teams?.A||[], Bids=teams?.B||[];
-      const rateA=teamGlobal(Aids,map), rateB=teamGlobal(Bids,map);
-      const chemA=chemTeam(Aids,chem), chemB=chemTeam(Bids,chem);
-      const scoreA=+(rateA+chemA*kChem).toFixed(2);
-      const scoreB=+(rateB+chemB*kChem).toFixed(2);
+      const openDetails=id=>{setPlayerDetailId(id);window.scrollTo({top:0,behavior:'smooth'})};
 
-      // UI: Header alto con título F5C + engranaje
-      const TabButton = ({id,label})=>(
-        <button className={`tab-btn ${tab===id?'active':''}`} onClick={()=>setTab(id)}>{label}</button>
-      );
-
-      // ordenar/filtrar lista Plantel
-      const openDetails=id=>{ setPlayerDetailId(id); setModal('player'); };
-
-      /* ========= RENDER ========= */
-      const tabIndex = (tab==='partido'?0:1);
-      const convocadosCount = convocados.length;
-
-      return (
-        <div className="min-h-screen">
-          {/* Header */}
-          <header className="app-header">
-            <div className="mx-auto max-w-6xl px-3 py-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-600/20 ring-1 ring-emerald-500/30">⚽</div>
-                </div>
-                <div className="text-center">
-                  <div style={{fontStyle:'italic'}} className="text-3xl font-extrabold tracking-wide">
-                    F5C
-                  </div>
-                  <div className="text-xs text-slate-400 -mt-1">Fútbol 5 Coronda</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={()=>setSettings(true)} className="rounded-xl bg-slate-800 px-3 py-2 ring-1 ring-slate-700 hover:bg-slate-700" title="Configuración">⚙️</button>
-                </div>
+      // Título + Tabs + pill convocados
+      const Header=()=>(
+        <header className="app-header">
+          <div className="mx-auto max-w-6xl px-3 py-3 relative">
+            <div className="flex items-center justify-between">
+              <div className="h-10 w-10 grid place-items-center select-none text-2xl">⚽</div>
+              <div className="text-center">
+                <div style={{fontStyle:'italic'}} className="text-3xl font-extrabold tracking-wide">F5C</div>
               </div>
-
-              {/* Tabs */}
-              <div className="mt-3">
-                <div className="tab-nav flex items-center gap-2">
-                  <TabButton id="partido" label="Partido"/>
-                  <TabButton id="plantel" label="Plantel"/>
-                </div>
-                <div className="mt-2">
-                  <span className="inline-block rounded-full bg-slate-800/70 px-3 py-1 text-sm ring-1 ring-slate-700">
-                    Convocados: <b>{convocadosCount}</b>/10
-                  </span>
-                </div>
-              </div>
+              <button onClick={()=>setSettings(true)} className="rounded-xl bg-slate-800 px-3 py-2 ring-1 ring-slate-700 hover:bg-slate-700" title="Configuración">⚙️</button>
             </div>
-          </header>
-          <div className="header-spacer"></div>
 
-          {/* Tabs viewport (swipe) */}
-          <div ref={viewportRef} className="tabs-viewport">
-            <div className="tabs-track" style={{transform:`translateX(${tabIndex*-50}%)`}}>
-              {/* === PARTIDO === */}
-              <section className="tabs-page space-y-3">
-                <div className="mx-auto max-w-6xl space-y-3">
-                  {/* Botones grandes AZAR / EQUILIBRADO */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <button
-                      onClick={makeR}
-                      disabled={!canMake || invalidPins}
-                      className={`rounded-2xl px-4 py-4 text-lg font-bold ring-1 ${canMake && !invalidPins ? 'bg-indigo-600 text-white ring-indigo-500 hover:bg-indigo-500' : 'bg-slate-800/50 text-slate-400 ring-slate-700 cursor-not-allowed'}`}>
-                      🎲 AZAR
-                      <div className="text-xs font-normal opacity-80 mt-1">Requiere 10 convocados</div>
-                    </button>
-                    <button
-                      onClick={makeB}
-                      disabled={!canMake || invalidPins}
-                      className={`rounded-2xl px-4 py-4 text-lg font-bold ring-1 ${canMake && !invalidPins ? 'bg-emerald-600 text-white ring-emerald-500 hover:bg-emerald-500' : 'bg-slate-800/50 text-slate-400 ring-slate-700 cursor-not-allowed'}`}>
-                      ⚖️ EQUILIBRADO
-                      <div className="text-xs font-normal opacity-80 mt-1">Respeta pines A/B</div>
-                    </button>
-                  </div>
+            <div className="tabs-bar">
+              <button className={`tab-big ${tab==='partido'?'active':''}`} onClick={()=>setTab('partido')}>Partido</button>
+              <button className={`tab-big ${tab==='plantel'?'active':''}`} onClick={()=>setTab('plantel')}>Plantel</button>
+            </div>
 
-                  {/* Listado por equipo (arriba de todo) */}
-                  {teams ? (
-                    <div className={`grid ${listTwoCols?'md:grid-cols-2':'grid-cols-1'} gap-3`}>
-                      {/* Equipo A */}
-                      <div
-                        onDragOver={onDragOver}
-                        onDrop={onDrop('A')}
-                        className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-                        <div className="mb-2 flex items-center justify-between">
-                          <div className="text-lg font-bold">Equipo A</div>
-                          <div className="text-xs text-slate-300">
-                            Rating: <b>{rateA}</b> &nbsp;•&nbsp; Química: <b>{chemA}</b> &nbsp;•&nbsp; Score: <b>{scoreA}</b>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          {Aids.map(id=>{
-                            const p=map[id]; if(!p) return null;
-                            return (
-                              <div key={id}
-                                   draggable
-                                   onDragStart={onDragStart('A',id)}
-                                   className="cursor-move">
-                                <PlayerRow
-                                  p={p}
-                                  selected={true}
-                                  onToggle={()=>toggle(id)}
-                                  onOpen={()=>openDetails(id)}
-                                  pinA={pinA} pinB={pinB} setPinA={setPinA} setPinB={setPinB}
-                                  disableAdd={false}
-                                />
-                              </div>
-                            );
-                          })}
-                          {Aids.length<5 && (
-                            <div className="rounded-xl border border-dashed border-slate-600 p-4 text-center text-slate-400">
-                              Arrastrá aquí un jugador del B…
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Equipo B */}
-                      <div
-                        onDragOver={onDragOver}
-                        onDrop={onDrop('B')}
-                        className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-                        <div className="mb-2 flex items-center justify-between">
-                          <div className="text-lg font-bold">Equipo B</div>
-                          <div className="text-xs text-slate-300">
-                            Rating: <b>{rateB}</b> &nbsp;•&nbsp; Química: <b>{chemB}</b> &nbsp;•&nbsp; Score: <b>{scoreB}</b>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          {Bids.map(id=>{
-                            const p=map[id]; if(!p) return null;
-                            return (
-                              <div key={id}
-                                   draggable
-                                   onDragStart={onDragStart('B',id)}
-                                   className="cursor-move">
-                                <PlayerRow
-                                  p={p}
-                                  selected={true}
-                                  onToggle={()=>toggle(id)}
-                                  onOpen={()=>openDetails(id)}
-                                  pinA={pinA} pinB={pinB} setPinA={setPinA} setPinB={setPinB}
-                                  disableAdd={false}
-                                />
-                              </div>
-                            );
-                          })}
-                          {Bids.length<5 && (
-                            <div className="rounded-xl border border-dashed border-slate-600 p-4 text-center text-slate-400">
-                              Arrastrá aquí un jugador del A…
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="rounded-2xl bg-slate-900/60 p-3 ring-1 ring-slate-700 text-sm">
-                      Elegí 10 convocados y usa <b>AZAR</b> o <b>EQUILIBRADO</b> para generar equipos.
-                    </div>
-                  )}
-
-                  {/* Radar comparativo */}
-                  {teams && (
-                    <TeamRadarCompare A={Aids} B={Bids} map={map}/>
-                  )}
-
-                  {/* Barras: 2 columnas lado a lado (A/B) */}
-                  {teams && (
-                    <div className={`grid ${listTwoCols?'md:grid-cols-2':'grid-cols-1'} gap-3`}>
-                      <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-                        <div className="mb-2 text-sm font-semibold">Barras Equipo A</div>
-                        <BarsChart values={teamAvgValues(Aids)} accent={TC.A.hex}/>
-                      </div>
-                      <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-                        <div className="mb-2 text-sm font-semibold">Barras Equipo B</div>
-                        <BarsChart values={teamAvgValues(Bids)} accent={TC.B.hex}/>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Semáforo balance */}
-                  {teams && (
-                    <BalanceIndicator A={Aids} B={Bids} map={map} chem={chem} kChem={kChem}/>
-                  )}
-
-                  {/* Formación al final */}
-                  {teams && (
-                    <FormationBoard teamA={Aids} teamB={Bids} map={map} kChem={kChem} chem={chem} scale={formScale}/>
-                  )}
-                </div>
-              </section>
-
-              {/* === PLANTEL === */}
-              <section className="tabs-page space-y-3">
-                <div className="mx-auto max-w-6xl">
-                  <div className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    <input value={q} onChange={e=>setQ(e.target.value)}
-                           placeholder="Buscar por nombre, propio, favorito…"
-                           className="rounded-xl bg-slate-900 px-3 py-2 ring-1 ring-slate-700"/>
-                    <select value={sort} onChange={e=>setSort(e.target.value)}
-                            className="rounded-xl bg-slate-900 px-3 py-2 ring-1 ring-slate-700">
-                      <option value="global-desc">Rating ↓</option>
-                      <option value="global-asc">Rating ↑</option>
-                      <option value="nombre">Nombre A–Z</option>
-                    </select>
-                    <div className="flex gap-2">
-                      <button onClick={()=>setForm({})} className="flex-1 rounded-xl bg-emerald-600 px-3 py-2 text-white ring-1 ring-emerald-500 hover:bg-emerald-500">+ Jugador</button>
-                      <button onClick={()=>reset()} className="rounded-xl bg-slate-800 px-3 py-2 ring-1 ring-slate-700 hover:bg-slate-700">Seed</button>
-                    </div>
-                  </div>
-
-                  <div className="plantel-scroll space-y-2">
-                    {filtered.map(p=>{
-                      const sel=selected.has(p.id);
-                      return (
-                        <PlayerRow key={p.id}
-                                   p={p}
-                                   selected={sel}
-                                   onToggle={()=>toggle(p.id)}
-                                   onOpen={()=>openDetails(p.id)}
-                                   pinA={pinA} pinB={pinB} setPinA={setPinA} setPinB={setPinB}
-                                   disableAdd={reachedMax && !sel}/>
-                      );
-                    })}
-                    {filtered.length===0 && (
-                      <div className="rounded-xl bg-slate-900/60 p-3 text-center ring-1 ring-slate-700 text-sm text-slate-300">
-                        No hay jugadores que coincidan con tu búsqueda.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </section>
+            <div className="mt-2">
+              <span className="inline-block rounded-full bg-slate-800/60 backdrop-blur px-3 py-1 text-sm ring-1 ring-slate-700">
+                Convocados: <b>{convocadosCount}</b>/10
+              </span>
             </div>
           </div>
+        </header>
+      );
 
-          {/* Install pill sticky */}
-          {!isStandalone && deferredPrompt && (
-            <button onClick={doInstall}
-                    className="install-pill rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white ring-1 ring-emerald-500 shadow-lg">
-              ⤓ Instalar F5C
-            </button>
-          )}
+      const ContentPartido=()=>{
+        const Aids=teams?.A||[];
+        const Bids=teams?.B||[];
+        const scoreA=teamScoreUI(Aids,map,chem,kChem), scoreB=teamScoreUI(Bids,map,chem,kChem);
+        const avgA=teamAvg(Aids,map), avgB=teamAvg(Bids,map);
 
-          {/* Modales */}
-          {settings && (
-            <SettingsModal
-              onClose={()=>setSettings(false)}
-              kChem={kChem} setKChem={setKChem}
-              onExport={onExport}
-              onImport={onImport}
-              onReset={reset}
-              parallaxOn={parallaxOn} setParallaxOn={setParallaxOn}
-              formScale={formScale} setFormScale={setFormScale}
-              listTwoCols={listTwoCols} setListTwoCols={setListTwoCols}
-              onOpenGlossary={()=>{ setShowGlossary(true); }}
-            />
-          )}
-          {showGlossary && <GlossaryModal onClose={()=>setShowGlossary(false)}/>}
+        return (
+          <section className="tabs-page space-y-3">
+            {/* Botones grandes */}
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={makeR} disabled={!canMake || invalidPins} className={`rounded-2xl px-4 py-3 text-lg font-bold ring-1 ${canMake&&!invalidPins?'bg-slate-800 text-white ring-slate-700 hover:bg-slate-700':'bg-slate-800/40 text-slate-500 ring-slate-800 cursor-not-allowed'}`}>🎲 AZAR</button>
+              <button onClick={makeB} disabled={!canMake || invalidPins} className={`rounded-2xl px-4 py-3 text-lg font-bold ring-1 ${canMake&&!invalidPins?'bg-emerald-600 text-white ring-emerald-500 hover:bg-emerald-500':'bg-emerald-600/30 text-emerald-200 ring-emerald-800 cursor-not-allowed'}`}>⚖️ EQUILIBRADO</button>
+            </div>
 
-          {form && (
-            <PlayerFormModal
-              initial={form.id? map[form.id]: null}
-              onCancel={()=>setForm(null)}
-              onSave={onSave}
-            />
-          )}
-          {modal==='player' && playerDetailId && map[playerDetailId] && (
-            <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={()=>{setModal(null);setPlayerDetailId(null)}}>
-              <div className="w-full max-w-4xl rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700 max-h-[90vh] overflow-auto" onClick={e=>e.stopPropagation()}>
+            {/* Listados compactos A/B */}
+            <div className={`grid ${true?'grid-cols-2':'grid-cols-1'} gap-3`}>
+              <div onDragOver={onDragOver} onDrop={onDrop('A')} className="space-y-2 rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
+                <div className="mb-1 flex items-center justify-between">
+                  <div className="font-semibold">Equipo A</div>
+                  <div className="text-xs opacity-80">Score: {scoreA}</div>
+                </div>
+                {Aids.map(id=>{
+                  const p=map[id];
+                  return (
+                    <CompactRow
+                      key={id}
+                      p={p}
+                      onOpen={()=>openDetails(id)}
+                      onDragStart={onDragStart('A',id)}
+                    />
+                  );
+                })}
+              </div>
+
+              <div onDragOver={onDragOver} onDrop={onDrop('B')} className="space-y-2 rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
+                <div className="mb-1 flex items-center justify-between">
+                  <div className="font-semibold">Equipo B</div>
+                  <div className="text-xs opacity-80">Score: {scoreB}</div>
+                </div>
+                {Bids.map(id=>{
+                  const p=map[id];
+                  return (
+                    <CompactRow
+                      key={id}
+                      p={p}
+                      onOpen={()=>openDetails(id)}
+                      onDragStart={onDragStart('B',id)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Radar */}
+            <TeamRadarCompare A={Aids} B={Bids} map={map}/>
+
+            {/* Barras A/B */}
+            <div className={`grid ${true?'grid-cols-2':'grid-cols-1'} gap-3`}>
+              <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
+                <div className="mb-2 text-sm font-semibold">Promedios Equipo A</div>
+                <BarsChart values={avgA} accent={TC.A.hex}/>
+              </div>
+              <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
+                <div className="mb-2 text-sm font-semibold">Promedios Equipo B</div>
+                <BarsChart values={avgB} accent={TC.B.hex}/>
+              </div>
+            </div>
+
+            {/* Formación */}
+            <FormationBoard teamA={Aids} teamB={Bids} map={map} kChem={kChem} chem={chem} scale={formScale}/>
+          </section>
+        );
+      };
+
+      const ContentPlantel=()=>{
+        const disableAdd = selected.size>=10;
+        return(
+          <section className="tabs-page">
+            <div className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <input value={q} onChange={e=>setQ(e.target.value)}
+                className="rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-700" placeholder="Buscar nombre o equipo..."/>
+              <select value={sort} onChange={e=>setSort(e.target.value)}
+                className="rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-700">
+                <option value="global-desc">Rating ↓</option>
+                <option value="global-asc">Rating ↑</option>
+                <option value="nombre">Nombre A→Z</option>
+              </select>
+              <div className="flex gap-2">
+                <button onClick={()=>setForm({})} className="flex-1 rounded-xl bg-emerald-600 px-3 py-2 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">+ Añadir</button>
+                <button onClick={()=>setSettings(true)} className="rounded-xl bg-slate-800 px-3 py-2 text-sm ring-1 ring-slate-700 hover:bg-slate-700">⚙️ Ajustes</button>
+              </div>
+            </div>
+
+            <div className="plantel-scroll space-y-2">
+              {filtered.map(p=>(
+                <PlayerRow key={p.id} p={p} selected={selected.has(p.id)}
+                  onToggle={()=>toggle(p.id)}
+                  onOpen={()=>setPlayerDetailId(p.id)}
+                  pinA={pinA} pinB={pinB} setPinA={setPinA} setPinB={setPinB}
+                  disableAdd={disableAdd}/>
+              ))}
+            </div>
+
+            {playerDetailId && (
+              <div className="mt-3 rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
                 <div className="mb-2 flex items-center justify-between">
-                  <div className="text-lg font-semibold">{map[playerDetailId].nombre}</div>
-                  <div className="flex gap-2">
-                    <button onClick={()=>{ setForm(map[playerDetailId]); setModal(null);} } className="rounded-xl bg-slate-800 px-3 py-1 ring-1 ring-slate-700 hover:bg-slate-700">Editar</button>
-                    <button onClick={()=>{ onDel(playerDetailId); setModal(null);}} className="rounded-xl bg-rose-700 px-3 py-1 text-white ring-1 ring-rose-500 hover:bg-rose-600">Eliminar</button>
-                    <button onClick={()=>{setModal(null);setPlayerDetailId(null)}} className="rounded-xl bg-slate-800 px-3 py-1 ring-1 ring-slate-700 hover:bg-slate-700">Cerrar</button>
-                  </div>
+                  <div className="text-sm font-semibold">Detalles del jugador</div>
+                  <button onClick={()=>setPlayerDetailId(null)} className="rounded-lg bg-slate-800 px-2 py-1 ring-1 ring-slate-700">Cerrar</button>
                 </div>
                 <PlayerDetails p={map[playerDetailId]}/>
               </div>
+            )}
+          </section>
+        );
+      };
+
+      // track transform
+      const trackStyle={transform:`translateX(${tab==='partido'?'0%':'-50%'})`};
+
+      return (
+        <>
+          <Header/>
+          <div className="header-spacer"></div>
+
+          <div className="tabs-viewport" ref={viewportRef}>
+            <div className="tabs-track" style={trackStyle}>
+              <div className="tabs-page w-full"><ContentPartido/></div>
+              <div className="tabs-page w-full"><ContentPlantel/></div>
             </div>
+          </div>
+
+          {/* Ajustes / Glosario / Form */}
+          {settings && <SettingsModal
+            onClose={()=>setSettings(false)}
+            kChem={kChem} setKChem={setKChem}
+            onExport={onExport} onImport={onImport} onReset={reset}
+            parallaxOn={parallaxOn} setParallaxOn={setParallaxOn}
+            formScale={formScale} setFormScale={setFormScale}
+            listTwoCols={true} setListTwoCols={()=>{}}
+            onOpenGlossary={()=>{setSettings(false);setShowGlossary(true)}}
+          />}
+          {showGlossary && <GlossaryModal onClose={()=>setShowGlossary(false)}/>}
+
+          {form && <PlayerFormModal initial={form.id?form:null} onCancel={()=>setForm(null)} onSave={onSave}/>}
+
+          {/* Instalar (si el navegador lo permite) */}
+          {deferredPrompt && (
+            <button className="install-pill rounded-full bg-emerald-600/90 px-3 py-1.5 text-sm text-white ring-1 ring-emerald-500 shadow"
+              onClick={doInstall}>Instalar F5C</button>
           )}
+        </>
+      );
+    };
+
+    /* ====== Form modal (igual al anterior) ====== */
+    const PlayerFormModal=({initial,onCancel,onSave})=>{
+      const base={nombre:'',equipoPropio:'',equipoFavorito:'',fotoUrl:'',escudoUrl:'',bandera:'',pos:'',ATA:5,PAS:5,REG:5,VEL:5,DEF:5,FIS:5,ARQ:5,EQP:5,subs:null,pie:'Derecho',estrellas:3,especial:false};
+      const [form,setForm]=useState(()=>{const f=initial?{...initial}:{...base}; if(!f.subs) f.subs=Object.fromEntries(STAT.map(k=>[k,(SUBS[k]||[]).map(n=>({n,v:5}))])); return f;});
+      const [showFlags,setShowFlags]=useState(false);
+      const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+      const onFile=e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>set('fotoUrl',r.result);r.readAsDataURL(f)};
+      const onSubmit=e=>{
+        e.preventDefault();
+        const c={...form};
+        STAT.forEach(k=>{ const arr=(c.subs?.[k]||[]).map(it=>clamp(+it.v||0,1,10)); c[k]=arr.length?clamp(Math.round(avg(arr.map(x=>+x.v||0))),1,10):clamp(parseInt(c[k]||0,10),1,10); });
+        if(!c.nombre.trim()) return; if(!c.fotoUrl) c.fotoUrl=mkAvatar(c.nombre);
+        onSave(c);
+      };
+      const FLAGS='🇦🇷,🇧🇷,🇺🇾,🇵🇾,🇨🇱,🇧🇴,🇵🇪,🇨🇴,🇪🇨,🇲🇽,🇪🇸,🇵🇹,🇮🇹,🇫🇷,🇩🇪,🇬🇧,🇺🇸,🇯🇵'.split(',');
+
+      return(
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={onCancel}>
+          <form className="w-full max-w-2xl space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700 max-h-[85vh] overflow-auto" onSubmit={onSubmit} onClick={e=>e.stopPropagation()}>
+            <div className="text-lg font-semibold">{initial?'Editar jugador':'Añadir jugador'}</div>
+
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <label className="space-y-1 col-span-2"><span>Nombre</span>
+                <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.nombre} onChange={e=>set('nombre',e.target.value)} required/></label>
+
+              <label className="space-y-1 col-span-2"><span>Foto URL</span>
+                <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.fotoUrl||''} placeholder="https://... (o deja vacío para avatar)" onChange={e=>set('fotoUrl',e.target.value)}/>
+                <span className="text-xs opacity-80">o subir imagen</span>
+                <input type="file" accept="image/*" onChange={onFile} className="w-full text-xs"/></label>
+
+              <label className="space-y-1"><span>Equipo propio</span>
+                <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.equipoPropio||''} onChange={e=>set('equipoPropio',e.target.value)}/></label>
+
+              <label className="space-y-1"><span>Equipo favorito</span>
+                <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.equipoFavorito||''} onChange={e=>set('equipoFavorito',e.target.value)}/></label>
+
+              <label className="space-y-1"><span>Posición</span>
+                <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.pos||''} placeholder="DC, MC, DF..." onChange={e=>set('pos',e.target.value)}/></label>
+
+              <label className="space-y-1 col-span-2"><span>Bandera (emoji)</span>
+                <div className="flex gap-2">
+                  <input className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700" value={form.bandera||''} placeholder="🇦🇷" onChange={e=>set('bandera',e.target.value)}/>
+                  <button type="button" onClick={()=>setShowFlags(s=>!s)} className="rounded bg-slate-800 px-2 ring-1 ring-slate-700">Elegir</button>
+                </div>
+                {showFlags&&(<div className="mt-1 max-h-24 overflow-auto rounded bg-slate-800 p-2 ring-1 ring-slate-700 flex flex-wrap gap-1">
+                  {FLAGS.map(f=>(<button type="button" key={f} onClick={()=>{set('bandera',f);setShowFlags(false)}} className="rounded bg-slate-700 px-2 text-base">{f}</button>))}
+                </div>)}
+              </label>
+            </div>
+
+            {/* Substats */}
+            <div className="space-y-2">
+              {STAT.map(k=>(
+                <div key={k} className="rounded-xl bg-slate-800/60 p-2 ring-1 ring-slate-700">
+                  <div className="mb-1 text-sm font-semibold">{SL[k]} <span className="opacity-60 text-xs">(se promedia en {k})</span> — <span className="opacity-80">Actual: {form[k]}</span></div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {(form.subs?.[k]||SUBS[k].map(n=>({n,v:5}))).map((it,idx)=>(
+                      <label key={idx} className="space-y-1">
+                        <span className="text-xs">{it.n}</span>
+                        <input type="number" min="1" max="10" className="w-full rounded bg-slate-800 p-2 ring-1 ring-slate-700"
+                          value={it.v} onChange={e=>{
+                            const v=clamp(parseInt(e.target.value||0,10),1,10);
+                            setForm(f=>{
+                              const subs={...(f.subs||{})};
+                              const arr=[...((subs[k]||SUBS[k].map(n=>({n,v:5}))))];
+                              arr[idx]={...arr[idx],v};
+                              subs[k]=arr;
+                              const gen=clamp(Math.round(avg(arr.map(x=>+x.v||0))),1,10);
+                              return {...f,subs,[k]:gen};
+                            });
+                          }}/>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={onCancel} className="rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">Cancelar</button>
+              <button type="submit" className="rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">Guardar</button>
+            </div>
+          </form>
         </div>
       );
     };
 
-    /* ========= Mount ========= */
-    const root=ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App/>);
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
   </script>
 </body>
 </html>
-
