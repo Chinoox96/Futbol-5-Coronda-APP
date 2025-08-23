@@ -87,7 +87,7 @@
   <div id="bg-parallax" aria-hidden="true"></div>
   <div id="root"></div>
 
-  <!-- Manifest dinámico -->
+  /* Manifest dinámico */
   <script>
     (async()=>{
       try{
@@ -114,7 +114,7 @@
     })();
   </script>
 
-  <!-- Fondo responsive -->
+  /* Fondo responsive */
   <script>
     (function(){
       try{
@@ -134,7 +134,7 @@
     })();
   </script>
 
-  <!-- Parallax -->
+  /* Parallax */
   <script>
     (function(){
       let ticking=false;
@@ -144,7 +144,7 @@
     })();
   </script>
 
-  <!-- === APP === -->
+  /* === APP === */
   <script type="text/babel">
     const {useMemo,useState,useEffect,useRef} = React;
 
@@ -868,7 +868,7 @@
                     </select>
                   </div>
 
-                  <!-- scroll verdadero solo en esta caja -->
+                  {/* scroll verdadero solo en esta caja */}
                   <div className="plantel-scroll grid gap-3"
                        style={{gridTemplateColumns: (listTwoCols ? 'repeat(2,minmax(0,1fr))' : 'repeat(1,minmax(0,1fr))')}}>
                     {filtered.map(p=>(
