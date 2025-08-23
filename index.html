@@ -7,16 +7,10 @@
   <meta name="theme-color" content="#10b981"/>
   <link id="mf" rel="manifest"/>
 
-  <!-- Favicon inline -->
-  <link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='24' fill='%2310b981'/%3E%3Ctext x='50%25' y='54%25' font-family='system-ui,Segoe UI,Roboto,sans-serif' font-size='64' text-anchor='middle' dominant-baseline='middle' font-weight='700' fill='%230b1220'%3EF5%3C/text%3E%3C/svg%3E"/>
-
-  <!-- Tailwind + React + Babel -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-  <!-- Export/Share -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <style>
@@ -27,7 +21,7 @@
       --pitch-image-desktop: var(--pitch-image-mobile);
       --pitch-darken: 0.50;
       --parallax-speed: 0.35;
-      --header-h: 132px; /* header + tabs */
+      --header-h: 132px;
     }
     html,body{background:#0b1220;color:#e2e8f0;margin:0;overflow-x:hidden}
     img,svg{max-width:100%;height:auto}
@@ -47,7 +41,6 @@
     .app-header{position:fixed;top:0;left:0;right:0;z-index:40;backdrop-filter:blur(10px);
       background:rgba(2,6,23,.92);border-bottom:1px solid rgba(30,41,59,.8)}
     .header-spacer{height:var(--header-h)}
-    /* textura sutil */
     .app-header::before{
       content:"";position:absolute;inset:0;opacity:.12;pointer-events:none;
       background-image:
@@ -61,10 +54,10 @@
     .big-tabs{overflow:hidden;border-radius:14px}
     .big-tabs button{transition:background .2s,color .2s}
 
-    /* Carrusel tabs + swipe */
+    /* Pestañas (viewport de altura completa sin “zona muerta”) */
     .tabs-viewport{overflow:hidden}
     .tabs-track{display:flex;width:200%;transition:transform .32s cubic-bezier(.22,.7,.12,1);touch-action:pan-y}
-    .tabs-page{width:100%;padding:12px}
+    .tabs-page{width:100%;padding:12px;min-height:calc(100vh - var(--header-h));}
 
     /* Cards */
     .card-rect{position:relative;border-radius:16px;padding:8px;overflow:hidden}
@@ -82,8 +75,9 @@
     .board img.field{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
     .board .layer{position:absolute;inset:0}
 
-    /* Plantel scroll (alto correcto) */
-    .plantel-scroll{max-height:calc(100vh - var(--header-h) - 24px);overflow-y:auto;padding-right:4px}
+    /* Scrolls altos */
+    .plantel-scroll{max-height:calc(100vh - var(--header-h) - 130px);overflow-y:auto;padding-right:4px}
+    .glossary-scroll{max-height:85vh;overflow:auto}
 
     /* Botón instalar sticky */
     .install-pill{position:fixed;right:12px;bottom:12px;z-index:50}
@@ -216,7 +210,7 @@
     const applyOverrides=(base,ov)=>{if(!ov)return base;const q=JSON.parse(JSON.stringify(base));for(const a in ov){for(const b in ov[a]){const v=clamp(+ov[a][b],1,10);if(!q[a])q[a]={};if(!q[b])q[b]={};q[a][b]=q[b][a]=v}}return q};
     const chemTeam=(ids,chem)=>{const arr=Array.isArray(ids)?ids.filter(Boolean):[];if(arr.length<=1)return 10;let t=0,p=0;for(let i=0;i<arr.length;i++)for(let j=i+1;j<arr.length;j++){t+=chem[arr[i]]?.[arr[j]]??5;p++}return +(t/(p||1)).toFixed(2)};
     const teamGlobal=(ids,map)=>{const arr=Array.isArray(ids)?ids.filter(id=>map[id]):[];return +avg(arr.map(id=>map[id]._GLOBAL)).toFixed(2)};
-    const teamScoreUI=(ids,map,chem,k)=>+(teamGlobal(ids,map,chem)+chemTeam(ids,chem)*k).toFixed(2);
+    const teamScoreUI=(ids,map,chem,k)=>+(teamGlobal(ids,map)+chemTeam(ids,chem)*k).toFixed(2);
     const shuffle=a=>{const x=[...a];for(let i=x.length-1;i>0;i--){const j=(Math.random()*(i+1)|0);[x[i],x[j]]=[x[j],x[i]]}return x};
     const seedWithPins=(ids,pA,pB)=>{const A=ids.filter(id=>pA.has(id));const B=ids.filter(id=>pB.has(id));const rest=ids.filter(id=>!pA.has(id)&&!pB.has(id));return{A,B,rest}};
     const fillRandom=(A,B,rest)=>{const r=shuffle(rest);for(const id of r){(A.length<B.length?A:B).push(id);if(A.length===5&&B.length===5)break}};
@@ -230,7 +224,21 @@
         [best.A[i],best.B[j]]=[best.B[j],best.A[i]];const cur=scoreDiff(best.A,best.B,map,chem,k);if(cur.diff<=best.diff||Math.random()<.12)best=cur;else[best.A[i],best.B[j]]=[best.B[j],best.A[i]]}
       return{A:best.A,B:best.B,m:best.m}};
 
-    /* ========= UI helpers ========= */
+    /* ====== Componentes UI ====== */
+    const RadarChart=({size=260,max=10,keys=STAT,dataSeries})=>{
+      const cx=size/2,cy=size/2,r=size*.4,N=keys.length;
+      const ang=i=>Math.PI*2*i/N-Math.PI/2;
+      const pt=(i,v)=>{const a=ang(i),rr=r*(v/max);return[cx+rr*Math.cos(a),cy+rr*Math.sin(a)]};
+      const lv=[2,4,6,8,10];
+      return(<svg viewBox={`0 0 ${size} ${size}`} width="100%" className="mx-auto block">
+        {lv.map((L,i)=>{const d=keys.map((_,j)=>pt(j,L)).map(([x,y])=>`${x},${y}`).join(' ');return <polygon key={i} points={d} fill="none" stroke="rgba(148,163,184,.25)" strokeWidth={1}/>})}
+        {keys.map((k,i)=>{const[x,y]=pt(i,max);return <line key={k} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(148,163,184,.3)" strokeWidth={1}/>})}
+        {keys.map((k,i)=>{const[x,y]=pt(i,max+.9);return <text key={k} x={x} y={y} textAnchor="middle" dominantBaseline="middle" fontSize={11} fill="#cbd5e1">{k}</text>})}
+        {dataSeries.map((srs,i)=>{const d=keys.map((k,j)=>pt(j,srs.values[k]??0)).map(([x,y])=>`${x},${y}`).join(' ');return(<g key={i}><polygon points={d} fill={srs.fill} stroke={srs.stroke} strokeWidth={2}/></g>)})}
+      </svg>);
+    };
+    const TC={A:{stroke:'rgba(16,185,129,1)',fill:'rgba(16,185,129,0.18)',dot:'bg-emerald-500',hex:'#10b981'},B:{stroke:'rgba(59,130,246,1)',fill:'rgba(59,130,246,0.18)',dot:'bg-blue-500',hex:'#3b82f6'}};
+
     const FifaCard=({p,small=false})=>{
       const rate=Math.round((p._GLOBAL||globalOf(p))*10);
       const rare=rarityOf(p);
@@ -264,20 +272,18 @@
       );
     };
 
-    /* ============ Radar simple (SVG) ============ */
-    const RadarChart=({size=260,max=10,keys=STAT,dataSeries})=>{
-      const cx=size/2,cy=size/2,r=size*.4,N=keys.length;
-      const ang=i=>Math.PI*2*i/N-Math.PI/2;
-      const pt=(i,v)=>{const a=ang(i),rr=r*(v/max);return[cx+rr*Math.cos(a),cy+rr*Math.sin(a)]};
-      const lv=[2,4,6,8,10];
-      return(<svg viewBox={`0 0 ${size} ${size}`} width="100%" className="mx-auto block">
-        {lv.map((L,i)=>{const d=keys.map((_,j)=>pt(j,L)).map(([x,y])=>`${x},${y}`).join(' ');return <polygon key={i} points={d} fill="none" stroke="rgba(148,163,184,.25)" strokeWidth={1}/>})}
-        {keys.map((k,i)=>{const[x,y]=pt(i,max);return <line key={k} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(148,163,184,.3)" strokeWidth={1}/>})}
-        {keys.map((k,i)=>{const[x,y]=pt(i,max+.9);return <text key={k} x={x} y={y} textAnchor="middle" dominantBaseline="middle" fontSize={11} fill="#cbd5e1">{k}</text>})}
-        {dataSeries.map((srs,i)=>{const d=keys.map((k,j)=>pt(j,srs.values[k]??0)).map(([x,y])=>`${x},${y}`).join(' ');return(<g key={i}><polygon points={d} fill={srs.fill} stroke={srs.stroke} strokeWidth={2}/></g>)})}
-      </svg>);
+    const BarsChart=({values,max=10,accent})=>{
+      const c=accent||'#22d3ee';
+      return(<div className="space-y-2">
+        {STAT.map(k=>(
+          <div key={k}>
+            <div className="mb-1 flex items-center justify-between text-sm"><span className="text-slate-300">{k}</span><span className="font-semibold">{values[k]}</span></div>
+            <div className="h-2 w-full rounded bg-slate-700"><div className="h-2 rounded" style={{width:`${Math.max(0,Math.min(100,(values[k]/max)*100))}%`,backgroundColor:c}}/></div>
+          </div>
+        ))}
+      </div>);
     };
-    const TC={A:{stroke:'rgba(16,185,129,1)',fill:'rgba(16,185,129,0.18)',dot:'bg-emerald-500',hex:'#10b981'},B:{stroke:'rgba(59,130,246,1)',fill:'rgba(59,130,246,0.18)',dot:'bg-blue-500',hex:'#3b82f6'}};
+
     const teamAvg=(ids,map)=>{const o={};const arr=Array.isArray(ids)?ids.filter(id=>map[id]):[];STAT.forEach(k=>o[k]=+avg(arr.map(id=>map[id][k]??0)).toFixed(2));return o};
 
     const TeamRadarCompare=({A,B,map})=>{
@@ -294,7 +300,6 @@
       )
     };
 
-    /* ===== Semáforo ===== */
     const BalanceIndicator=({A,B,map,chem,kChem})=>{
       const a=(Array.isArray(A)?A:[]).filter(id=>map[id]);
       const b=(Array.isArray(B)?B:[]).filter(id=>map[id]);
@@ -311,7 +316,39 @@
       )
     };
 
-    /* ============ Formación ============ */
+    /* ===== Detalles jugador (completo) ===== */
+    const Gauge=({label,v})=>(<div className="mb-1"><div className="flex justify-between text-xs"><span>{label}</span><span className="font-semibold">{v}</span></div><div className="h-1.5 rounded bg-slate-700"><div className="h-1.5 rounded" style={{width:`${v*10}%`,backgroundColor:'#22c55e'}}/></div></div>);
+    const PlayerDetails=({p})=>{
+      const s=p.subs||(Object.fromEntries(STAT.map(k=>[k, (SUBS[k]||[]).map(n=>({n,v:p[k]}))])));
+      return(
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <div className="flex justify-center"><FifaCard p={p}/></div>
+          <div className="space-y-3">
+            <div className="rounded-xl bg-slate-800/60 p-3 ring-1 ring-slate-700">
+              <div className="mb-1 text-sm font-semibold">Ficha</div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="rounded-lg bg-slate-900/60 p-2">Rol:<div className="font-semibold">{roleOfPos(p.pos)}</div></div>
+                <div className="rounded-lg bg-slate-900/60 p-2">Pie hábil:<div className="font-semibold">{p.pie||'-'}</div></div>
+                <div className="rounded-lg bg-slate-900/60 p-2">Equipo propio:<div className="font-semibold">{p.equipoPropio||'-'}</div></div>
+                <div className="rounded-lg bg-slate-900/60 p-2">Favorito:<div className="font-semibold">{p.equipoFavorito||'-'}</div></div>
+              </div>
+            </div>
+            <div className="rounded-xl bg-slate-800/60 p-3 ring-1 ring-slate-700">
+              <div className="mb-2 text-sm font-semibold">Radar</div>
+              <RadarChart size={240} dataSeries={[{label:p.nombre,values:p,stroke:'rgba(34,211,238,1)',fill:'rgba(34,211,238,0.18)'}]}/>
+            </div>
+            {STAT.map(k=>(
+              <div key={k} className="rounded-xl bg-slate-800/60 p-2 ring-1 ring-slate-700">
+                <div className="mb-1 text-sm font-semibold">{SL[k]} <span className="opacity-75">({p[k]})</span></div>
+                {(s[k]||[]).map((it,idx)=>(<Gauge key={idx} label={it.n} v={it.v}/>))}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    /* ===== MiniCard y Formación ===== */
     const MiniCard = ({p,dataFotos})=>{
       if(!p) return null;
       const rare=rarityOf(p);
@@ -346,10 +383,7 @@
       );
     };
 
-    // posiciones relativas 2-2-1 en %
-    const POS_A = [
-      {x: 12, y: 80}, {x: 28, y: 62}, {x: 28, y: 38}, {x: 50, y: 50}, {x: 70, y: 50},
-    ];
+    const POS_A = [{x:12,y:80},{x:28,y:62},{x:28,y:38},{x:50,y:50},{x:70,y:50}];
     const mirrorX = p => ({x: 100 - p.x, y: p.y});
     const POS_B = POS_A.map(mirrorX);
 
@@ -418,14 +452,12 @@
 
       return (
         <div className="w-full">
-          {/* Título FUERA de la imagen */}
           <div className="mb-2 text-center text-base font-semibold">Formación</div>
 
           <div ref={ref} className="board ring-1 ring-slate-700 shadow-xl mx-auto bg-slate-900/30 relative">
             <img src="assets/cancha.png" alt="Cancha" className="field"/>
 
             <div className="layer">
-              {/* A */}
               {teamA.map((id,i)=>{
                 const p=map[id]; const pos=POS_A[i]||POS_A[POS_A.length-1];
                 return (
@@ -435,7 +467,6 @@
                   </div>
                 );
               })}
-              {/* B */}
               {teamB.map((id,i)=>{
                 const p=map[id]; const pos=POS_B[i]||POS_B[POS_B.length-1];
                 return (
@@ -459,7 +490,7 @@
       );
     };
 
-    /* ====== Listado / Filas compactas ====== */
+    /* ====== Listado compact ====== */
     const PinButtons=({id,pinA,pinB,setPinA,setPinB})=>{
       const onA=pinA.has(id), onB=pinB.has(id);
       const toggle=t=>{
@@ -489,10 +520,10 @@
       );
     };
 
-    /* ========= Glosario ========= */
+    /* ========= Ajustes / Glosario ========= */
     const GlossaryModal = ({onClose}) => (
       <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={onClose}>
-        <div className="w-full max-w-3xl space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700 text-sm max-h-[85vh] overflow-auto"
+        <div className="w-full max-w-3xl space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700 text-sm glossary-scroll"
              onClick={e=>e.stopPropagation()}>
           <div className="flex items-center justify-between">
             <div className="text-lg font-semibold">Glosario</div>
@@ -533,15 +564,13 @@
 
             <div>
               <div className="font-semibold text-emerald-300">Score</div>
-              <div>Combina Rating y Química con peso <b>k</b>:</div>
-              <div><code>Score = Rating equipo + (Química equipo × k)</code></div>
+              <div>Combina Rating y Química con peso <b>k</b>: <code>Score = Rating equipo + (Química × k)</code></div>
             </div>
           </div>
         </div>
       </div>
     );
 
-    /* ========= Ajustes ========= */
     const SettingsModal=({
       onClose,kChem,setKChem,onExport,onImport,onReset,parallaxOn,setParallaxOn,formScale,setFormScale,
       listTwoCols,setListTwoCols,onOpenGlossary
@@ -625,11 +654,7 @@
 
       // install prompt
       const [deferredPrompt,setDeferredPrompt]=useState(null);
-      useEffect(()=>{
-        const onPrompt=(e)=>{e.preventDefault();setDeferredPrompt(e)};
-        window.addEventListener('beforeinstallprompt',onPrompt);
-        return ()=>window.removeEventListener('beforeinstallprompt',onPrompt);
-      },[]);
+      useEffect(()=>{const onPrompt=(e)=>{e.preventDefault();setDeferredPrompt(e)};window.addEventListener('beforeinstallprompt',onPrompt);return ()=>window.removeEventListener('beforeinstallprompt',onPrompt)},[]);
 
       const map=useMemo(()=>Object.fromEntries(players.map(p=>[p.id,p])),[players]);
       const chem=useMemo(()=>applyOverrides(chemBuildBase(players),chemOverrides),[players,chemOverrides]);
@@ -696,11 +721,26 @@
       filtered.sort((a,b)=>{switch(sort){case'global-asc':return a._GLOBAL-b._GLOBAL;case'nombre':return a.nombre.localeCompare(b.nombre);default:return b._GLOBAL-a._GLOBAL;}});
 
       const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
-      const doInstall=async ()=>{
-        if(!deferredPrompt){alert('Si tu navegador lo permite, vuelve a abrir la app para ver el botón de instalar.');return;}
-        deferredPrompt.prompt();
-        const {outcome}=await deferredPrompt.userChoice; // OK en la mayoría de navegadores
-        if(outcome!=='accepted'){ /* canceló, no hacer nada */ }
+      const doInstall=async ()=>{if(!deferredPrompt){alert('Si tu navegador lo permite, vuelve a abrir la app para ver el botón de instalar.');return;} deferredPrompt.prompt(); await deferredPrompt.userChoice;};
+
+      const teamSummary = (label, ids, colorHex)=>{
+        const rating100 = Math.round(teamGlobal(ids,map)*10);
+        const q = chemTeam(ids,chem);
+        const score = teamScoreUI(ids,map,chem,kChem);
+        const av = teamAvg(ids,map);
+        return (
+          <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="font-semibold" style={{color:colorHex}}>{label}</div>
+              <div className="text-sm flex gap-3">
+                <span>Rating: <b>{rating100}</b></span>
+                <span>Química: <b>{q}</b></span>
+                <span>Score: <b>{score}</b></span>
+              </div>
+            </div>
+            <BarsChart values={av} max={10} accent={colorHex}/>
+          </div>
+        );
       };
 
       return (
@@ -713,23 +753,13 @@
                   <span className="text-2xl leading-none">⚽</span>
                   <h1 className="text-2xl font-black italic tracking-wide">F5C</h1>
                 </div>
-                <button
-                  onClick={()=>setSettings(true)}
-                  className="rounded-xl bg-slate-800 px-3 py-1.5 text-sm ring-1 ring-slate-700 hover:bg-slate-700"
-                  title="Ajustes"
-                >⚙️</button>
+                <button onClick={()=>setSettings(true)} className="rounded-xl bg-slate-800 px-3 py-1.5 text-sm ring-1 ring-slate-700 hover:bg-slate-700" title="Ajustes">⚙️</button>
               </div>
 
               <div className="mt-3 flex items-center justify-between">
                 <div className="big-tabs flex w-full max-w-md overflow-hidden ring-1 ring-slate-700 rounded-2xl">
-                  <button
-                    className={`w-1/2 py-2 font-semibold ${tab==='partido' ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-slate-200'}`}
-                    onClick={()=>setTab('partido')}
-                  >Partido</button>
-                  <button
-                    className={`w-1/2 py-2 font-semibold ${tab==='plantel' ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-slate-200'}`}
-                    onClick={()=>setTab('plantel')}
-                  >Plantel</button>
+                  <button className={`w-1/2 py-2 font-semibold ${tab==='partido' ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-slate-200'}`} onClick={()=>setTab('partido')}>Partido</button>
+                  <button className={`w-1/2 py-2 font-semibold ${tab==='plantel' ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-slate-200'}`} onClick={()=>setTab('plantel')}>Plantel</button>
                 </div>
 
                 <div className="ml-3">
@@ -748,117 +778,99 @@
             <div className="tabs-track" style={{ transform: tab==='partido' ? 'translateX(0%)' : 'translateX(-50%)' }}>
               {/* ======== PARTIDO ======== */}
               <div className="tabs-page">
-                {!teams ? (
-                  <div className="mx-auto max-w-6xl space-y-4">
-                    <div className="rounded-2xl bg-slate-900/70 p-4 ring-1 ring-slate-700">
-                      <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
-                        <div className="text-center sm:text-left">
-                          <div className="text-lg font-semibold">Crear equipos</div>
-                          <div className="text-sm opacity-80">Seleccioná 10 jugadores y armá los equipos</div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={makeR}
-                            disabled={![...selected].length===10}
-                            className="rounded-xl bg-slate-800 px-4 py-2 font-semibold ring-1 ring-slate-700 hover:bg-slate-700 disabled:opacity-50"
-                          >🎲 AZAR</button>
-                          <button
-                            onClick={makeB}
-                            disabled={![...selected].length===10}
-                            className="rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white ring-1 ring-emerald-500 hover:bg-emerald-500 disabled:opacity-50"
-                          >⚖️ EQUILIBRADO</button>
-                        </div>
+                <div className="mx-auto max-w-6xl space-y-4">
+                  {/* Botones siempre visibles */}
+                  <div className="rounded-2xl bg-slate-900/70 p-4 ring-1 ring-slate-700">
+                    <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+                      <div className="text-center sm:text-left">
+                        <div className="text-lg font-semibold">Armar/Rearmar equipos</div>
+                        <div className="text-sm opacity-80">Seleccioná 10 jugadores. Tip: fijá A/B desde el plantel.</div>
                       </div>
-                      <div className="mt-2 text-xs opacity-75">
-                        Tips: podés fijar jugadores en A/B desde el listado antes de crear equipos.
+                      <div className="flex gap-2">
+                        <button onClick={makeR} disabled={!canMake||invalidPins} className="rounded-xl bg-slate-800 px-4 py-2 font-semibold ring-1 ring-slate-700 hover:bg-slate-700 disabled:opacity-50">🎲 AZAR</button>
+                        <button onClick={makeB} disabled={!canMake||invalidPins} className="rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white ring-1 ring-emerald-500 hover:bg-emerald-500 disabled:opacity-50">⚖️ EQUILIBRADO</button>
                       </div>
                     </div>
-
-                    <div className="rounded-2xl bg-slate-900/70 p-4 ring-1 ring-slate-700">
-                      <div className="text-sm opacity-80">
-                        Necesitás 10 convocados: <b>{[...selected].length}</b>/10.
-                      </div>
-                    </div>
+                    {!teams && (<div className="mt-2 text-xs opacity-75">Convocados: <b>{[...selected].length}</b>/10.</div>)}
                   </div>
-                ) : (
-                  <div className="mx-auto max-w-6xl space-y-4">
-                    <BalanceIndicator A={teams.A} B={teams.B} map={map} chem={chem} kChem={kChem} />
-                    <TeamRadarCompare A={teams.A} B={teams.B} map={map} />
-                    <FormationBoard
-                      teamA={teams.A}
-                      teamB={teams.B}
-                      map={map}
-                      kChem={kChem}
-                      chem={chem}
-                      scale={formScale}
-                      onCopyStateChange={setCopyState}
-                    />
-                    {/* Listados compactos (nombre + rating) en 2 columnas opcional */}
-                    <div className={`grid gap-3 ${true ? 'md:grid-cols-2' : ''}`}>
-                      <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-                        <div className="mb-2 font-semibold text-emerald-300">Equipo A</div>
-                        <div className="space-y-2">
-                          {teams.A.map(id=>{
-                            const p = map[id];
-                            return (
-                              <div key={id} className="flex items-center justify-between rounded-lg bg-slate-800/60 px-3 py-2">
-                                <button onClick={()=>setPlayerDetailId(id)} className="truncate text-left font-medium">
-                                  {p?.nombre} {p?.bandera || ''}
-                                </button>
-                                <span className="rounded bg-slate-900/60 px-2 py-0.5 text-sm ring-1 ring-slate-700">
-                                  {Math.round((p?._GLOBAL||0)*10)}
-                                </span>
-                              </div>
-                            )
-                          })}
-                        </div>
+
+                  {/* Si ya hay equipos: mostrar resúmenes, listas y luego formación */}
+                  {teams && (
+                    <>
+                      <BalanceIndicator A={teams.A} B={teams.B} map={map} chem={chem} kChem={kChem} />
+                      <div className="grid gap-4 md:grid-cols-2">
+                        {teamSummary('Equipo A', teams.A, TC.A.hex)}
+                        {teamSummary('Equipo B', teams.B, TC.B.hex)}
                       </div>
 
-                      <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-                        <div className="mb-2 font-semibold text-blue-300">Equipo B</div>
-                        <div className="space-y-2">
-                          {teams.B.map(id=>{
-                            const p = map[id];
-                            return (
-                              <div key={id} className="flex items-center justify-between rounded-lg bg-slate-800/60 px-3 py-2">
-                                <button onClick={()=>setPlayerDetailId(id)} className="truncate text-left font-medium">
-                                  {p?.nombre} {p?.bandera || ''}
-                                </button>
-                                <span className="rounded bg-slate-900/60 px-2 py-0.5 text-sm ring-1 ring-slate-700">
-                                  {Math.round((p?._GLOBAL||0)*10)}
-                                </span>
-                              </div>
-                            )
-                          })}
+                      {/* Listas arriba (compacto) */}
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
+                          <div className="mb-2 font-semibold text-emerald-300">Equipo A</div>
+                          <div className="space-y-2">
+                            {teams.A.map(id=>{
+                              const p = map[id];
+                              return (
+                                <div key={id} className="flex items-center justify-between rounded-lg bg-slate-800/60 px-3 py-2">
+                                  <button onClick={()=>setPlayerDetailId(id)} className="truncate text-left font-medium">
+                                    {p?.nombre} {p?.bandera || ''}
+                                  </button>
+                                  <span className="rounded bg-slate-900/60 px-2 py-0.5 text-sm ring-1 ring-slate-700">
+                                    {Math.round((p?._GLOBAL||0)*10)}
+                                  </span>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                        <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
+                          <div className="mb-2 font-semibold text-blue-300">Equipo B</div>
+                          <div className="space-y-2">
+                            {teams.B.map(id=>{
+                              const p = map[id];
+                              return (
+                                <div key={id} className="flex items-center justify-between rounded-lg bg-slate-800/60 px-3 py-2">
+                                  <button onClick={()=>setPlayerDetailId(id)} className="truncate text-left font-medium">
+                                    {p?.nombre} {p?.bandera || ''}
+                                  </button>
+                                  <span className="rounded bg-slate-900/60 px-2 py-0.5 text-sm ring-1 ring-slate-700">
+                                    {Math.round((p?._GLOBAL||0)*10)}
+                                  </span>
+                                </div>
+                              )
+                            })}
+                          </div>
                         </div>
                       </div>
+
+                      <TeamRadarCompare A={teams.A} B={teams.B} map={map} />
+                      <FormationBoard teamA={teams.A} teamB={teams.B} map={map} kChem={kChem} chem={chem} scale={formScale} onCopyStateChange={setCopyState} />
+                    </>
+                  )}
+
+                  {!teams && (
+                    <div className="rounded-2xl bg-slate-900/70 p-4 ring-1 ring-slate-700">
+                      <div className="text-sm opacity-80">Necesitás 10 convocados para generar equipos.</div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
               {/* ======== PLANTEL ======== */}
               <div className="tabs-page">
-                <div className="mx-auto max-w-6xl">
+                <div className="mx-auto max-w-6xl h-full flex flex-col">
                   <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <input
-                      className="flex-1 min-w-[200px] rounded-xl bg-slate-900 px-3 py-2 text-sm ring-1 ring-slate-700"
-                      placeholder="Buscar por nombre, equipo..."
-                      value={q}
-                      onChange={e=>setQ(e.target.value)}
-                    />
-                    <select
-                      className="rounded-xl bg-slate-900 px-3 py-2 text-sm ring-1 ring-slate-700"
-                      value={sort}
-                      onChange={e=>setSort(e.target.value)}
-                    >
+                    <input className="flex-1 min-w-[200px] rounded-xl bg-slate-900 px-3 py-2 text-sm ring-1 ring-slate-700" placeholder="Buscar por nombre, equipo..." value={q} onChange={e=>setQ(e.target.value)}/>
+                    <select className="rounded-xl bg-slate-900 px-3 py-2 text-sm ring-1 ring-slate-700" value={sort} onChange={e=>setSort(e.target.value)}>
                       <option value="global-desc">Rating ↓</option>
                       <option value="global-asc">Rating ↑</option>
                       <option value="nombre">Nombre A–Z</option>
                     </select>
                   </div>
 
-                  <div className={`plantel-scroll grid grid-cols-1 ${listTwoCols ? 'md:grid-cols-2 gap-3' : 'gap-2'}`}>
+                  <!-- scroll verdadero solo en esta caja -->
+                  <div className="plantel-scroll grid gap-3"
+                       style={{gridTemplateColumns: (listTwoCols ? 'repeat(2,minmax(0,1fr))' : 'repeat(1,minmax(0,1fr))')}}>
                     {filtered.map(p=>(
                       <PlayerRowCompact
                         key={p.id}
@@ -866,10 +878,7 @@
                         selected={selected.has(p.id)}
                         onToggle={()=>toggle(p.id)}
                         onOpen={()=>setPlayerDetailId(p.id)}
-                        pinA={pinA}
-                        pinB={pinB}
-                        setPinA={setPinA}
-                        setPinB={setPinB}
+                        pinA={pinA} pinB={pinB} setPinA={setPinA} setPinB={setPinB}
                         disableAdd={[...selected].length>=10}
                       />
                     ))}
@@ -883,17 +892,11 @@
           {settings && (
             <SettingsModal
               onClose={()=>setSettings(false)}
-              kChem={kChem}
-              setKChem={setKChem}
-              onExport={onExport}
-              onImport={onImport}
-              onReset={reset}
-              parallaxOn={parallaxOn}
-              setParallaxOn={setParallaxOn}
-              formScale={formScale}
-              setFormScale={setFormScale}
-              listTwoCols={listTwoCols}
-              setListTwoCols={setListTwoCols}
+              kChem={kChem} setKChem={setKChem}
+              onExport={onExport} onImport={onImport} onReset={reset}
+              parallaxOn={parallaxOn} setParallaxOn={setParallaxOn}
+              formScale={formScale} setFormScale={setFormScale}
+              listTwoCols={listTwoCols} setListTwoCols={setListTwoCols}
               onOpenGlossary={()=>{ setShowGlossary(true); }}
             />
           )}
@@ -901,25 +904,19 @@
 
           {playerDetailId && (
             <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-3" onClick={()=>setPlayerDetailId(null)}>
-              <div className="w-full max-w-4xl rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700"
-                  onClick={e=>e.stopPropagation()}>
+              <div className="w-full max-w-4xl rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700" onClick={e=>e.stopPropagation()}>
                 <div className="mb-2 flex items-center justify-between">
                   <div className="text-lg font-semibold">Detalles</div>
                   <button onClick={()=>setPlayerDetailId(null)} className="rounded-lg bg-slate-800 px-2 py-1 ring-1 ring-slate-700">Cerrar</button>
                 </div>
-                <FifaCard p={map[playerDetailId]} />
+                <PlayerDetails p={map[playerDetailId]} />
               </div>
             </div>
           )}
 
-          {/* BOTÓN INSTALAR (sticky) */}
-          {!isStandalone && (
-            <button
-              onClick={doInstall}
-              className={`install-pill rounded-full ${copyState?'opacity-70':''} bg-emerald-600 px-3 py-2 text-sm font-semibold text-white ring-1 ring-emerald-500 shadow-lg`}
-            >
-              📲 Instalar
-            </button>
+          {/* INSTALAR */}
+          {!(window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone) && (
+            <button onClick={doInstall} className={`install-pill rounded-full ${copyState?'opacity-70':''} bg-emerald-600 px-3 py-2 text-sm font-semibold text-white ring-1 ring-emerald-500 shadow-lg`}>📲 Instalar</button>
           )}
         </>
       );
