@@ -1,48 +1,77 @@
-// sw.js — cache simple para GitHub Pages
-const CACHE = 'f5-cache-v16';
+// sw.js — PWA para GitHub Pages (scope relativo)
+// - Evita 404 en addAll
+// - Controla la página (skipWaiting + clients.claim)
+// - Navegación SPA: fallback a index.html
+const CACHE = "f5c-v1";
 
-self.addEventListener('install', (e) => {
-  e.waitUntil((async () => {
+const ASSETS = [
+  "./",
+  "./index.html",
+  "./manifest.webmanifest",        // <= si usas .webmanifest
+  "./assets/cesped-vert.webp",
+  "./assets/cesped-horiz.webp",
+  "./assets/cancha.png",           // <= añádelo si existe
+  "./icons/icon-192.png",          // <= ponlos si existen
+  "./icons/icon-512.png"
+];
+
+self.addEventListener("install", (event) => {
+  event.waitUntil((async () => {
     const c = await caches.open(CACHE);
-    const safePut = async (u) => {
+    // addAll falla si alguno 404; cargamos uno por uno
+    await Promise.all(ASSETS.map(async (u) => {
       try {
-        const r = await fetch(u, { cache: 'no-cache' });
+        const r = await fetch(u, { cache: "no-cache" });
         if (r.ok) await c.put(u, r.clone());
       } catch {}
-    };
-    await safePut('./');
-    await safePut('./index.html');
-    await safePut('./assets/cesped-vert.webp');
-    await safePut('./assets/cesped-horiz.webp');
-    // Iconos opcionales si existen
-    await safePut('./icons/icon-192.png');
-    await safePut('./icons/icon-512.png');
+    }));
+    self.skipWaiting();
   })());
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil((async () => {
-    const ks = await caches.keys();
-    await Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)));
+self.addEventListener("activate", (event) => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
+    self.clients.claim();
   })());
 });
 
-self.addEventListener('fetch', (e) => {
-  const url = new URL(e.request.url);
-  if (e.request.method !== 'GET') return;
+// HTML: network-first con fallback a cache; estáticos: cache-first
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  const url = new URL(req.url);
+  if (req.method !== "GET") return;
+  if (url.origin !== location.origin) return;
 
-  if (url.origin === location.origin) {
-    // network-first, fallback a cache, luego a index.html
-    e.respondWith((async () => {
-      const c = await caches.open(CACHE);
+  // Navegaciones (SPA)
+  if (req.mode === "navigate") {
+    event.respondWith((async () => {
       try {
-        const r = await fetch(e.request);
-        if (r && r.status === 200) c.put(e.request, r.clone());
-        return r;
+        const net = await fetch(req);
+        // Guarda copia
+        const copy = net.clone();
+        caches.open(CACHE).then(c => c.put(req, copy));
+        return net;
       } catch {
-        const m = await c.match(e.request);
-        return m || c.match('./index.html');
+        const c = await caches.open(CACHE);
+        return (await c.match("./index.html")) || Response.error();
       }
     })());
+    return;
   }
+
+  // Estáticos
+  event.respondWith((async () => {
+    const c = await caches.open(CACHE);
+    const hit = await c.match(req);
+    if (hit) return hit;
+    try {
+      const net = await fetch(req);
+      if (net && net.status === 200) c.put(req, net.clone());
+      return net;
+    } catch {
+      return hit || Response.error();
+    }
+  })());
 });
