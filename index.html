@@ -5,11 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>F5C</title>
   <meta name="theme-color" content="#10b981"/>
-
-  <!-- Manifest SIEMPRE dinámico (no uses href a un archivo estático) -->
   <link id="mf" rel="manifest">
 
-  <!-- iOS icons (si existen se usarán; si no, los generamos en runtime) -->
+  <!-- iOS icons (si existen; si no, se generan en runtime) -->
   <link rel="apple-touch-icon" sizes="192x192" href="./icons/icon-192.png"/>
   <link rel="apple-touch-icon" sizes="512x512" href="./icons/icon-512.png"/>
 
@@ -38,6 +36,7 @@
     html,body{background:#0b1220;color:#e2e8f0;margin:0;overflow-x:hidden}
     img,svg{max-width:100%;height:auto}
 
+    /* Fondo (degradado Coronda + cesped) */
     #bg-parallax{
       position:fixed;inset:0;z-index:0;
       background-image:
@@ -55,6 +54,7 @@
     }
     #root{position:relative;z-index:1}
 
+    /* Header */
     .app-header{
       position:fixed;top:0;left:0;right:0;z-index:50;backdrop-filter:blur(10px);
       background:rgba(8,12,22,.94);border-bottom:1px solid rgba(30,41,59,.8);
@@ -65,15 +65,18 @@
     .header-spacer{height:var(--header-h)}
     .title-fifa{font-style:italic;letter-spacing:.5px}
 
+    /* Tabs */
     .tabs-bar{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.75rem}
     .tab-large{border-radius:14px;padding:.75rem 1rem;font-weight:700;text-align:center;
       border:1px solid rgba(51,65,85,.8);background:rgba(2,6,23,.6);color:#cbd5e1;transition:all .2s}
     .tab-large.active{background:#0b1220;color:#fff;border-color:#4ade80;box-shadow:0 0 0 1px rgba(74,222,128,.25) inset}
 
+    /* Carrusel de pestañas */
     .tabs-viewport{overflow:hidden}
     .tabs-track{display:flex;width:200%;transition:transform .32s cubic-bezier(.22,.7,.12,1);touch-action:pan-y}
     .tabs-page{width:100%;padding:12px}
 
+    /* Cards FIFA */
     .card-rect{position:relative;border-radius:16px;padding:8px;overflow:hidden}
     .card-inner{position:relative;z-index:2}
     .rarity-bronze{background:linear-gradient(180deg,#d3a076,#7a5438)}
@@ -84,12 +87,12 @@
     .rarity-special::after{content:"";position:absolute;inset:2px;border-radius:14px;background:linear-gradient(180deg,rgba(15,23,42,.9),rgba(30,41,59,.85))}
     @keyframes spin{to{transform:rotate(1turn)}}
 
+    /* Cancha (16:9 nueva imagen) */
     .board{position:relative;width:100%;max-width:980px;aspect-ratio:16/9;border-radius:16px;overflow:hidden}
     .board img.field{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
     .board .layer{position:absolute;inset:0}
 
-    /* Altura dinámica del viewport para evitar “zona muerta” */
-    .tabs-viewport{display:block}
+    /* Botón instalar */
     .install-pill{position:fixed;right:12px;bottom:12px;z-index:60}
   </style>
 </head>
@@ -97,7 +100,7 @@
   <div id="bg-parallax" aria-hidden="true"></div>
   <div id="root"></div>
 
-  <!-- Manifest dinámico con rutas correctas al repo -->
+  <!-- Manifest dinámico (rutas correctas según base) -->
   <script>
     (function(){
       const link=document.getElementById('mf');
@@ -109,7 +112,7 @@
       (async ()=>{
         let icons=[{src:`${base}icons/icon-192.png`,sizes:'192x192',type:'image/png',purpose:'any maskable'},
                    {src:`${base}icons/icon-512.png`,sizes:'512x512',type:'image/png',purpose:'any maskable'}];
-        if(!(await exists(icons[0].src))||( !(await exists(icons[1].src)) )){
+        if(!(await exists(icons[0].src))||!(await exists(icons[1].src))){
           icons=[{src:mkIcon(192,'#10b981'),sizes:'192x192',type:'image/png'},
                  {src:mkIcon(512,'#10b981'),sizes:'512x512',type:'image/png'}];
         }
@@ -151,7 +154,7 @@
     })();
   </script>
 
-  <!-- Service Worker -->
+  <!-- SW registro (usa tu sw.js actual) -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -166,16 +169,18 @@
   <script type="text/babel">
     const {useMemo,useState,useEffect,useRef} = React;
 
-    /* ===== Helpers y constantes ===== */
+    /* ========= Constantes + helpers ========= */
     const STAT=['ATA','PAS','REG','VEL','DEF','FIS','ARQ','EQP'];
     const SL={ATA:'Ataque',PAS:'Pase',REG:'Regate',VEL:'Velocidad',DEF:'Defensa',FIS:'Físico',ARQ:'Arco',EQP:'Equipo'};
-    const SUBS={ATA:['Posición','Definición','Potencia'], PAS:['Visión','Corto','Largo'], REG:['Agilidad','Control','Equilibrio'],
-      VEL:['Aceleración','Punta','Arranque'], DEF:['Marcaje','Anticipación','Entradas'], FIS:['Resistencia','Fuerza','Salto'],
+    const SUBS={ATA:['Posición','Definición','Potencia'], PAS:['Visión','Pase corto','Pase largo'], REG:['Agilidad','Control','Equilibrio'],
+      VEL:['Aceleración','Pico','Arranque'], DEF:['Marcaje','Anticipación','Entradas'], FIS:['Resistencia','Fuerza','Salto'],
       ARQ:['Reflejos','Manos','Saque'], EQP:['Colaboración','Disciplina','Liderazgo']};
     const Wt={ATA:.18,DEF:.16,PAS:.14,REG:.14,VEL:.14,FIS:.10,ARQ:.07,EQP:.07};
+
     const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
     const avg=a=>a.length?a.reduce((p,c)=>p+c,0)/a.length:0;
     const J=(s,d)=>{try{return JSON.parse(s)}catch{return d}};
+
     const globalOf=p=>{let s=0,w=0;for(const k in Wt){s+=(p[k]||0)*Wt[k];w+=Wt[k]}return +(s/w).toFixed(2)};
     const withG=a=>a.map(p=>({...p,_GLOBAL:globalOf(p)}));
     const rarityOf=p=>{const r=Math.round((p._GLOBAL||globalOf(p))*10);if(p.especial||r>=90)return 'special';if(r>=80)return 'gold';if(r>=70)return 'silver';return 'bronze'};
@@ -183,38 +188,57 @@
     const colorNum10  = v => v>=9?'text-emerald-400' :v>=8?'text-emerald-300' :v>=7?'text-amber-300' :v>=6?'text-amber-200' :'text-rose-300';
     const hexA=(hex,a)=>{const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)||[];const r=parseInt(m[1]||'10',16),g=parseInt(m[2]||'b9',16),b=parseInt(m[3]||'81',16);return `rgba(${r},${g},${b},${a})`};
     const colorOf=n=>['#22c55e','#06b6d4','#a78bfa','#f59e0b','#ef4444','#14b8a6','#8b5cf6','#f97316','#10b981','#38bdf8'][[...n].reduce((h,c)=>(h*31+c.charCodeAt(0))>>>0,0)%10];
-    const mkAvatar=n=> 'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><rect width='100%' height='100%' rx='24' ry='24' fill='${colorOf(n)}'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui,Segoe UI,Roboto,sans-serif' font-size='72' fill='white' style='font-style:italic;font-weight:800;letter-spacing:1px'>${(n||'F5').split(/\s+/).map(s=>s[0]||'').join('').slice(0,2).toUpperCase()}</text></svg>`);
+    const mkAvatar=n=>'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><rect width='100%' height='100%' rx='24' ry='24' fill='${colorOf(n)}'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui,Segoe UI,Roboto,sans-serif' font-size='72' fill='white' style='font-style:italic;font-weight:800;letter-spacing:1px'>${(n||'F5').split(/\s+/).map(s=>s[0]||'').join('').slice(0,2).toUpperCase()}</text></svg>`);
 
-    /* ===== Seed ===== */
+    /* ==== Balanceo (Equilibrado) con pins ==== */
+    const shuffle=a=>{const x=[...a];for(let i=x.length-1;i>0;i--){const j=(Math.random()*(i+1)|0);[x[i],x[j]]=[x[j],x[i]]}return x};
+    const seedWithPins=(ids,pA,pB)=>{const A=ids.filter(id=>pA.has(id)),B=ids.filter(id=>pB.has(id));const rest=ids.filter(id=>!pA.has(id)&&!pB.has(id));return{A:[...A],B:[...B],rest}};
+    const fillRandom=(A,B,rest)=>{const r=shuffle(rest);for(const id of r){(A.length<B.length?A:B).push(id);if(A.length===5&&B.length===5)break}};
+    const teamGlobal=(ids,map)=>+avg(ids.map(id=>map[id]?map[id]._GLOBAL:0)).toFixed(2);
+    const chemTeam=(ids,chem)=>{const arr=Array.isArray(ids)?ids.filter(Boolean):[];if(arr.length<=1)return 10;let t=0,p=0;for(let i=0;i<arr.length;i++)for(let j=i+1;j<arr.length;j++){t+=chem[arr[i]]?.[arr[j]]??5;p++}return +(t/(p||1)).toFixed(2)};
+    const teamScoreUI=(ids,map,chem,k)=>+(teamGlobal(ids,map)+chemTeam(ids,chem)*k).toFixed(2);
+    const scoreDiff=(A,B,map,chem,k)=>{const sA=teamScoreUI(A,map,chem,k),sB=teamScoreUI(B,map,chem,k);return{A:[...A],B:[...B],diff:Math.abs(sA-sB),m:{sA,sB}}};
+    const balancedWithPins=(ids,map,chem,k,pA,pB)=>{
+      const{A,B,rest}=seedWithPins(ids,pA,pB); fillRandom(A,B,rest);
+      while((A.length<5||B.length<5)&&rest.length>0){const id=rest.pop();(A.length<B.length?A:B).push(id)}
+      let best=scoreDiff(A,B,map,chem,k);
+      const freeA=best.A.map((id,i)=>pA.has(id)?-1:i).filter(i=>i>=0);
+      const freeB=best.B.map((id,i)=>pB.has(id)?-1:i).filter(i=>i>=0);
+      for(let t=0;t<800;t++){
+        if(!freeA.length||!freeB.length)break;
+        const i=freeA[(Math.random()*freeA.length)|0], j=freeB[(Math.random()*freeB.length)|0];
+        [best.A[i],best.B[j]]=[best.B[j],best.A[i]];
+        const cur=scoreDiff(best.A,best.B,map,chem,k);
+        if(cur.diff<=best.diff || Math.random()<.12) best=cur; else [best.A[i],best.B[j]]=[best.B[j],best.A[i]];
+      }
+      return{A:best.A,B:best.B,m:best.m};
+    };
+
+    /* ========= Seed ========= */
     const SEED=[
-      {id:'1',nombre:'Leo',equipoPropio:'La 10',equipoFavorito:'Barcelona',fotoUrl:mkAvatar('Leo'),ATA:10,PAS:9,REG:10,VEL:9,DEF:4,FIS:7,ARQ:3,EQP:8,pie:'Izquierdo',estrellas:5,especial:true,bandera:'🇦🇷',pos:'LA'},
-      {id:'2',nombre:'Fabi',equipoPropio:'La 10',equipoFavorito:'Colón',fotoUrl:mkAvatar('Fabi'),ATA:7,PAS:8,REG:7,VEL:7,DEF:7,FIS:7,ARQ:4,EQP:9,pie:'Derecho',estrellas:4,bandera:'🇦🇷',pos:'MU'},
-      {id:'3',nombre:'Cuti',equipoPropio:'Muralla',equipoFavorito:'Belgrano',fotoUrl:mkAvatar('Cuti'),ATA:5,PAS:6,REG:5,VEL:7,DEF:10,FIS:9,ARQ:4,EQP:7,pie:'Derecho',estrellas:4,bandera:'🇦🇷',pos:'TI'},
-      {id:'4',nombre:'Dibu',equipoPropio:'Muralla',equipoFavorito:'Arsenal',fotoUrl:mkAvatar('Dibu'),ATA:3,PAS:5,REG:4,VEL:5,DEF:8,FIS:8,ARQ:10,EQP:7,pie:'Derecho',estrellas:5,bandera:'🇦🇷',pos:'AR'},
-      {id:'5',nombre:'Papu',equipoPropio:'Tiki',equipoFavorito:'San Lorenzo',fotoUrl:mkAvatar('Papu'),ATA:8,PAS:8,REG:9,VEL:8,DEF:5,FIS:6,ARQ:3,EQP:7,pie:'Derecho',estrellas:4,bandera:'🇦🇷',pos:'LA'},
-      {id:'6',nombre:'Nico',equipoPropio:'Tiki',equipoFavorito:'Boca',fotoUrl:mkAvatar('Nico'),ATA:7,PAS:7,REG:7,VEL:8,DEF:6,FIS:7,ARQ:4,EQP:6,pie:'Derecho',estrellas:4,bandera:'🇦🇷',pos:'LA'},
-      {id:'7',nombre:'Chino',equipoPropio:'Muralla',equipoFavorito:"Newell's",fotoUrl:mkAvatar('Chino'),ATA:5,PAS:6,REG:5,VEL:6,DEF:8,FIS:7,ARQ:8,EQP:6,pie:'Izquierdo',estrellas:3,bandera:'🇦🇷',pos:'AR'},
-      {id:'8',nombre:'Joa',equipoPropio:'La 10',equipoFavorito:'River',fotoUrl:mkAvatar('Joa'),ATA:6,PAS:6,REG:6,VEL:7,DEF:8,FIS:8,ARQ:5,EQP:7,pie:'Derecho',estrellas:3,bandera:'🇦🇷',pos:'TI'},
-      {id:'9',nombre:'Fideo',equipoPropio:'Tiki',equipoFavorito:'Rosario C.',fotoUrl:mkAvatar('Fideo'),ATA:8,PAS:9,REG:9,VEL:8,DEF:6,FIS:6,ARQ:3,EQP:8,pie:'Izquierdo',estrellas:5,bandera:'🇦🇷',pos:'LA'},
-      {id:'10',nombre:'Kuni',equipoPropio:'La 10',equipoFavorito:'Independiente',fotoUrl:mkAvatar('Kuni'),ATA:9,PAS:7,REG:8,VEL:9,DEF:5,FIS:7,ARQ:3,EQP:7,pie:'Derecho',estrellas:4,bandera:'🇦🇷',pos:'MU'},
-      {id:'11',nombre:'Tomi',equipoPropio:'Muralla',equipoFavorito:'Talleres',fotoUrl:mkAvatar('Tomi'),ATA:6,PAS:7,REG:6,VEL:7,DEF:7,FIS:7,ARQ:5,EQP:6,pie:'Derecho',estrellas:3,bandera:'🇦🇷',pos:'LA'},
-      {id:'12',nombre:'Gonza',equipoPropio:'Tiki',equipoFavorito:'Racing',fotoUrl:mkAvatar('Gonza'),ATA:7,PAS:6,REG:7,VEL:8,DEF:6,FIS:7,ARQ:4,EQP:6,pie:'Derecho',estrellas:3,bandera:'🇦🇷',pos:'TI'},
+      {id:'1',nombre:'Leo',apodo:'',equipoPropio:'La 10',equipoFavorito:'Barcelona',fotoUrl:mkAvatar('Leo'),ATA:10,PAS:9,REG:10,VEL:9,DEF:4,FIS:7,ARQ:3,EQP:8,pie:'Izquierdo',estrellas:5,especial:true,bandera:'🇦🇷',pos:'LA'},
+      {id:'2',nombre:'Fabi',apodo:'',equipoPropio:'La 10',equipoFavorito:'Colón',fotoUrl:mkAvatar('Fabi'),ATA:7,PAS:8,REG:7,VEL:7,DEF:7,FIS:7,ARQ:4,EQP:9,pie:'Derecho',estrellas:4,bandera:'🇦🇷',pos:'MU'},
+      {id:'3',nombre:'Cuti',apodo:'',equipoPropio:'Muralla',equipoFavorito:'Belgrano',fotoUrl:mkAvatar('Cuti'),ATA:5,PAS:6,REG:5,VEL:7,DEF:10,FIS:9,ARQ:4,EQP:7,pie:'Derecho',estrellas:4,bandera:'🇦🇷',pos:'TI'},
+      {id:'4',nombre:'Dibu',apodo:'',equipoPropio:'Muralla',equipoFavorito:'Arsenal',fotoUrl:mkAvatar('Dibu'),ATA:3,PAS:5,REG:4,VEL:5,DEF:8,FIS:8,ARQ:10,EQP:7,pie:'Derecho',estrellas:5,bandera:'🇦🇷',pos:'AR'},
+      {id:'5',nombre:'Papu',apodo:'',equipoPropio:'Tiki',equipoFavorito:'San Lorenzo',fotoUrl:mkAvatar('Papu'),ATA:8,PAS:8,REG:9,VEL:8,DEF:5,FIS:6,ARQ:3,EQP:7,pie:'Derecho',estrellas:4,bandera:'🇦🇷',pos:'LA'},
+      {id:'6',nombre:'Nico',apodo:'',equipoPropio:'Tiki',equipoFavorito:'Boca',fotoUrl:mkAvatar('Nico'),ATA:7,PAS:7,REG:7,VEL:8,DEF:6,FIS:7,ARQ:4,EQP:6,pie:'Derecho',estrellas:4,bandera:'🇦🇷',pos:'LA'},
+      {id:'7',nombre:'Chino',apodo:'',equipoPropio:'Muralla',equipoFavorito:"Newell's",fotoUrl:mkAvatar('Chino'),ATA:5,PAS:6,REG:5,VEL:6,DEF:8,FIS:7,ARQ:8,EQP:6,pie:'Izquierdo',estrellas:3,bandera:'🇦🇷',pos:'AR'},
+      {id:'8',nombre:'Joa',apodo:'',equipoPropio:'La 10',equipoFavorito:'River',fotoUrl:mkAvatar('Joa'),ATA:6,PAS:6,REG:6,VEL:7,DEF:8,FIS:8,ARQ:5,EQP:7,pie:'Derecho',estrellas:3,bandera:'🇦🇷',pos:'TI'},
+      {id:'9',nombre:'Fideo',apodo:'',equipoPropio:'Tiki',equipoFavorito:'Rosario C.',fotoUrl:mkAvatar('Fideo'),ATA:8,PAS:9,REG:9,VEL:8,DEF:6,FIS:6,ARQ:3,EQP:8,pie:'Izquierdo',estrellas:5,bandera:'🇦🇷',pos:'LA'},
+      {id:'10',nombre:'Kuni',apodo:'',equipoPropio:'La 10',equipoFavorito:'Independiente',fotoUrl:mkAvatar('Kuni'),ATA:9,PAS:7,REG:8,VEL:9,DEF:5,FIS:7,ARQ:3,EQP:7,pie:'Derecho',estrellas:4,bandera:'🇦🇷',pos:'MU'},
+      {id:'11',nombre:'Tomi',apodo:'',equipoPropio:'Muralla',equipoFavorito:'Talleres',fotoUrl:mkAvatar('Tomi'),ATA:6,PAS:7,REG:6,VEL:7,DEF:7,FIS:7,ARQ:5,EQP:6,pie:'Derecho',estrellas:3,bandera:'🇦🇷',pos:'LA'},
+      {id:'12',nombre:'Gonza',apodo:'',equipoPropio:'Tiki',equipoFavorito:'Racing',fotoUrl:mkAvatar('Gonza'),ATA:7,PAS:6,REG:7,VEL:8,DEF:6,FIS:7,ARQ:4,EQP:6,pie:'Derecho',estrellas:3,bandera:'🇦🇷',pos:'TI'},
     ];
 
-    /* ===== Química / balance ===== */
-    const chemBuildBase=arr=>{const q={};for(const a of arr){q[a.id]={};for(const b of arr){
-      if(a.id===b.id){q[a.id][b.id]=10;continue}
-      if(q[b.id]?.[a.id]!=null){q[a.id][b.id]=q[b.id][a.id];continue}
-      let v=5;if(a.equipoPropio&&b.equipoPropio&&a.equipoPropio===b.equipoPropio)v+=1.2;
-      if(a.equipoFavorito&&b.equipoFavorito&&a.equipoFavorito===b.equipoFavorito)v+=.8;
-      v+=(((a.EQP+b.EQP)/2)-5)*.15;q[a.id][b.id]=clamp(+v.toFixed(2),1,10)}}return q};
-    const applyOverrides=(base,ov)=>{if(!ov)return base;const q=JSON.parse(JSON.stringify(base));for(const a in ov){for(const b in ov[a]){const v=clamp(+ov[a][b],1,10);if(!q[a])q[a]={};if(!q[b])q[b]={};q[a][b]=q[b][a]=v}}return q};
-    const chemTeam=(ids,chem)=>{const arr=Array.isArray(ids)?ids.filter(Boolean):[];if(arr.length<=1)return 10;let t=0,p=0;for(let i=0;i<arr.length;i++)for(let j=i+1;j<arr.length;j++){t+=chem[arr[i]]?.[arr[j]]??5;p++}return +(t/(p||1)).toFixed(2)};
-    const avgN=(ids,map,k)=>+avg(ids.map(id=>map[id]?.[k]??0)).toFixed(2);
-    const teamGlobal=(ids,map)=>+avg(ids.map(id=>map[id]?map[id]._GLOBAL:0)).toFixed(2);
-    const teamScoreUI=(ids,map,chem,k)=>+(teamGlobal(ids,map,chem)+chemTeam(ids,chem)*k).toFixed(2);
+    /* ========= Cancha ========= */
+    const FIELD_VER='v4';
+    const FIELD_BOX={ left:4.5, right:95.5, top:43, bottom:97 };
+    const pmap=({x,y})=>({ x: FIELD_BOX.left + (FIELD_BOX.right-FIELD_BOX.left)*(x/100),
+                            y: FIELD_BOX.top  + (FIELD_BOX.bottom-FIELD_BOX.top)*(y/100) });
+    const POS_A=[{x:6,y:50},{x:22,y:35},{x:22,y:65},{x:46,y:50},{x:70,y:50}];
+    const POS_B=POS_A.map(p=>({x:100-p.x,y:p.y}));
 
-    /* ===== FIFA Card ===== */
+    /* ========= UI: FIFA / MiniCard / Radar ========= */
     const FifaCard=({p})=>{
       const rate=Math.round((p._GLOBAL||globalOf(p))*10);
       const rare=rarityOf(p);
@@ -237,7 +261,7 @@
               <img src={src||mkAvatar(p.nombre)} onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}}
                    className="rounded-xl object-cover ring-2 h-24 w-24" alt={p.nombre}/>
             </div>
-            <div className="mt-2 text-center text-sm font-extrabold">{p.nombre}</div>
+            <div className="mt-2 text-center text-sm font-extrabold">{p.nombre}{p.apodo?` “${p.apodo}”`:''}</div>
             <div className="mt-1 grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] font-semibold">
               {STAT.map(k=>(
                 <div key={k} className="flex items-center justify-between rounded-lg bg-white/30 px-2 py-1">
@@ -249,28 +273,6 @@
         </div>
       );
     };
-
-    /* ===== Radar ===== */
-    const RadarChart=({size=260,max=10,keys=STAT,dataSeries})=>{
-      const cx=size/2,cy=size/2,r=size*.4,N=keys.length;
-      const ang=i=>Math.PI*2*i/N-Math.PI/2;
-      const pt=(i,v)=>{const a=ang(i),rr=r*(v/max);return[cx+rr*Math.cos(a),cy+rr*Math.sin(a)]};
-      const lv=[2,4,6,8,10];
-      return(<svg viewBox={`0 0 ${size} ${size}`} width="100%" className="mx-auto block">
-        {lv.map((L,i)=>{const d=keys.map((_,j)=>pt(j,L)).map(([x,y])=>`${x},${y}`).join(' ');return <polygon key={i} points={d} fill="none" stroke="rgba(148,163,184,.25)" strokeWidth={1}/>})}
-        {keys.map((k,i)=>{const[x,y]=pt(i,max);return <line key={k} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(148,163,184,.3)" strokeWidth={1}/>})}
-        {keys.map((k,i)=>{const[x,y]=pt(i,max+.9);return <text key={k} x={x} y={y} textAnchor="middle" dominantBaseline="middle" fontSize={11} fill="#cbd5e1">{k}</text>})}
-        {dataSeries.map((srs,i)=>{const d=keys.map((k,j)=>pt(j,srs.values[k]??0)).map(([x,y])=>`${x},${y}`).join(' ');return(<g key={i}><polygon points={d} fill={srs.fill} stroke={srs.stroke} strokeWidth={2}/></g>)})}
-      </svg>);
-    };
-
-    /* ===== Formación (mapea a la cancha nueva) ===== */
-    const FIELD_VER='v4'; // cache bust
-    const FIELD_BOX={ left:4.5, right:95.5, top:43, bottom:97 };
-    const pmap=({x,y})=>({ x: FIELD_BOX.left + (FIELD_BOX.right-FIELD_BOX.left)*(x/100),
-                            y: FIELD_BOX.top  + (FIELD_BOX.bottom-FIELD_BOX.top)*(y/100) });
-    const POS_A=[{x:6,y:50},{x:22,y:35},{x:22,y:65},{x:46,y:50},{x:70,y:50}];
-    const POS_B=POS_A.map(p=>({x:100-p.x,y:p.y}));
 
     const MiniCard=({p})=>{
       const rare=rarityOf(p);
@@ -302,6 +304,20 @@
       );
     };
 
+    const RadarChart=({size=260,max=10,keys=STAT,dataSeries})=>{
+      const cx=size/2,cy=size/2,r=size*.4,N=keys.length;
+      const ang=i=>Math.PI*2*i/N-Math.PI/2;
+      const pt=(i,v)=>{const a=ang(i),rr=r*(v/max);return[cx+rr*Math.cos(a),cy+rr*Math.sin(a)]};
+      const lv=[2,4,6,8,10];
+      return(<svg viewBox={`0 0 ${size} ${size}`} width="100%" className="mx-auto block">
+        {lv.map((L,i)=>{const d=keys.map((_,j)=>pt(j,L)).map(([x,y])=>`${x},${y}`).join(' ');return <polygon key={i} points={d} fill="none" stroke="rgba(148,163,184,.25)" strokeWidth={1}/>})}
+        {keys.map((k,i)=>{const[x,y]=pt(i,max);return <line key={k} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(148,163,184,.3)" strokeWidth={1}/>})}
+        {keys.map((k,i)=>{const[x,y]=pt(i,max+.9);return <text key={k} x={x} y={y} textAnchor="middle" dominantBaseline="middle" fontSize={11} fill="#cbd5e1">{k}</text>})}
+        {dataSeries.map((srs,i)=>{const d=keys.map((k,j)=>pt(j,srs.values[k]??0)).map(([x,y])=>`${x},${y}`).join(' ');return(<g key={i}><polygon points={d} fill={srs.fill} stroke={srs.stroke} strokeWidth={2}/></g>)})}
+      </svg>);
+    };
+
+    /* ========= Formación ========= */
     const FormationBoard=({teamA=[],teamB=[],map,scale=0.5})=>{
       const ref=useRef(null);
       const isDesk=()=>window.matchMedia('(min-width:768px)').matches;
@@ -328,7 +344,7 @@
       </div>);
     };
 
-    /* ===== Filas / Detalles ===== */
+    /* ========= Filas / Detalles ========= */
     const PinButtons=({id,pinA,pinB,setPinA,setPinB})=>{
       const onA=pinA.has(id),onB=pinB.has(id);
       const toggle=t=>{
@@ -345,10 +361,13 @@
       const disabled=!selected && disableAdd;
       const [src,setSrc]=React.useState(p.fotoUrl||'');
       React.useEffect(()=>setSrc(p.fotoUrl||''),[p.fotoUrl]);
-      return(<div className="flex items-center justify-between rounded-xl bg-slate-900/70 p-2 ring-2" style={{borderColor:'rgba(148,163,184,.25)'}}>
-        <button onClick={onOpen} className="flex items-center gap-2 min-w-0">
+      return(<div className="flex items-center justify-between rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-700">
+        <button onClick={onOpen} className="flex items-center gap-2 min-w-0 text-left">
           <img src={src||mkAvatar(p.nombre)} onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}} className="h-9 w-9 rounded-full object-cover ring-1 ring-slate-700" alt={p.nombre}/>
-          <span className="truncate font-semibold">{p.nombre} {p.bandera||''}</span>
+          <div className="min-w-0">
+            <div className="truncate font-semibold">{p.nombre}</div>
+            {p.apodo?<div className="truncate text-xs text-slate-400">“{p.apodo}”</div>:null}
+          </div>
         </button>
         <div className="flex items-center gap-2">
           <span className={`tabular-nums text-sm font-bold ${colorNum100(Math.round(p._GLOBAL*10))}`}>{Math.round(p._GLOBAL*10)}</span>
@@ -363,16 +382,16 @@
 
     const PlayerDetails=({p,onClose})=>{
       const s=p.subs||(Object.fromEntries(STAT.map(k=>[k,(SUBS[k]||[]).map(n=>({n,v:p[k]}))])));
-      return(<div className="fixed inset-0 z-60 grid place-items-center bg-black/60 p-3" onClick={onClose}>
+      return(<div className="fixed inset-0 z-[90] grid place-items-center bg-black/60 p-3" onClick={onClose}>
         <div className="w-full max-w-4xl space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700 max-h-[90vh] overflow-auto" onClick={e=>e.stopPropagation()}>
-          <div className="flex items-center justify-between"><div className="text-lg font-semibold">{p.nombre} {p.bandera||''}</div><button onClick={onClose} className="rounded-lg bg-slate-800 px-2 py-1 ring-1 ring-slate-700">Cerrar</button></div>
+          <div className="flex items-center justify-between"><div className="text-lg font-semibold">{p.nombre}{p.apodo?` “${p.apodo}”`:''} {p.bandera||''}</div><button onClick={onClose} className="rounded-lg bg-slate-800 px-2 py-1 ring-1 ring-slate-700">Cerrar</button></div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             <div className="flex justify-center"><FifaCard p={p}/></div>
             <div className="space-y-3">
               <div className="rounded-xl bg-slate-800/60 p-3 ring-1 ring-slate-700">
                 <div className="mb-1 text-sm font-semibold">Ficha</div>
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="rounded-lg bg-slate-900/60 p-2">Rol:<div className="font-semibold">{p.pos}</div></div>
+                  <div className="rounded-lg bg-slate-900/60 p-2">Posición:<div className="font-semibold">{p.pos}</div></div>
                   <div className="rounded-lg bg-slate-900/60 p-2">Pie:<div className="font-semibold">{p.pie||'-'}</div></div>
                   <div className="rounded-lg bg-slate-900/60 p-2">Equipo propio:<div className="font-semibold">{p.equipoPropio||'-'}</div></div>
                   <div className="rounded-lg bg-slate-900/60 p-2">Favorito:<div className="font-semibold">{p.equipoFavorito||'-'}</div></div>
@@ -394,12 +413,12 @@
       </div>);
     };
 
-    /* ===== Formulario con sub-stats ===== */
-    const PlayerFormModal=({initial,onClose,onSave})=>{
+    /* ========= Formulario con substats + eliminar ========= */
+    const PlayerFormModal=({initial,onClose,onSave,onDelete})=>{
       const isEdit=!!(initial&&initial.id);
       const defaultSubs=Object.fromEntries(STAT.map(k=>[k,(SUBS[k]||[]).map(n=>({n,v:5}))]));
       const start=initial?JSON.parse(JSON.stringify(initial)):{
-        nombre:'',pos:'LA',bandera:'🇦🇷',pie:'Derecho',equipoPropio:'',equipoFavorito:'',
+        nombre:'',apodo:'',pos:'LA',bandera:'🇦🇷',pie:'Derecho',equipoPropio:'',equipoFavorito:'',
         ATA:5,PAS:5,REG:5,VEL:5,DEF:5,FIS:5,ARQ:5,EQP:5,fotoUrl:'',subs:defaultSubs
       };
       if(!start.subs) start.subs=Object.fromEntries(STAT.map(k=>[k,(SUBS[k]||[]).map(n=>({n,v:start[k]||5}))]));
@@ -412,12 +431,20 @@
       });
       const submit=()=>{const id=isEdit?f.id:String(Date.now());const p={...f,id};
         STAT.forEach(k=>p[k]=clamp(Math.round(p[k]),1,10));p._GLOBAL=globalOf(p);onSave(p);onClose();};
-      return(<div className="fixed inset-0 z-60 grid place-items-center bg-black/60 p-3" onClick={onClose}>
+      return(<div className="fixed inset-0 z-[90] grid place-items-center bg-black/60 p-3" onClick={onClose}>
         <div className="w-full max-w-3xl space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700 max-h-[92vh] overflow-auto" onClick={e=>e.stopPropagation()}>
-          <div className="flex items-center justify-between"><div className="text-lg font-semibold">{isEdit?'Editar jugador':'Añadir jugador'}</div><button onClick={onClose} className="rounded-lg bg-slate-800 px-2 py-1 ring-1 ring-slate-700">Cerrar</button></div>
+          <div className="flex items-center justify-between">
+            <div className="text-lg font-semibold">{isEdit?'Editar jugador':'Añadir jugador'}</div>
+            <div className="flex items-center gap-2">
+              {isEdit && <button onClick={()=>{onDelete?.(f.id);onClose();}} className="rounded-lg bg-rose-700 px-2 py-1 text-white ring-1 ring-rose-500 hover:bg-rose-600">Eliminar</button>}
+              <button onClick={onClose} className="rounded-lg bg-slate-800 px-2 py-1 ring-1 ring-slate-700">Cerrar</button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
             <div className="md:col-span-2 grid grid-cols-2 gap-2">
               <label className="flex flex-col gap-1">Nombre<input value={f.nombre} onChange={e=>set('nombre',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700"/></label>
+              <label className="flex flex-col gap-1">Apodo<input value={f.apodo} onChange={e=>set('apodo',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700" placeholder="Opcional"/></label>
               <label className="flex flex-col gap-1">Pos<input value={f.pos} onChange={e=>set('pos',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700" placeholder="LA / MU / TI / AR"/></label>
               <label className="flex flex-col gap-1">Bandera<input value={f.bandera} onChange={e=>set('bandera',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700"/></label>
               <label className="flex flex-col gap-1">Pie<input value={f.pie} onChange={e=>set('pie',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700"/></label>
@@ -456,12 +483,12 @@
       </div>);
     };
 
-    /* ===== Settings ===== */
+    /* ========= Settings ========= */
     const SettingsModal=({onClose,kChem,setKChem,formScale,setFormScale,partidoTwoCols,setPartidoTwoCols,teamColors,setTeamColors,onOpenGlossary})=>{
       const [a,setA]=useState(teamColors.A),[b,setB]=useState(teamColors.B);
       useEffect(()=>{setA(teamColors.A);setB(teamColors.B)},[teamColors]);
       const saveColors=()=>setTeamColors({A:a,B:b});
-      return(<div className="fixed inset-0 z-60 grid place-items-center bg-black/60 p-3" onClick={onClose}>
+      return(<div className="fixed inset-0 z-[90] grid place-items-center bg-black/60 p-3" onClick={onClose}>
         <div className="w-full max-w-md space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700" onClick={e=>e.stopPropagation()}>
           <div className="mb-1 text-lg font-semibold">Ajustes</div>
 
@@ -503,16 +530,50 @@
     };
 
     const GlossaryModal=({onClose})=>(
-      <div className="fixed inset-0 z-60 grid place-items-center bg-black/60 p-3" onClick={onClose}>
+      <div className="fixed inset-0 z-[90] grid place-items-center bg-black/60 p-3" onClick={onClose}>
         <div className="w-full max-w-3xl space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700 text-sm max-h-[90vh] overflow-auto"
              onClick={e=>e.stopPropagation()}>
           <div className="flex items-center justify-between"><div className="text-lg font-semibold">Glosario</div><button onClick={onClose} className="rounded-lg bg-slate-800 px-2 py-1 ring-1 ring-slate-700">Cerrar</button></div>
-          <p>Rating = promedio ponderado de stats (ATA .18, DEF .16, PAS .14, REG .14, VEL .14, FIS .10, ARQ .07, EQP .07).</p>
+          <div className="space-y-4 leading-relaxed text-slate-200">
+            <div>
+              <div className="font-semibold text-emerald-300">Rating de jugador (1–100)</div>
+              <div>Promedio ponderado de stats con pesos: ATA(.18), DEF(.16), PAS(.14), REG(.14), VEL(.14), FIS(.10), ARQ(.07), EQP(.07).</div>
+              <div className="mt-1"><code>Rating = Σ(stat × peso) / Σ(pesos)</code></div>
+            </div>
+            <div>
+              <div className="font-semibold text-emerald-300">Stats (1–10) y substats</div>
+              <ul className="list-disc pl-5 space-y-1">
+                <li><b>ATA</b>: Posición, Definición, Potencia</li>
+                <li><b>PAS</b>: Visión, Pase corto, Pase largo</li>
+                <li><b>REG</b>: Agilidad, Control, Equilibrio</li>
+                <li><b>VEL</b>: Aceleración, Pico, Arranque</li>
+                <li><b>DEF</b>: Marcaje, Anticipación, Entradas</li>
+                <li><b>FIS</b>: Resistencia, Fuerza, Salto</li>
+                <li><b>ARQ</b>: Reflejos, Manos, Saque</li>
+                <li><b>EQP</b>: Colaboración, Disciplina, Liderazgo</li>
+              </ul>
+              <div className="mt-1 text-slate-300">Cada stat es el promedio de sus substats (redondeo 1–10).</div>
+            </div>
+            <div>
+              <div className="font-semibold text-emerald-300">Química de equipo (1–10)</div>
+              <div>Promedio de afinidad por parejas. Sube si comparten equipo propio/favorito y por el valor EQP promedio.</div>
+            </div>
+            <div>
+              <div className="font-semibold text-emerald-300">Rating de equipo (1–100)</div>
+              <div>Promedio de los Ratings individuales de los 5 jugadores.</div>
+            </div>
+            <div>
+              <div className="font-semibold text-emerald-300">Score</div>
+              <div>Combina Rating y Química con un peso <b>k</b> (configurable):</div>
+              <div><code>Score = Rating de equipo + (Química de equipo × k)</code></div>
+              <div className="text-slate-400 text-xs mt-1">Umbrales del semáforo: Parejo &lt; 0.30 — Aceptable &lt; 0.80 — Desbalanceado ≥ 0.80.</div>
+            </div>
+          </div>
         </div>
       </div>
     );
 
-    /* ===== App ===== */
+    /* ========= App ========= */
     const App=()=>{
       const initP=withG(J(localStorage.getItem('f5.players'),SEED));
       const[players,setPlayers]=useState(initP);
@@ -521,8 +582,6 @@
       const[kChem,setKChem]=useState(()=>+(localStorage.getItem('f5.kchem')??0.6));
       const[pinA,setPinA]=useState(()=>new Set(J(localStorage.getItem('f5.pins.A'),[])));
       const[pinB,setPinB]=useState(()=>new Set(J(localStorage.getItem('f5.pins.B'),[])));
-      const[chemOverrides]=useState({});
-      const[parallaxOn]=useState(true);
       const[formScale,setFormScale]=useState(()=>+(localStorage.getItem('f5.formScale')??0.50));
       const[partidoTwoCols,setPartidoTwoCols]=useState(()=>{try{return JSON.parse(localStorage.getItem('f5.partidoTwoCols')??'true')}catch{return true}});
       const[teamColors,setTeamColors]=useState(()=>{try{return JSON.parse(localStorage.getItem('f5.teamColors')??'{"A":"#10b981","B":"#3b82f6"}')}catch{return{A:'#10b981',B:'#3b82f6'}}});
@@ -544,7 +603,7 @@
       useEffect(()=>localStorage.setItem('f5.partidoTwoCols',JSON.stringify(partidoTwoCols)),[partidoTwoCols]);
       useEffect(()=>localStorage.setItem('f5.teamColors',JSON.stringify(teamColors)),[teamColors]);
 
-      // ajustar altura del viewport a la página visible (evita zona muerta)
+      // altura del viewport a cada tab (evita zona muerta)
       const viewportRef=useRef(null);
       const pageRefs=useRef({partido:null,plantel:null});
       const fitHeight=()=>{const vp=viewportRef.current;if(!vp)return;const pg=pageRefs.current[tab];if(!pg)return;vp.style.height=pg.scrollHeight+'px'};
@@ -566,16 +625,21 @@
       },[]);
 
       const map=useMemo(()=>Object.fromEntries(players.map(p=>[p.id,p])),[players]);
-      const chem=useMemo(()=>applyOverrides(chemBuildBase(players),chemOverrides),[players,chemOverrides]);
 
       const convocados=[...selected];
-      const canMake=convocados.length===10, reachedMax=convocados.length>=10, invalidPins=pinA.size>5||pinB.size>5;
+      const canMake=convocados.length===10, reachedMax=convocados.length>=10, invalidPins=false; // pins solo para futuro
       const toggle=id=>setSelected(s=>{const n=new Set(s);if(n.has(id))n.delete(id);else{if(reachedMax)return n;n.add(id)}return n});
       const makeR=()=>{if(!canMake||invalidPins)return;const ids=[...convocados];ids.sort(()=>Math.random()-.5);setTeams({A:ids.slice(0,5),B:ids.slice(5)})};
-      const makeB=()=>{if(!canMake||invalidPins)return;const A=[...convocados].slice(0,5),B=[...convocados].slice(5);const best=(()=>{const r=balancedWithPins(convocados,map,chem,kChem,new Set(pinA),new Set(pinB));return r})();setTeams({A:best.A,B:best.B})};
-      const clearConvocados=()=>{setSelected(new Set());setTeams(null);setPinA(new Set());setPinB(new Set())};
+      const chem=useMemo(()=>{const q={};for(const a of players){q[a.id]={};for(const b of players){
+        if(a.id===b.id){q[a.id][b.id]=10;continue}
+        if(q[b.id]?.[a.id]!=null){q[a.id][b.id]=q[b.id][a.id];continue}
+        let v=5;if(a.equipoPropio&&b.equipoPropio&&a.equipoPropio===b.equipoPropio)v+=1.2;
+        if(a.equipoFavorito&&b.equipoFavorito&&a.equipoFavorito===b.equipoFavorito)v+=.8;
+        v+=(((a.EQP+b.EQP)/2)-5)*.15;q[a.id][b.id]=clamp(+v.toFixed(2),1,10)}}return q},[players]);
+      const makeB=()=>{if(!canMake||invalidPins)return;const r=balancedWithPins(convocados,map,chem,kChem,new Set(),new Set());setTeams({A:r.A,B:r.B})};
+      const clearConvocados=()=>{setSelected(new Set());setTeams(null)};
 
-      const filtered=[...players].filter(p=>{const t=q.trim().toLowerCase();return !t || (p.nombre||'').toLowerCase().includes(t) || (p.equipoPropio||'').toLowerCase().includes(t) || (p.equipoFavorito||'').toLowerCase().includes(t)});
+      const filtered=[...players].filter(p=>{const t=q.trim().toLowerCase();return !t || (p.nombre||'').toLowerCase().includes(t) || (p.apodo||'').toLowerCase().includes(t) || (p.equipoPropio||'').toLowerCase().includes(t) || (p.equipoFavorito||'').toLowerCase().includes(t)});
       filtered.sort((a,b)=> sort==='global-asc' ? a._GLOBAL-b._GLOBAL : sort==='nombre' ? a.nombre.localeCompare(b.nombre) : b._GLOBAL-a._GLOBAL);
 
       const teamA=teams?.A||[], teamB=teams?.B||[];
@@ -588,6 +652,10 @@
       const [deferredPrompt,setDeferredPrompt]=useState(null);
       useEffect(()=>{const onPrompt=(e)=>{e.preventDefault();setDeferredPrompt(e)};window.addEventListener('beforeinstallprompt',onPrompt);return()=>window.removeEventListener('beforeinstallprompt',onPrompt)},[]);
       const doInstall=async()=>{if(!deferredPrompt){alert('Tu navegador no ofrece instalación ahora. Prueba desde Chrome en Android.');return;}deferredPrompt.prompt();};
+
+      // Guardar / Eliminar jugador
+      const upsertPlayer = (p)=>setPlayers(ps=>{const i=ps.findIndex(x=>x.id===p.id);if(i>=0){const cp=[...ps];cp[i]=withG([p])[0];return cp;}return withG([...ps,p]);});
+      const deletePlayer = (id)=>{setPlayers(ps=>ps.filter(x=>x.id!==id));setSelected(s=>{const n=new Set(s);n.delete(id);return n});setTeams(t=>{if(!t)return t;return {A:(t.A||[]).filter(x=>x!==id),B:(t.B||[]).filter(x=>x!==id)}})};
 
       return(<div className="min-h-screen">
         <header className="app-header">
@@ -641,7 +709,7 @@
                     return (<div key={t} className="space-y-2">
                       <div className="text-xs font-semibold text-slate-300">Equipo {t}</div>
                       {ids.map((id,idx)=>{const p=map[id];if(!p)return null;
-                        return (<div key={id} draggable onDragStart={e=>{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);window.__drag={team:t,id}}}
+                        return (<div key={id} draggable onDragStart={e=>{e.dataTransfer.effectAllowed='move';window.__drag={team:t,id}}}
                           onDragOver={e=>e.preventDefault()}
                           onDrop={e=>{e.preventDefault();const d=window.__drag;if(!d)return;const fromT=d.team,toT=t;
                             setTeams(tt=>{const A=[...(tt?.A||[])],B=[...(tt?.B||[])];
@@ -650,13 +718,14 @@
                           className="flex items-center justify-between rounded-xl bg-slate-900/70 p-2 ring-2" style={{borderColor:hexA(col,.35)}}>
                           <button onClick={()=>setPlayerDetailId(id)} className="flex items-center gap-2 min-w-0">
                             <img src={p.fotoUrl||mkAvatar(p.nombre)} onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}} className="h-8 w-8 rounded-full object-cover ring-1 ring-slate-700" alt={p.nombre}/>
-                            <span className="truncate">{p.nombre}</span>
+                            <span className="truncate">{p.nombre}{p.apodo?` “${p.apodo}”`:''}</span>
                           </button>
                           <span className={`tabular-nums text-sm font-bold ${colorNum100(Math.round(p._GLOBAL*10))}`}>{Math.round(p._GLOBAL*10)}</span>
                         </div>)})}
                     </div>)})}
                 </div>
 
+                {/* Semáforo */}
                 <div className="rounded-2xl p-3 ring-1 bg-slate-900/70 ring-slate-700">
                   {(()=>{const sA=teamScoreUI(teamA,map,chem,kChem),sB=teamScoreUI(teamB,map,chem,kChem),d=Math.abs(sA-sB).toFixed(2);
                     let lb='Parejo',cls='bg-emerald-600/15 text-emerald-200 ring-emerald-500/30';
@@ -665,11 +734,12 @@
                     return(<div className={`rounded-xl p-3 ring-1 ${cls}`}><div className="text-sm">Resultado: <b>{lb}</b> <span className="opacity-80">(A: {sA} vs B: {sB})</span></div><div className="mt-1 text-xs opacity-80">Diff: {d}</div></div>)} )()}
                 </div>
 
+                {/* Radar */}
                 <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
                   <div className="mb-2 text-center text-sm text-slate-300">Radar comparativo</div>
                   <RadarChart dataSeries={[
-                    {values:Object.fromEntries(STAT.map(k=>[k,avgN(teamA,map,k)])),stroke:hexA(teamColors.A,1),fill:hexA(teamColors.A,0.18)},
-                    {values:Object.fromEntries(STAT.map(k=>[k,avgN(teamB,map,k)])),stroke:hexA(teamColors.B,1),fill:hexA(teamColors.B,0.18)},
+                    {values:Object.fromEntries(STAT.map(k=>[k,+avg(teamA.map(id=>map[id]?.[k]??0)).toFixed(2)])),stroke:hexA(teamColors.A,1),fill:hexA(teamColors.A,0.18)},
+                    {values:Object.fromEntries(STAT.map(k=>[k,+avg(teamB.map(id=>map[id]?.[k]??0)).toFixed(2)])),stroke:hexA(teamColors.B,1),fill:hexA(teamColors.B,0.18)},
                   ]}/>
                   <div className="mt-2 flex justify-center gap-4 text-xs text-slate-300">
                     <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{backgroundColor:teamColors.A}}></span> A</span>
@@ -677,11 +747,12 @@
                   </div>
                 </div>
 
+                {/* Barras */}
                 <div className={`grid gap-3 ${gridCols}`}>
                   {['A','B'].map((t,i)=>{const ids=t==='A'?teamA:teamB;const col=i?teamColors.B:teamColors.A;return(
                     <div key={t} className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
                       <div className="mb-1 text-sm font-semibold">Barras — Equipo {t}</div>
-                      <div className="space-y-2">{STAT.map(k=>{const v=avgN(ids,map,k);return(
+                      <div className="space-y-2">{STAT.map(k=>{const v=+avg(ids.map(id=>map[id]?.[k]??0)).toFixed(2);return(
                         <div key={k}>
                           <div className="mb-1 flex items-center justify-between text-sm"><span className="text-slate-300" title={SL[k]}>{k}</span><span className="font-semibold">{v}</span></div>
                           <div className="h-2 w-full rounded bg-slate-700"><div className="h-2 rounded" style={{width:`${(v/10)*100}%`,backgroundColor:col}}/></div>
@@ -697,8 +768,16 @@
             {/* === PLANTEL === */}
             <section className="tabs-page" ref={el=>pageRefs.current.plantel=el}>
               <div className="mx-auto max-w-5xl space-y-3">
+
+                <!-- Acciones arriba -->
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={()=>setForm({})} className="rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">+ Añadir jugador</button>
+                  <button onClick={clearConvocados} className="rounded-xl bg-amber-600 px-3 py-1 text-sm text-white ring-1 ring-amber-500 hover:bg-amber-500">🧹 Limpiar convocados</button>
+                  <button onClick={()=>{setPlayers(withG(SEED));}} className="rounded-xl bg-rose-700 px-3 py-1 text-sm text-white ring-1 ring-rose-500 hover:bg-rose-600">Restablecer seed</button>
+                </div>
+
                 <div className="flex flex-wrap items-center gap-2">
-                  <input value={q} onChange={e=>setQ(e.target.value)} className="flex-1 min-w-[160px] rounded-lg bg-slate-900/70 px-3 py-2 ring-1 ring-slate-700" placeholder="Buscar por nombre / equipo"/>
+                  <input value={q} onChange={e=>setQ(e.target.value)} className="flex-1 min-w-[160px] rounded-lg bg-slate-900/70 px-3 py-2 ring-1 ring-slate-700" placeholder="Buscar por nombre / apodo / equipo"/>
                   <select value={sort} onChange={e=>setSort(e.target.value)} className="rounded-lg bg-slate-900/70 px-3 py-2 ring-1 ring-slate-700">
                     <option value="global-desc">Rating ↓</option><option value="global-asc">Rating ↑</option><option value="nombre">Nombre A-Z</option>
                   </select>
@@ -708,15 +787,9 @@
                   {filtered.map(p=>(
                     <PlayerRow key={p.id} p={p} selected={selected.has(p.id)}
                       onToggle={()=>toggle(p.id)} onOpen={()=>setPlayerDetailId(p.id)} onEdit={()=>setForm({initial:p})}
-                      pinA={pinA} pinB={pinB} setPinA={setPinA} setPinB={setPinB}
+                      pinA={new Set()} pinB={new Set()} setPinA={()=>{}} setPinB={()=>{}}
                       disableAdd={selected.size>=10 && !selected.has(p.id)} />
                   ))}
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <button onClick={()=>setForm({})} className="rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">+ Añadir jugador</button>
-                  <button onClick={clearConvocados} className="rounded-xl bg-amber-600 px-3 py-1 text-sm text-white ring-1 ring-amber-500 hover:bg-amber-500">🧹 Limpiar convocados</button>
-                  <button onClick={()=>{setPlayers(withG(SEED));}} className="rounded-xl bg-rose-700 px-3 py-1 text-sm text-white ring-1 ring-rose-500 hover:bg-rose-600">Restablecer seed</button>
                 </div>
               </div>
             </section>
@@ -728,19 +801,37 @@
           <button onClick={doInstall} className="install-pill rounded-full bg-emerald-600 px-4 py-2 text-sm text-white ring-1 ring-emerald-500 shadow-lg">📲 Instalar</button>
         )}
 
-        {settings && <SettingsModal
-          onClose={()=>setSettings(false)} kChem={kChem} setKChem={setKChem}
-          formScale={formScale} setFormScale={setFormScale}
-          partidoTwoCols={partidoTwoCols} setPartidoTwoCols={setPartidoTwoCols}
-          teamColors={teamColors} setTeamColors={setTeamColors}
-          onOpenGlossary={()=>{setSettings(false);setShowGlossary(true)}}/>}
-        {showGlossary && <GlossaryModal onClose={()=>setShowGlossary(false)}/>}
-        {playerDetailId && (players.find(p=>p.id===playerDetailId)) && <PlayerDetails p={players.find(p=>p.id===playerDetailId)} onClose={()=>setPlayerDetailId(null)}/>}
-        {form && <PlayerFormModal initial={form.initial} onClose={()=>setForm(null)} onSave={(p)=>setPlayers(ps=>{const i=ps.findIndex(x=>x.id===p.id);if(i>=0){const cp=[...ps];cp[i]=withG([p])[0];return cp;}return withG([...ps,p]);})}/>}
-      </div>);
-    };
+        {/* Modales */}
+        <div id="modals-root">
+          {settings && <SettingsModal
+            onClose={()=>setSettings(false)} kChem={kChem} setKChem={setKChem}
+            formScale={formScale} setFormScale={setFormScale}
+            partidoTwoCols={partidoTwoCols} setPartidoTwoCols={setPartidoTwoCols}
+            teamColors={teamColors} setTeamColors={setTeamColors}
+            onOpenGlossary={()=>{setSettings(false);setShowGlossary(true)}}/>}
+          {showGlossary && <GlossaryModal onClose={()=>setShowGlossary(false)}/>}
+                    {playerDetailId && (players.find(p=>p.id===playerDetailId)) && (
+            <PlayerDetails
+              p={players.find(p=>p.id===playerDetailId)}
+              onClose={()=>setPlayerDetailId(null)}
+            />
+          )}
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+          {form && (
+            <PlayerFormModal
+              initial={form.initial}
+              onClose={()=>setForm(null)}
+              onSave={upsertPlayer}
+              onDelete={deletePlayer}
+            />
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
   </script>
 </body>
 </html>
+
