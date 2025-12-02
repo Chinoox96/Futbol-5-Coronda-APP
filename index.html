@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
@@ -180,14 +180,14 @@
     const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
     const avg=a=>a.length?a.reduce((p,c)=>p+c,0)/a.length:0;
     const J = (s, d) => {
-  if (!s) return d;          // si no existe → usar default
-  try {
-    const parsed = JSON.parse(s);
-    return parsed ?? d;      // si era null → usar default
-  } catch {
-    return d;
-  }
-};
+      if (!s) return d;
+      try {
+        const parsed = JSON.parse(s);
+        return parsed ?? d;
+      } catch {
+        return d;
+      }
+    };
 
     const globalOf=p=>{let s=0,w=0;for(const k in Wt){s+=(p[k]||0)*Wt[k];w+=Wt[k]}return +(s/w).toFixed(2)};
     const withG = (a) => (a || []).map(p => ({ ...p, _GLOBAL: globalOf(p) }));
@@ -222,7 +222,7 @@
       return{A:best.A,B:best.B,m:best.m};
     };
 
-    /* ========= Seed ========= */
+    /* ========= SEED ========= */
     const SEED=[
       {id:'1',nombre:'Leo',apodo:'',equipoPropio:'La 10',equipoFavorito:'Barcelona',fotoUrl:mkAvatar('Leo'),ATA:10,PAS:9,REG:10,VEL:9,DEF:4,FIS:7,ARQ:3,EQP:8,pie:'Izquierdo',estrellas:5,especial:true,bandera:'🇦🇷',pos:'LA'},
       {id:'2',nombre:'Fabi',apodo:'',equipoPropio:'La 10',equipoFavorito:'Colón',fotoUrl:mkAvatar('Fabi'),ATA:7,PAS:8,REG:7,VEL:7,DEF:7,FIS:7,ARQ:4,EQP:9,pie:'Derecho',estrellas:4,bandera:'🇦🇷',pos:'MU'},
@@ -296,16 +296,17 @@
                 <div className="text-xl font-black">{Math.round((p._GLOBAL||globalOf(p))*10)}</div>
                 <div className="text-[10px] font-bold">{p.pos||'F5'}</div>
               </div>
-              <div className="h-6 w-6 grid place-items-center bg-white/70 text-[10px] font-extrabold ring-1 ring-black/10 rounded">
-                {(p.equipoPropio||'').slice(0,2).toUpperCase()}
-              </div>
             </div>
             <div className="mt-1 grid place-items-center">
               <img src={src||mkAvatar(p.nombre)} onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}} className="h-16 w-16 rounded-lg object-cover ring-2"/>
             </div>
             <div className="mt-1 text-center text-[11px] font-extrabold px-1 leading-tight">{p.nombre}</div>
             <div className="mt-1 grid grid-cols-2 gap-1 text-[9px] font-semibold px-1 pb-1">
-              {STAT.map(k=>(<div key={k} className="flex items-center justify-between rounded bg-white/30 px-1 py-[1px]"><span>{k}</span><span className="tabular-nums">{p[k]}</span></div>))}
+              {STAT.map(k=>(
+                <div key={k} className="flex items-center justify-between rounded bg-white/30 px-1 py-[1px]">
+                  <span>{k}</span><span className="tabular-nums">{p[k]}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -317,12 +318,24 @@
       const ang=i=>Math.PI*2*i/N-Math.PI/2;
       const pt=(i,v)=>{const a=ang(i),rr=r*(v/max);return[cx+rr*Math.cos(a),cy+rr*Math.sin(a)]};
       const lv=[2,4,6,8,10];
-      return(<svg viewBox={`0 0 ${size} ${size}`} width="100%" className="mx-auto block">
-        {lv.map((L,i)=>{const d=keys.map((_,j)=>pt(j,L)).map(([x,y])=>`${x},${y}`).join(' ');return <polygon key={i} points={d} fill="none" stroke="rgba(148,163,184,.25)" strokeWidth={1}/>})}
-        {keys.map((k,i)=>{const[x,y]=pt(i,max);return <line key={k} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(148,163,184,.3)" strokeWidth={1}/>})}
-        {keys.map((k,i)=>{const[x,y]=pt(i,max+.9);return <text key={k} x={x} y={y} textAnchor="middle" dominantBaseline="middle" fontSize={11} fill="#cbd5e1">{k}</text>})}
-        {dataSeries.map((srs,i)=>{const d=keys.map((k,j)=>pt(j,srs.values[k]??0)).map(([x,y])=>`${x},${y}`).join(' ');return(<g key={i}><polygon points={d} fill={srs.fill} stroke={srs.stroke} strokeWidth={2}/></g>)})}
-      </svg>);
+      return(
+        <svg viewBox={`0 0 ${size} ${size}`} width="100%" className="mx-auto block">
+          {lv.map((L,i)=>{
+            const d=keys.map((_,j)=>pt(j,L)).map(([x,y])=>`${x},${y}`).join(' ');
+            return <polygon key={i} points={d} fill="none" stroke="rgba(148,163,184,.25)" strokeWidth={1}/>;
+          })}
+          {keys.map((k,i)=>{const[x,y]=pt(i,max);return <line key={k} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(148,163,184,.3)" strokeWidth={1}/>;})}
+          {keys.map((k,i)=>{const[x,y]=pt(i,max+.9);return <text key={k} x={x} y={y} textAnchor="middle" dominantBaseline="middle" fontSize={11} fill="#cbd5e1">{k}</text>;})}
+          {dataSeries.map((srs,i)=>{
+            const d=keys.map((k,j)=>pt(j,srs.values[k]??0)).map(([x,y])=>`${x},${y}`).join(' ');
+            return(
+              <g key={i}>
+                <polygon points={d} fill={srs.fill} stroke={srs.stroke} strokeWidth={2}/>
+              </g>
+            );
+          })}
+        </svg>
+      );
     };
 
     /* ========= Formación ========= */
@@ -330,95 +343,174 @@
       const ref=useRef(null);
       const isDesk=()=>window.matchMedia('(min-width:768px)').matches;
       const scaleLive=isDesk()?scale:Math.max(0.42,Math.min(scale,0.56));
-      const makeCanvas=async()=>{const el=ref.current;if(!el)return;const canvas=await html2canvas(el,{backgroundColor:null,useCORS:true,allowTaint:true,scale:2});return{canvas,url:canvas.toDataURL('image/png')}};
+      const makeCanvas=async()=>{
+        const el=ref.current;if(!el)return;
+        const canvas=await html2canvas(el,{backgroundColor:null,useCORS:true,allowTaint:true,scale:2});
+        return{canvas,url:canvas.toDataURL('image/png')};
+      };
       const [copied,setCopied]=useState(false);
-      const copiar=async()=>{try{const{canvas}=await makeCanvas();canvas.toBlob(async b=>{if(!b)return;await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);setCopied(true);setTimeout(()=>setCopied(false),1200);});}catch{}}
-      const descargar=async()=>{const{url}=await makeCanvas();const a=document.createElement('a');a.href=url;a.download='formacion_f5.png';a.click()};
-      const compartir=async()=>{try{const{canvas}=await makeCanvas();const file=await new Promise(res=>canvas.toBlob(b=>res(new File([b],'formacion_f5.png',{type:'image/png'}))));if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({title:'Formación F5',files:[file]});}catch{}}
-      return(<div className="w-full">
-        <div className="mb-2 text-center"><span className="inline-flex items-center gap-2 rounded-xl bg-slate-900/70 px-3 py-1 text-sm ring-1 ring-slate-700"><span className="text-lg">⚽</span><span>Formación F5</span></span></div>
-        <div ref={ref} className="board ring-1 ring-slate-700 shadow-xl mx-auto bg-slate-900/30 relative">
-          <img src={`assets/cancha.png?${FIELD_VER}`} alt="Cancha" className="field"/>
-          <div className="layer">
-            {teamA.map((id,i)=>{const p=map[id],pos=pmap(POS_A[i]||POS_A.at(-1));return(<div key={'A'+id} className="absolute" style={{left:`${pos.x}%`,top:`${pos.y}%`,transform:`translate(-50%,-50%) scale(${scaleLive})`,transformOrigin:'top left'}}><MiniCard p={p}/></div>)})}
-            {teamB.map((id,i)=>{const p=map[id],pos=pmap(POS_B[i]||POS_B.at(-1));return(<div key={'B'+id} className="absolute" style={{left:`${pos.x}%`,top:`${pos.y}%`,transform:`translate(-50%,-50%) scale(${scaleLive})`,transformOrigin:'top left'}}><MiniCard p={p}/></div>)})}
+      const copiar=async()=>{
+        try{
+          const{canvas}=await makeCanvas();
+          canvas.toBlob(async b=>{
+            if(!b)return;
+            await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);
+            setCopied(true);setTimeout(()=>setCopied(false),1200);
+          });
+        }catch{}
+      };
+      const descargar=async()=>{
+        const{url}=await makeCanvas();
+        const a=document.createElement('a');
+        a.href=url;a.download='formacion_f5.png';a.click();
+      };
+      const compartir=async()=>{
+        try{
+          const{canvas}=await makeCanvas();
+          const file=await new Promise(res=>canvas.toBlob(b=>res(new File([b],'formacion_f5.png',{type:'image/png'}))));
+          if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({title:'Formación F5',files:[file]});
+        }catch{}
+      };
+      return(
+        <div className="w-full">
+          <div className="mb-2 text-center">
+            <span className="inline-flex items-center gap-2 rounded-xl bg-slate-900/70 px-3 py-1 text-sm ring-1 ring-slate-700">
+              <span className="text-lg">⚽</span><span>Formación F5</span>
+            </span>
+          </div>
+          <div ref={ref} className="board ring-1 ring-slate-700 shadow-xl mx-auto bg-slate-900/30 relative">
+            <img src={`assets/cancha.png?${FIELD_VER}`} alt="Cancha" className="field"/>
+            <div className="layer">
+              {teamA.map((id,i)=>{
+                const p=map[id],pos=pmap(POS_A[i]||POS_A.at(-1));
+                return(
+                  <div key={'A'+id} className="absolute"
+                    style={{left:`${pos.x}%`,top:`${pos.y}%`,transform:`translate(-50%,-50%) scale(${scaleLive})`,transformOrigin:'top left'}}>
+                    <MiniCard p={p}/>
+                  </div>
+                );
+              })}
+              {teamB.map((id,i)=>{
+                const p=map[id],pos=pmap(POS_B[i]||POS_B.at(-1));
+                return(
+                  <div key={'B'+id} className="absolute"
+                    style={{left:`${pos.x}%`,top:`${pos.y}%`,transform:`translate(-50%,-50%) scale(${scaleLive})`,transformOrigin:'top left'}}>
+                    <MiniCard p={p}/>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:flex sm:flex-row justify-center gap-2 mt-3">
+            <button onClick={descargar} className="rounded-xl bg-emerald-600 px-3 py-2 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">⬇️ Descargar</button>
+            <button onClick={copiar} className={`rounded-xl px-3 py-2 text-sm ring-1 ${copied?'bg-emerald-700 text-white ring-emerald-500':'bg-slate-800 text-slate-100 ring-slate-700 hover:bg-slate-700'}`}>{copied?'Copiado ✅':'📋 Copiar'}</button>
+            <button onClick={compartir} className="rounded-xl bg-cyan-600 px-3 py-2 text-sm text-white ring-1 ring-cyan-500 hover:bg-cyan-500">📤 Compartir</button>
           </div>
         </div>
-        <div className="grid grid-cols-2 sm:flex sm:flex-row justify-center gap-2 mt-3">
-          <button onClick={descargar} className="rounded-xl bg-emerald-600 px-3 py-2 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">⬇️ Descargar</button>
-          <button onClick={copiar} className={`rounded-xl px-3 py-2 text-sm ring-1 ${copied?'bg-emerald-700 text-white ring-emerald-500':'bg-slate-800 text-slate-100 ring-slate-700 hover:bg-slate-700'}`}>{copied?'Copiado ✅':'📋 Copiar'}</button>
-          <button onClick={compartir} className="rounded-xl bg-cyan-600 px-3 py-2 text-sm text-white ring-1 ring-cyan-500 hover:bg-cyan-500">📤 Compartir</button>
-        </div>
-      </div>);
+      );
     };
 
     /* ========= Filas / Detalles ========= */
     const PinButtons=({id,pinA,pinB,setPinA,setPinB})=>{
       const onA=pinA.has(id),onB=pinB.has(id);
       const toggle=t=>{
-        if(t==='A'){const a=new Set(pinA),b=new Set(pinB);onA?a.delete(id):a.add(id);b.delete(id);setPinA(a);setPinB(b)}
-        else{const a=new Set(pinA),b=new Set(pinB);onB?b.delete(id):b.add(id);a.delete(id);setPinA(a);setPinB(b)}
+        if(t==='A'){
+          const a=new Set(pinA),b=new Set(pinB);
+          onA?a.delete(id):a.add(id);
+          b.delete(id);
+          setPinA(a);setPinB(b);
+        }else{
+          const a=new Set(pinA),b=new Set(pinB);
+          onB?b.delete(id):b.add(id);
+          a.delete(id);
+          setPinA(a);setPinB(b);
+        }
       };
-      return(<div className="flex gap-1">
-        <button title="Fijar en A" onClick={()=>toggle('A')} className={`h-7 w-7 rounded-lg text-xs font-bold ring-1 ${onA?'bg-emerald-600 text-white ring-emerald-500':'bg-slate-800 text-slate-200 ring-slate-700 hover:bg-slate-700'}`}>A</button>
-        <button title="Fijar en B" onClick={()=>toggle('B')} className={`h-7 w-7 rounded-lg text-xs font-bold ring-1 ${onB?'bg-blue-600 text-white ring-blue-500':'bg-slate-800 text-slate-200 ring-slate-700 hover:bg-slate-700'}`}>B</button>
-      </div>);
+      return(
+        <div className="flex gap-1">
+          <button title="Fijar en A" onClick={()=>toggle('A')}
+            className={`h-7 w-7 rounded-lg text-xs font-bold ring-1 ${onA?'bg-emerald-600 text-white ring-emerald-500':'bg-slate-800 text-slate-200 ring-slate-700 hover:bg-slate-700'}`}>A</button>
+          <button title="Fijar en B" onClick={()=>toggle('B')}
+            className={`h-7 w-7 rounded-lg text-xs font-bold ring-1 ${onB?'bg-blue-600 text-white ring-blue-500':'bg-slate-800 text-slate-200 ring-slate-700 hover:bg-slate-700'}`}>B</button>
+        </div>
+      );
     };
 
     const PlayerRow=({p,selected,onToggle,onOpen,onEdit,pinA,pinB,setPinA,setPinB,disableAdd})=>{
       const disabled=!selected && disableAdd;
       const [src,setSrc]=React.useState(p.fotoUrl||'');
       React.useEffect(()=>setSrc(p.fotoUrl||''),[p.fotoUrl]);
-      return(<div className="flex items-center justify-between rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-700">
-        <button onClick={onOpen} className="flex items-center gap-2 min-w-0 text-left">
-          <img src={src||mkAvatar(p.nombre)} onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}} className="h-9 w-9 rounded-full object-cover ring-1 ring-slate-700" alt={p.nombre}/>
-          <div className="min-w-0">
-            <div className="truncate font-semibold">{p.nombre}</div>
-            {p.apodo?<div className="truncate text-xs text-slate-400">“{p.apodo}”</div>:null}
+      return(
+        <div className="flex items-center justify-between rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-700">
+          <button onClick={onOpen} className="flex items-center gap-2 min-w-0 text-left">
+            <img src={src||mkAvatar(p.nombre)} onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}} className="h-9 w-9 rounded-full object-cover ring-1 ring-slate-700" alt={p.nombre}/>
+            <div className="min-w-0">
+              <div className="truncate font-semibold">{p.nombre}</div>
+              {p.apodo?<div className="truncate text-xs text-slate-400">“{p.apodo}”</div>:null}
+            </div>
+          </button>
+          <div className="flex items-center gap-2">
+            <span className={`tabular-nums text-sm font-bold ${colorNum100(Math.round(p._GLOBAL*10))}`}>{Math.round(p._GLOBAL*10)}</span>
+            <button onClick={onEdit} className="rounded-lg bg-slate-800 px-2 py-1 text-xs ring-1 ring-slate-700 hover:bg-slate-700">✏️</button>
+            <PinButtons id={p.id} pinA={pinA} pinB={pinB} setPinA={setPinA} setPinB={setPinB}/>
+            <button onClick={onToggle} disabled={disabled}
+              className={`rounded-xl px-3 py-1 text-sm ring-1 ${selected?'bg-emerald-600 text-white ring-emerald-500':disabled?'bg-slate-800/40 text-slate-500 ring-slate-800 cursor-not-allowed':'bg-slate-800 text-slate-200 ring-slate-700 hover:bg-slate-700'}`}>
+              {selected? '✓' : '+'}
+            </button>
           </div>
-        </button>
-        <div className="flex items-center gap-2">
-          <span className={`tabular-nums text-sm font-bold ${colorNum100(Math.round(p._GLOBAL*10))}`}>{Math.round(p._GLOBAL*10)}</span>
-          <button onClick={onEdit} className="rounded-lg bg-slate-800 px-2 py-1 text-xs ring-1 ring-slate-700 hover:bg-slate-700">✏️</button>
-          <PinButtons id={p.id} pinA={pinA} pinB={pinB} setPinA={setPinA} setPinB={setPinB}/>
-          <button onClick={onToggle} disabled={disabled} className={`rounded-xl px-3 py-1 text-sm ring-1 ${selected?'bg-emerald-600 text-white ring-emerald-500':disabled?'bg-slate-800/40 text-slate-500 ring-slate-800 cursor-not-allowed':'bg-slate-800 text-slate-200 ring-slate-700 hover:bg-slate-700'}`}>{selected? '✓' : '+'}</button>
         </div>
-      </div>);
+      );
     };
 
-    const Gauge=({label,v})=>(<div className="mb-1"><div className="flex justify-between text-xs"><span>{label}</span><span className="font-semibold">{v}</span></div><div className="h-1.5 rounded bg-slate-700"><div className="h-1.5 rounded" style={{width:`${v*10}%`,backgroundColor:'#22c55e'}}/></div></div>);
+    const Gauge=({label,v})=>(
+      <div className="mb-1">
+        <div className="flex justify-between text-xs">
+          <span>{label}</span><span className="font-semibold">{v}</span>
+        </div>
+        <div className="h-1.5 rounded bg-slate-700">
+          <div className="h-1.5 rounded" style={{width:`${v*10}%`,backgroundColor:'#22c55e'}}/>
+        </div>
+      </div>
+    );
 
     const PlayerDetails=({p,onClose})=>{
       const s=p.subs||(Object.fromEntries(STAT.map(k=>[k,(SUBS[k]||[]).map(n=>({n,v:p[k]}))])));
-      return(<div className="fixed inset-0 z-[90] grid place-items-center bg-black/60 p-3" onClick={onClose}>
-        <div className="w-full max-w-4xl space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700 max-h-[90vh] overflow-auto" onClick={e=>e.stopPropagation()}>
-          <div className="flex items-center justify-between"><div className="text-lg font-semibold">{p.nombre}{p.apodo?` “${p.apodo}”`:''} {p.bandera||''}</div><button onClick={onClose} className="rounded-lg bg-slate-800 px-2 py-1 ring-1 ring-slate-700">Cerrar</button></div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <div className="flex justify-center"><FifaCard p={p}/></div>
-            <div className="space-y-3">
-              <div className="rounded-xl bg-slate-800/60 p-3 ring-1 ring-slate-700">
-                <div className="mb-1 text-sm font-semibold">Ficha</div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="rounded-lg bg-slate-900/60 p-2">Posición:<div className="font-semibold">{p.pos}</div></div>
-                  <div className="rounded-lg bg-slate-900/60 p-2">Pie:<div className="font-semibold">{p.pie||'-'}</div></div>
-                  <div className="rounded-lg bg-slate-900/60 p-2">Equipo propio:<div className="font-semibold">{p.equipoPropio||'-'}</div></div>
-                  <div className="rounded-lg bg-slate-900/60 p-2">Favorito:<div className="font-semibold">{p.equipoFavorito||'-'}</div></div>
+      return(
+        <div className="fixed inset-0 z-[90] grid place-items-center bg-black/60 p-3" onClick={onClose}>
+          <div className="w-full max-w-4xl space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700 max-h-[90vh] overflow-auto" onClick={e=>e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <div className="text-lg font-semibold">{p.nombre}{p.apodo?` “${p.apodo}”`:''} {p.bandera||''}</div>
+              <button onClick={onClose} className="rounded-lg bg-slate-800 px-2 py-1 ring-1 ring-slate-700">Cerrar</button>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              <div className="flex justify-center"><FifaCard p={p}/></div>
+              <div className="space-y-3">
+                <div className="rounded-xl bg-slate-800/60 p-3 ring-1 ring-slate-700">
+                  <div className="mb-1 text-sm font-semibold">Ficha</div>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="rounded-lg bg-slate-900/60 p-2">Posición:<div className="font-semibold">{p.pos}</div></div>
+                    <div className="rounded-lg bg-slate-900/60 p-2">Pie:<div className="font-semibold">{p.pie||'-'}</div></div>
+                    <div className="rounded-lg bg-slate-900/60 p-2">Equipo propio:<div className="font-semibold">{p.equipoPropio||'-'}</div></div>
+                    <div className="rounded-lg bg-slate-900/60 p-2">Favorito:<div className="font-semibold">{p.equipoFavorito||'-'}</div></div>
+                  </div>
+                </div>
+                <div className="rounded-xl bg-slate-800/60 p-3 ring-1 ring-slate-700">
+                  <div className="mb-2 text-sm font-semibold">Radar</div>
+                  <RadarChart size={240} dataSeries={[{label:p.nombre,values:p,stroke:'rgba(34,211,238,1)',fill:'rgba(34,211,238,0.18)'}]}/>
                 </div>
               </div>
-              <div className="rounded-xl bg-slate-800/60 p-3 ring-1 ring-slate-700">
-                <div className="mb-2 text-sm font-semibold">Radar</div>
-                <RadarChart size={240} dataSeries={[{label:p.nombre,values:p,stroke:'rgba(34,211,238,1)',fill:'rgba(34,211,238,0.18)'}]}/>
+            </div>
+            {STAT.map(k=>(
+              <div key={k} className="rounded-xl bg-slate-800/60 p-2 ring-1 ring-slate-700">
+                <div className="mb-1 text-sm font-semibold">{SL[k]} <span className="opacity-75">({p[k]})</span></div>
+                {(s[k]||[]).map((it,idx)=>(
+                  <Gauge key={idx} label={it.n} v={it.v}/>
+                ))}
               </div>
-            </div>
+            ))}
           </div>
-          {STAT.map(k=>(
-            <div key={k} className="rounded-xl bg-slate-800/60 p-2 ring-1 ring-slate-700">
-              <div className="mb-1 text-sm font-semibold">{SL[k]} <span className="opacity-75">({p[k]})</span></div>
-              {(s[k]||[]).map((it,idx)=>(<Gauge key={idx} label={it.n} v={it.v}/>))}
-            </div>
-          ))}
         </div>
-      </div>);
+      );
     };
 
     /* ========= Formulario con substats + eliminar ========= */
@@ -437,58 +529,89 @@
         const main=Math.round(avg(subs[k].map(x=>+x.v||1)));
         return {...s,subs,[k]:main};
       });
-      const submit=()=>{const id=isEdit?f.id:String(Date.now());const p={...f,id};
-        STAT.forEach(k=>p[k]=clamp(Math.round(p[k]),1,10));p._GLOBAL=globalOf(p);onSave(p);onClose();};
-      return(<div className="fixed inset-0 z-[90] grid place-items-center bg-black/60 p-3" onClick={onClose}>
-        <div className="w-full max-w-3xl space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700 max-h-[92vh] overflow-auto" onClick={e=>e.stopPropagation()}>
-          <div className="flex items-center justify-between">
-            <div className="text-lg font-semibold">{isEdit?'Editar jugador':'Añadir jugador'}</div>
-            <div className="flex items-center gap-2">
-              {isEdit && <button onClick={()=>{onDelete?.(f.id);onClose();}} className="rounded-lg bg-rose-700 px-2 py-1 text-white ring-1 ring-rose-500 hover:bg-rose-600">Eliminar</button>}
-              <button onClick={onClose} className="rounded-lg bg-slate-800 px-2 py-1 ring-1 ring-slate-700">Cerrar</button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-            <div className="md:col-span-2 grid grid-cols-2 gap-2">
-              <label className="flex flex-col gap-1">Nombre<input value={f.nombre} onChange={e=>set('nombre',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700"/></label>
-              <label className="flex flex-col gap-1">Apodo<input value={f.apodo} onChange={e=>set('apodo',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700" placeholder="Opcional"/></label>
-              <label className="flex flex-col gap-1">Pos<input value={f.pos} onChange={e=>set('pos',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700" placeholder="LA / MU / TI / AR"/></label>
-              <label className="flex flex-col gap-1">Bandera<input value={f.bandera} onChange={e=>set('bandera',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700"/></label>
-              <label className="flex flex-col gap-1">Pie<input value={f.pie} onChange={e=>set('pie',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700"/></label>
-              <label className="flex flex-col gap-1">Equipo propio<input value={f.equipoPropio} onChange={e=>set('equipoPropio',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700"/></label>
-              <label className="flex flex-col gap-1">Favorito<input value={f.equipoFavorito} onChange={e=>set('equipoFavorito',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700"/></label>
-              <label className="col-span-2 flex flex-col gap-1">Foto URL<input value={f.fotoUrl} onChange={e=>set('fotoUrl',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700" placeholder="https://…"/></label>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {STAT.map(k=>(<label key={k} className="flex flex-col gap-1">{SL[k]}
-                <input type="number" min="1" max="10" value={f[k]} onChange={e=>set(k, +e.target.value||1)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700"/>
-              </label>))}
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {STAT.map(k=>(
-              <div key={k} className="rounded-xl bg-slate-800/60 p-3 ring-1 ring-slate-700">
-                <div className="mb-2 text-sm font-semibold">{SL[k]} — Sub-stats (promedio → {f[k]})</div>
-                <div className="grid gap-2">
-                  {(f.subs[k]||[]).map((it,i)=>(
-                    <div key={i} className="grid grid-cols-[120px,1fr,42px] items-center gap-2 text-sm">
-                      <div className="text-slate-300">{it.n}</div>
-                      <input type="range" min="1" max="10" step="1" value={it.v} onChange={e=>setSub(k,i,e.target.value)}/>
-                      <div className="tabular-nums text-right">{it.v}</div>
-                    </div>
-                  ))}
-                </div>
+      const submit=()=>{
+        const id=isEdit?f.id:String(Date.now());
+        const p={...f,id};
+        STAT.forEach(k=>p[k]=clamp(Math.round(p[k]),1,10));
+        p._GLOBAL=globalOf(p);
+        onSave(p);onClose();
+      };
+      return(
+        <div className="fixed inset-0 z-[90] grid place-items-center bg-black/60 p-3" onClick={onClose}>
+          <div className="w-full max-w-3xl space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700 max-h-[92vh] overflow-auto" onClick={e=>e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <div className="text-lg font-semibold">{isEdit?'Editar jugador':'Añadir jugador'}</div>
+              <div className="flex items-center gap-2">
+                {isEdit && (
+                  <button onClick={()=>{onDelete?.(f.id);onClose();}}
+                    className="rounded-lg bg-rose-700 px-2 py-1 text-white ring-1 ring-rose-500 hover:bg-rose-600">
+                    Eliminar
+                  </button>
+                )}
+                <button onClick={onClose} className="rounded-lg bg-slate-800 px-2 py-1 ring-1 ring-slate-700">Cerrar</button>
               </div>
-            ))}
-          </div>
+            </div>
 
-          <div className="flex justify-end gap-2">
-            <button onClick={submit} className="rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">Guardar</button>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+              <div className="md:col-span-2 grid grid-cols-2 gap-2">
+                <label className="flex flex-col gap-1">Nombre
+                  <input value={f.nombre} onChange={e=>set('nombre',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700"/>
+                </label>
+                <label className="flex flex-col gap-1">Apodo
+                  <input value={f.apodo} onChange={e=>set('apodo',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700" placeholder="Opcional"/>
+                </label>
+                <label className="flex flex-col gap-1">Pos
+                  <input value={f.pos} onChange={e=>set('pos',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700" placeholder="LA / MU / TI / AR"/>
+                </label>
+                <label className="flex flex-col gap-1">Bandera
+                  <input value={f.bandera} onChange={e=>set('bandera',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700"/>
+                </label>
+                <label className="flex flex-col gap-1">Pie
+                  <input value={f.pie} onChange={e=>set('pie',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700"/>
+                </label>
+                <label className="flex flex-col gap-1">Equipo propio
+                  <input value={f.equipoPropio} onChange={e=>set('equipoPropio',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700"/>
+                </label>
+                <label className="flex flex-col gap-1">Favorito
+                  <input value={f.equipoFavorito} onChange={e=>set('equipoFavorito',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700"/>
+                </label>
+                <label className="col-span-2 flex flex-col gap-1">Foto URL
+                  <input value={f.fotoUrl} onChange={e=>set('fotoUrl',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700" placeholder="https://…"/>
+                </label>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {STAT.map(k=>(
+                  <label key={k} className="flex flex-col gap-1">
+                    {SL[k]}
+                    <input type="number" min="1" max="10" value={f[k]} onChange={e=>set(k, +e.target.value||1)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700"/>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {STAT.map(k=>(
+                <div key={k} className="rounded-xl bg-slate-800/60 p-3 ring-1 ring-slate-700">
+                  <div className="mb-2 text-sm font-semibold">{SL[k]} — Sub-stats (promedio → {f[k]})</div>
+                  <div className="grid gap-2">
+                    {(f.subs[k]||[]).map((it,i)=>(
+                      <div key={i} className="grid grid-cols-[120px,1fr,42px] items-center gap-2 text-sm">
+                        <div className="text-slate-300">{it.n}</div>
+                        <input type="range" min="1" max="10" step="1" value={it.v} onChange={e=>setSub(k,i,e.target.value)}/>
+                        <div className="tabular-nums text-right">{it.v}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button onClick={submit} className="rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">Guardar</button>
+            </div>
           </div>
         </div>
-      </div>);
+      );
     };
 
     /* ========= Settings ========= */
@@ -496,52 +619,61 @@
       const [a,setA]=useState(teamColors.A),[b,setB]=useState(teamColors.B);
       useEffect(()=>{setA(teamColors.A);setB(teamColors.B)},[teamColors]);
       const saveColors=()=>setTeamColors({A:a,B:b});
-      return(<div className="fixed inset-0 z-[90] grid place-items-center bg-black/60 p-3" onClick={onClose}>
-        <div className="w-full max-w-md space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700" onClick={e=>e.stopPropagation()}>
-          <div className="mb-1 text-lg font-semibold">Ajustes</div>
+      return(
+        <div className="fixed inset-0 z-[90] grid place-items-center bg-black/60 p-3" onClick={onClose}>
+          <div className="w-full max-w-md space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700" onClick={e=>e.stopPropagation()}>
+            <div className="mb-1 text-lg font-semibold">Ajustes</div>
 
-          <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700">
-            <div className="mb-1 text-sm font-semibold">Peso de química</div>
-            <input type="range" min="0" max="1" step="0.05" value={kChem} onChange={e=>setKChem(+e.target.value)} className="w-full"/>
-            <div className="text-xs text-slate-300 mt-1">k = {kChem.toFixed(2)}</div>
-          </div>
+            <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700">
+              <div className="mb-1 text-sm font-semibold">Peso de química</div>
+              <input type="range" min="0" max="1" step="0.05" value={kChem} onChange={e=>setKChem(+e.target.value)} className="w-full"/>
+              <div className="text-xs text-slate-300 mt-1">k = {kChem.toFixed(2)}</div>
+            </div>
 
-          <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700">
-            <div className="mb-1 text-sm font-semibold">Tamaño tarjetas en Formación</div>
-            <input type="range" min="0.38" max="0.80" step="0.01" value={formScale} onChange={e=>setFormScale(+e.target.value)} className="w-full"/>
-            <div className="text-xs text-slate-300 mt-1">escala = {formScale.toFixed(2)}</div>
-          </div>
+            <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700">
+              <div className="mb-1 text-sm font-semibold">Tamaño tarjetas en Formación</div>
+              <input type="range" min="0.38" max="0.80" step="0.01" value={formScale} onChange={e=>setFormScale(+e.target.value)} className="w-full"/>
+              <div className="text-xs text-slate-300 mt-1">escala = {formScale.toFixed(2)}</div>
+            </div>
 
-          <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700">
-            <div className="mb-1 text-sm font-semibold">Vista de “Partido”</div>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={partidoTwoCols} onChange={e=>setPartidoTwoCols(e.target.checked)}/>
-              <span>{partidoTwoCols? '2 columnas (A|B)':'1 columna (apilado)'}</span>
-            </label>
-          </div>
+            <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700">
+              <div className="mb-1 text-sm font-semibold">Vista de “Partido”</div>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={partidoTwoCols} onChange={e=>setPartidoTwoCols(e.target.checked)}/>
+                <span>{partidoTwoCols? '2 columnas (A|B)':'1 columna (apilado)'}</span>
+              </label>
+            </div>
 
-          <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700 space-y-2">
-            <div className="text-sm font-semibold">Colores de equipos</div>
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 text-sm">A<input type="color" value={a} onChange={e=>setA(e.target.value)} /></label>
-              <label className="flex items-center gap-2 text-sm">B<input type="color" value={b} onChange={e=>setB(e.target.value)} /></label>
-              <button onClick={saveColors} className="ml-auto rounded-lg bg-slate-800 px-2 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">Guardar</button>
+            <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700 space-y-2">
+              <div className="text-sm font-semibold">Colores de equipos</div>
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 text-sm">A
+                  <input type="color" value={a} onChange={e=>setA(e.target.value)} />
+                </label>
+                <label className="flex items-center gap-2 text-sm">B
+                  <input type="color" value={b} onChange={e=>setB(e.target.value)} />
+                </label>
+                <button onClick={saveColors} className="ml-auto rounded-lg bg-slate-800 px-2 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">Guardar</button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <button onClick={onOpenGlossary} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">📘 Glosario</button>
+              <button onClick={onClose} className="rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">Cerrar</button>
             </div>
           </div>
-
-          <div className="flex items-center justify-between">
-            <button onClick={onOpenGlossary} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">📘 Glosario</button>
-            <button onClick={onClose} className="rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">Cerrar</button>
-          </div>
         </div>
-      </div>);
+      );
     };
 
     const GlossaryModal=({onClose})=>(
       <div className="fixed inset-0 z-[90] grid place-items-center bg-black/60 p-3" onClick={onClose}>
         <div className="w-full max-w-3xl space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700 text-sm max-h-[90vh] overflow-auto"
              onClick={e=>e.stopPropagation()}>
-          <div className="flex items-center justify-between"><div className="text-lg font-semibold">Glosario</div><button onClick={onClose} className="rounded-lg bg-slate-800 px-2 py-1 ring-1 ring-slate-700">Cerrar</button></div>
+          <div className="flex items-center justify-between">
+            <div className="text-lg font-semibold">Glosario</div>
+            <button onClick={onClose} className="rounded-lg bg-slate-800 px-2 py-1 ring-1 ring-slate-700">Cerrar</button>
+          </div>
           <div className="space-y-4 leading-relaxed text-slate-200">
             <div>
               <div className="font-semibold text-emerald-300">Rating de jugador (1–100)</div>
@@ -591,8 +723,13 @@
       const[pinA,setPinA]=useState(()=>new Set(J(localStorage.getItem('f5.pins.A'),[])));
       const[pinB,setPinB]=useState(()=>new Set(J(localStorage.getItem('f5.pins.B'),[])));
       const[formScale,setFormScale]=useState(()=>+(localStorage.getItem('f5.formScale')??0.50));
-      const[partidoTwoCols,setPartidoTwoCols]=useState(()=>{try{return JSON.parse(localStorage.getItem('f5.partidoTwoCols')??'true')}catch{return true}});
-      const[teamColors,setTeamColors]=useState(()=>{try{return JSON.parse(localStorage.getItem('f5.teamColors')??'{"A":"#10b981","B":"#3b82f6"}')}catch{return{A:'#10b981',B:'#3b82f6'}}});
+      const[partidoTwoCols,setPartidoTwoCols]=useState(()=>{
+        try{return JSON.parse(localStorage.getItem('f5.partidoTwoCols')??'true')}catch{return true}
+      });
+      const[teamColors,setTeamColors]=useState(()=>{
+        try{return JSON.parse(localStorage.getItem('f5.teamColors')??'{"A":"#10b981","B":"#3b82f6"}')}
+        catch{return{A:'#10b981',B:'#3b82f6'}}
+      });
       const[tab,setTab]=useState('partido');
       const[form,setForm]=useState(null);
       const[settings,setSettings]=useState(false);
@@ -614,9 +751,16 @@
       // altura del viewport a cada tab (evita zona muerta)
       const viewportRef=useRef(null);
       const pageRefs=useRef({partido:null,plantel:null});
-      const fitHeight=()=>{const vp=viewportRef.current;if(!vp)return;const pg=pageRefs.current[tab];if(!pg)return;vp.style.height=pg.scrollHeight+'px'};
+      const fitHeight=()=>{
+        const vp=viewportRef.current;if(!vp)return;
+        const pg=pageRefs.current[tab];if(!pg)return;
+        vp.style.height=pg.scrollHeight+'px';
+      };
       useEffect(()=>{fitHeight();},[tab,players,selected,teams,formScale,partidoTwoCols]);
-      useEffect(()=>{window.addEventListener('resize',fitHeight,{passive:true});return()=>window.removeEventListener('resize',fitHeight)},[]);
+      useEffect(()=>{
+        window.addEventListener('resize',fitHeight,{passive:true});
+        return()=>window.removeEventListener('resize',fitHeight);
+      },[]);
       useEffect(()=>{window.scrollTo({top:0,behavior:'instant'});},[tab]);
 
       // swipe
@@ -629,26 +773,83 @@
         vp.addEventListener('touchstart',ts,{passive:true});
         vp.addEventListener('touchmove',tm,{passive:true});
         vp.addEventListener('touchend',te,{passive:true});
-        return ()=>{vp.removeEventListener('touchstart',ts);vp.removeEventListener('touchmove',tm);vp.removeEventListener('touchend',te);}
+        return ()=>{
+          vp.removeEventListener('touchstart',ts);
+          vp.removeEventListener('touchmove',tm);
+          vp.removeEventListener('touchend',te);
+        };
       },[]);
 
       const map=useMemo(()=>Object.fromEntries(players.map(p=>[p.id,p])),[players]);
 
       const convocados=[...selected];
-      const canMake=convocados.length===10, reachedMax=convocados.length>=10, invalidPins=false; // pins solo para futuro
-      const toggle=id=>setSelected(s=>{const n=new Set(s);if(n.has(id))n.delete(id);else{if(reachedMax)return n;n.add(id)}return n});
-      const makeR=()=>{if(!canMake||invalidPins)return;const ids=[...convocados];ids.sort(()=>Math.random()-.5);setTeams({A:ids.slice(0,5),B:ids.slice(5)})};
-      const chem=useMemo(()=>{const q={};for(const a of players){q[a.id]={};for(const b of players){
-        if(a.id===b.id){q[a.id][b.id]=10;continue}
-        if(q[b.id]?.[a.id]!=null){q[a.id][b.id]=q[b.id][a.id];continue}
-        let v=5;if(a.equipoPropio&&b.equipoPropio&&a.equipoPropio===b.equipoPropio)v+=1.2;
-        if(a.equipoFavorito&&b.equipoFavorito&&a.equipoFavorito===b.equipoFavorito)v+=.8;
-        v+=(((a.EQP+b.EQP)/2)-5)*.15;q[a.id][b.id]=clamp(+v.toFixed(2),1,10)}}return q},[players]);
-      const makeB=()=>{if(!canMake||invalidPins)return;const r=balancedWithPins(convocados,map,chem,kChem,new Set(),new Set());setTeams({A:r.A,B:r.B})};
-      const clearConvocados=()=>{setSelected(new Set());setTeams(null)};
+      const canMake=convocados.length===10, reachedMax=convocados.length>=10;
+      // Reglas para validar pins
+      const invalidPins =
+        pinA.size > 5 ||
+        pinB.size > 5 ||
+        [...pinA].some(id => !selected.has(id)) ||
+        [...pinB].some(id => !selected.has(id)) ||
+        pinA.size + pinB.size > 10;
 
-      const filtered=[...players].filter(p=>{const t=q.trim().toLowerCase();return !t || (p.nombre||'').toLowerCase().includes(t) || (p.apodo||'').toLowerCase().includes(t) || (p.equipoPropio||'').toLowerCase().includes(t) || (p.equipoFavorito||'').toLowerCase().includes(t)});
-      filtered.sort((a,b)=> sort==='global-asc' ? a._GLOBAL-b._GLOBAL : sort==='nombre' ? a.nombre.localeCompare(b.nombre) : b._GLOBAL-a._GLOBAL);
+      const toggle=id=>setSelected(s=>{
+        const n=new Set(s);
+        if(n.has(id)) n.delete(id);
+        else{
+          if(reachedMax) return n;
+          n.add(id);
+        }
+        return n;
+      });
+
+      const makeR=()=>{
+        if(!canMake||invalidPins)return;
+        const ids=[...convocados];
+        ids.sort(()=>Math.random()-.5);
+        setTeams({A:ids.slice(0,5),B:ids.slice(5)});
+      };
+
+      const chem=useMemo(()=>{
+        const q={};
+        for(const a of players){
+          q[a.id]={};
+          for(const b of players){
+            if(a.id===b.id){q[a.id][b.id]=10;continue}
+            if(q[b.id]?.[a.id]!=null){q[a.id][b.id]=q[b.id][a.id];continue}
+            let v=5;
+            if(a.equipoPropio&&b.equipoPropio&&a.equipoPropio===b.equipoPropio)v+=1.2;
+            if(a.equipoFavorito&&b.equipoFavorito&&a.equipoFavorito===b.equipoFavorito)v+=.8;
+            v+=(((a.EQP+b.EQP)/2)-5)*.15;
+            q[a.id][b.id]=clamp(+v.toFixed(2),1,10);
+          }
+        }
+        return q;
+      },[players]);
+
+      const makeB=()=>{
+        if(!canMake || invalidPins) return;
+        const r = balancedWithPins(convocados, map, chem, kChem, pinA, pinB);
+        setTeams({ A: r.A, B: r.B });
+      };
+
+      const clearConvocados=()=>{
+        setSelected(new Set());
+        setTeams(null);
+      };
+
+      const filtered=[...players].filter(p=>{
+        const t=q.trim().toLowerCase();
+        return !t ||
+          (p.nombre||'').toLowerCase().includes(t) ||
+          (p.apodo||'').toLowerCase().includes(t) ||
+          (p.equipoPropio||'').toLowerCase().includes(t) ||
+          (p.equipoFavorito||'').toLowerCase().includes(t);
+      });
+      filtered.sort((a,b)=>
+        sort==='global-asc' ? a._GLOBAL-b._GLOBAL :
+        sort==='nombre' ? a.nombre.localeCompare(b.nombre) :
+        b._GLOBAL-a._GLOBAL
+      );
 
       const teamA=teams?.A||[], teamB=teams?.B||[];
       const ratingA=Math.round(teamGlobal(teamA,map)*10), ratingB=Math.round(teamGlobal(teamB,map)*10);
@@ -658,188 +859,315 @@
 
       // install
       const [deferredPrompt,setDeferredPrompt]=useState(null);
-      useEffect(()=>{const onPrompt=(e)=>{e.preventDefault();setDeferredPrompt(e)};window.addEventListener('beforeinstallprompt',onPrompt);return()=>window.removeEventListener('beforeinstallprompt',onPrompt)},[]);
-      const doInstall=async()=>{if(!deferredPrompt){alert('Tu navegador no ofrece instalación ahora. Prueba desde Chrome en Android.');return;}deferredPrompt.prompt();};
+      useEffect(()=>{
+        const onPrompt=(e)=>{
+          e.preventDefault();
+          setDeferredPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt',onPrompt);
+        return()=>window.removeEventListener('beforeinstallprompt',onPrompt);
+      },[]);
+      const doInstall=async()=>{
+        if(!deferredPrompt){
+          alert('Tu navegador no ofrece instalación ahora. Prueba desde Chrome en Android.');
+          return;
+        }
+        deferredPrompt.prompt();
+      };
 
       // Guardar / Eliminar jugador
-      const upsertPlayer = (p)=>setPlayers(ps=>{const i=ps.findIndex(x=>x.id===p.id);if(i>=0){const cp=[...ps];cp[i]=withG([p])[0];return cp;}return withG([...ps,p]);});
-      const deletePlayer = (id)=>{setPlayers(ps=>ps.filter(x=>x.id!==id));setSelected(s=>{const n=new Set(s);n.delete(id);return n});setTeams(t=>{if(!t)return t;return {A:(t.A||[]).filter(x=>x!==id),B:(t.B||[]).filter(x=>x!==id)}})};
+      const upsertPlayer = (p)=>setPlayers(ps=>{
+        const i=ps.findIndex(x=>x.id===p.id);
+        if(i>=0){
+          const cp=[...ps];
+          cp[i]=withG([p])[0];
+          return cp;
+        }
+        return withG([...ps,p]);
+      });
+      const deletePlayer = (id)=>{
+        setPlayers(ps=>ps.filter(x=>x.id!==id));
+        setSelected(s=>{
+          const n=new Set(s);n.delete(id);return n;
+        });
+        setTeams(t=>{
+          if(!t)return t;
+          return {
+            A:(t.A||[]).filter(x=>x!==id),
+            B:(t.B||[]).filter(x=>x!==id)
+          };
+        });
+      };
 
-      return(<div className="min-h-screen">
-        <header className="app-header">
-          <div className="mx-auto max-w-5xl px-3 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2"><span className="text-2xl leading-none">⚽</span><div className="text-2xl font-extrabold title-fifa">F5C</div></div>
-              <div className="flex items-center gap-2"><button onClick={()=>setSettings(true)} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">⚙️ Config</button></div>
-            </div>
-            <div className="tabs-bar">
-              <button className={`tab-large ${tab==='partido'?'active':''}`} onClick={()=>setTab('partido')}>Partido</button>
-              <button className={`tab-large ${tab==='plantel'?'active':''}`} onClick={()=>setTab('plantel')}>Plantel</button>
-            </div>
-            <div className="mt-2 text-center">
-              <span className="inline-block rounded-full bg-slate-900/60 px-3 py-1 text-xs ring-1 ring-slate-700">
-                Convocados: <b>{[...selected].length}</b>/10
-              </span>
-            </div>
-          </div>
-        </header>
-        <div className="header-spacer"></div>
-
-        {/* Viewport con altura dinámica */}
-        <div ref={viewportRef} className="tabs-viewport" style={{height:'auto'}}>
-          <div className="tabs-track" style={{transform:`translateX(${tab==='partido'?'0%':'-50%'})`}}>
-
-            {/* === PARTIDO === */}
-            <section className="tabs-page" ref={el=>pageRefs.current.partido=el}>
-              <div className="mx-auto max-w-5xl space-y-3">
-
-                <div className="grid grid-cols-2 gap-2">
-                  <button onClick={makeR} className={`rounded-xl px-4 py-3 font-bold ring-1 ${canMake&&!invalidPins?'bg-slate-800 hover:bg-slate-700 ring-slate-700':'bg-slate-800/40 ring-slate-800 cursor-not-allowed'}`}>🎲 Al azar</button>
-                  <button onClick={makeB} className={`rounded-xl px-4 py-3 font-bold ring-1 ${canMake&&!invalidPins?'bg-emerald-600 text-white hover:bg-emerald-500 ring-emerald-500':'bg-emerald-700/40 text-white/60 ring-emerald-800 cursor-not-allowed'}`}>⚖️ Equilibrado</button>
+      return(
+        <div className="min-h-screen">
+          <header className="app-header">
+            <div className="mx-auto max-w-5xl px-3 py-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl leading-none">⚽</span>
+                  <div className="text-2xl font-extrabold title-fifa">F5C</div>
                 </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={()=>setSettings(true)} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">⚙️ Config</button>
+                </div>
+              </div>
+              <div className="tabs-bar">
+                <button className={`tab-large ${tab==='partido'?'active':''}`} onClick={()=>setTab('partido')}>Partido</button>
+                <button className={`tab-large ${tab==='plantel'?'active':''}`} onClick={()=>setTab('plantel')}>Plantel</button>
+              </div>
+              <div className="mt-2 text-center">
+                <span className="inline-block rounded-full bg-slate-900/60 px-3 py-1 text-xs ring-1 ring-slate-700">
+                  Convocados: <b>{[...selected].length}</b>/10
+                </span>
+              </div>
+            </div>
+          </header>
+          <div className="header-spacer"></div>
 
-                <div className={`grid gap-2 ${gridCols}`}>
-                  {[['A',ratingA,chemA,scoreA],['B',ratingB,chemB,scoreB]].map(([t,rt,ch,sc],i)=>(
-                    <div key={t} className="rounded-2xl bg-slate-900/70 p-3 ring-2" style={{borderColor:hexA(i?teamColors.B:teamColors.A,.45)}}>
-                      <div className="mb-1 text-sm font-semibold">Equipo {t}</div>
-                      <div className="grid grid-cols-3 gap-2 text-center">
-                        <div><div className="text-xs text-slate-300">Rating</div><div className={`text-xl font-extrabold ${colorNum100(rt)}`}>{rt||0}</div></div>
-                        <div><div className="text-xs text-slate-300">Química</div><div className={`text-xl font-extrabold ${colorNum10(ch)}`}>{ch||0}</div></div>
-                        <div><div className="text-xs text-slate-300">Score</div><div className="text-xl font-extrabold text-cyan-300">{sc||0}</div></div>
+          {/* Viewport con altura dinámica */}
+          <div ref={viewportRef} className="tabs-viewport" style={{height:'auto'}}>
+            <div className="tabs-track" style={{transform:`translateX(${tab==='partido'?'0%':'-50%'})`}}>
+
+              {/* === PARTIDO === */}
+              <section className="tabs-page" ref={el=>pageRefs.current.partido=el}>
+                <div className="mx-auto max-w-5xl space-y-3">
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button onClick={makeR}
+                      className={`rounded-xl px-4 py-3 font-bold ring-1 ${canMake&&!invalidPins?'bg-slate-800 hover:bg-slate-700 ring-slate-700':'bg-slate-800/40 ring-slate-800 cursor-not-allowed'}`}>
+                      🎲 Al azar
+                    </button>
+                    <button onClick={makeB}
+                      className={`rounded-xl px-4 py-3 font-bold ring-1 ${canMake&&!invalidPins?'bg-emerald-600 text-white hover:bg-emerald-500 ring-emerald-500':'bg-emerald-700/40 text-white/60 ring-emerald-800 cursor-not-allowed'}`}>
+                      ⚖️ Equilibrado
+                    </button>
+                  </div>
+
+                  {invalidPins && (
+                    <p className="text-red-400 font-bold text-sm">
+                      ❌ Revisa los fijados A/B — no se puede armar un equipo válido con esos pins.
+                    </p>
+                  )}
+
+                  <div className={`grid gap-2 ${gridCols}`}>
+                    {[['A',ratingA,chemA,scoreA],['B',ratingB,chemB,scoreB]].map(([t,rt,ch,sc],i)=>(
+                      <div key={t} className="rounded-2xl bg-slate-900/70 p-3 ring-2" style={{borderColor:hexA(i?teamColors.B:teamColors.A,.45)}}>
+                        <div className="mb-1 text-sm font-semibold">Equipo {t}</div>
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                          <div>
+                            <div className="text-xs text-slate-300">Rating</div>
+                            <div className={`text-xl font-extrabold ${colorNum100(rt)}`}>{rt||0}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-slate-300">Química</div>
+                            <div className={`text-xl font-extrabold ${colorNum10(ch)}`}>{ch||0}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-slate-300">Score</div>
+                            <div className="text-xl font-extrabold text-cyan-300">{sc||0}</div>
+                          </div>
+                        </div>
                       </div>
+                    ))}
+                  </div>
+
+                  <div className={`grid gap-3 ${gridCols}`}>
+                    {['A','B'].map((t,i)=>{
+                      const ids=(teams?.[t]||[]), col=i?teamColors.B:teamColors.A;
+                      return (
+                        <div key={t} className="space-y-2">
+                          <div className="text-xs font-semibold text-slate-300">Equipo {t}</div>
+                          {ids.map((id,idx)=>{
+                            const p=map[id];if(!p)return null;
+                            return (
+                              <div key={id} draggable
+                                onDragStart={e=>{
+                                  e.dataTransfer.effectAllowed='move';
+                                  window.__drag={team:t,id};
+                                }}
+                                onDragOver={e=>e.preventDefault()}
+                                onDrop={e=>{
+                                  e.preventDefault();
+                                  const d=window.__drag;if(!d)return;
+                                  const fromT=d.team,toT=t;
+                                  setTeams(tt=>{
+                                    const A=[...(tt?.A||[])],B=[...(tt?.B||[])];
+                                    const fromArr=fromT==='A'?A:B,toArr=toT==='A'?A:B;
+                                    const fromIdx=fromArr.indexOf(d.id);
+                                    const swapId=toArr[idx];
+                                    if(fromIdx<0)return tt;
+                                    fromArr[fromIdx]=swapId;
+                                    toArr[idx]=d.id;
+                                    return {A,B};
+                                  });
+                                }}
+                                className="flex items-center justify-between rounded-xl bg-slate-900/70 p-2 ring-2"
+                                style={{borderColor:hexA(col,.35)}}
+                              >
+                                <button onClick={()=>setPlayerDetailId(id)} className="flex items-center gap-2 min-w-0">
+                                  <img src={p.fotoUrl||mkAvatar(p.nombre)} onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}} className="h-8 w-8 rounded-full object-cover ring-1 ring-slate-700" alt={p.nombre}/>
+                                  <span className="truncate">{p.nombre}{p.apodo?` “${p.apodo}”`:''}</span>
+                                </button>
+                                <span className={`tabular-nums text-sm font-bold ${colorNum100(Math.round(p._GLOBAL*10))}`}>{Math.round(p._GLOBAL*10)}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Semáforo */}
+                  <div className="rounded-2xl p-3 ring-1 bg-slate-900/70 ring-slate-700">
+                    {(()=>{
+                      const sA=teamScoreUI(teamA,map,chem,kChem),sB=teamScoreUI(teamB,map,chem,kChem),d=Math.abs(sA-sB).toFixed(2);
+                      let lb='Parejo',cls='bg-emerald-600/15 text-emerald-200 ring-emerald-500/30';
+                      if(d>=.8){lb='Desbalanceado';cls='bg-rose-600/15 text-rose-200 ring-rose-500/30'}
+                      else if(d>=.3){lb='Aceptable';cls='bg-amber-600/15 text-amber-100 ring-amber-500/30'}
+                      return(
+                        <div className={`rounded-xl p-3 ring-1 ${cls}`}>
+                          <div className="text-sm">
+                            Resultado: <b>{lb}</b> <span className="opacity-80">(A: {sA} vs B: {sB})</span>
+                          </div>
+                          <div className="mt-1 text-xs opacity-80">Diff: {d}</div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Radar */}
+                  <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
+                    <div className="mb-2 text-center text-sm text-slate-300">Radar comparativo</div>
+                    <RadarChart dataSeries={[
+                      {values:Object.fromEntries(STAT.map(k=>[k,+avg(teamA.map(id=>map[id]?.[k]??0)).toFixed(2)])),stroke:hexA(teamColors.A,1),fill:hexA(teamColors.A,0.18)},
+                      {values:Object.fromEntries(STAT.map(k=>[k,+avg(teamB.map(id=>map[id]?.[k]??0)).toFixed(2)])),stroke:hexA(teamColors.B,1),fill:hexA(teamColors.B,0.18)},
+                    ]}/>
+                    <div className="mt-2 flex justify-center gap-4 text-xs text-slate-300">
+                      <span className="inline-flex items-center gap-1">
+                        <span className="h-2 w-2 rounded-full" style={{backgroundColor:teamColors.A}}></span> A
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <span className="h-2 w-2 rounded-full" style={{backgroundColor:teamColors.B}}></span> B
+                      </span>
                     </div>
-                  ))}
-                </div>
+                  </div>
 
-                <div className={`grid gap-3 ${gridCols}`}>
-                  {['A','B'].map((t,i)=>{
-                    const ids=(teams?.[t]||[]), col=i?teamColors.B:teamColors.A;
-                    return (<div key={t} className="space-y-2">
-                      <div className="text-xs font-semibold text-slate-300">Equipo {t}</div>
-                      {ids.map((id,idx)=>{const p=map[id];if(!p)return null;
-                        return (<div key={id} draggable onDragStart={e=>{e.dataTransfer.effectAllowed='move';window.__drag={team:t,id}}}
-                          onDragOver={e=>e.preventDefault()}
-                          onDrop={e=>{e.preventDefault();const d=window.__drag;if(!d)return;const fromT=d.team,toT=t;
-                            setTeams(tt=>{const A=[...(tt?.A||[])],B=[...(tt?.B||[])];
-                              const fromArr=fromT==='A'?A:B,toArr=toT==='A'?A:B;const fromIdx=fromArr.indexOf(d.id);const swapId=toArr[idx];
-                              if(fromIdx<0)return tt;fromArr[fromIdx]=swapId;toArr[idx]=d.id;return {A,B};});}}
-                          className="flex items-center justify-between rounded-xl bg-slate-900/70 p-2 ring-2" style={{borderColor:hexA(col,.35)}}>
-                          <button onClick={()=>setPlayerDetailId(id)} className="flex items-center gap-2 min-w-0">
-                            <img src={p.fotoUrl||mkAvatar(p.nombre)} onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}} className="h-8 w-8 rounded-full object-cover ring-1 ring-slate-700" alt={p.nombre}/>
-                            <span className="truncate">{p.nombre}{p.apodo?` “${p.apodo}”`:''}</span>
-                          </button>
-                          <span className={`tabular-nums text-sm font-bold ${colorNum100(Math.round(p._GLOBAL*10))}`}>{Math.round(p._GLOBAL*10)}</span>
-                        </div>)})}
-                    </div>)})}
-                </div>
+                  {/* Barras */}
+                  <div className={`grid gap-3 ${gridCols}`}>
+                    {['A','B'].map((t,i)=>{
+                      const ids=t==='A'?teamA:teamB;
+                      const col=i?teamColors.B:teamColors.A;
+                      return(
+                        <div key={t} className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
+                          <div className="mb-1 text-sm font-semibold">Barras — Equipo {t}</div>
+                          <div className="space-y-2">
+                            {STAT.map(k=>{
+                              const v=+avg(ids.map(id=>map[id]?.[k]??0)).toFixed(2);
+                              return(
+                                <div key={k}>
+                                  <div className="mb-1 flex items-center justify-between text-sm">
+                                    <span className="text-slate-300" title={SL[k]}>{k}</span>
+                                    <span className="font-semibold">{v}</span>
+                                  </div>
+                                  <div className="h-2 w-full rounded bg-slate-700">
+                                    <div className="h-2 rounded" style={{width:`${(v/10)*100}%`,backgroundColor:col}}/>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
 
-                {/* Semáforo */}
-                <div className="rounded-2xl p-3 ring-1 bg-slate-900/70 ring-slate-700">
-                  {(()=>{const sA=teamScoreUI(teamA,map,chem,kChem),sB=teamScoreUI(teamB,map,chem,kChem),d=Math.abs(sA-sB).toFixed(2);
-                    let lb='Parejo',cls='bg-emerald-600/15 text-emerald-200 ring-emerald-500/30';
-                    if(d>=.8){lb='Desbalanceado';cls='bg-rose-600/15 text-rose-200 ring-rose-500/30'}
-                    else if(d>=.3){lb='Aceptable';cls='bg-amber-600/15 text-amber-100 ring-amber-500/30'}
-                    return(<div className={`rounded-xl p-3 ring-1 ${cls}`}><div className="text-sm">Resultado: <b>{lb}</b> <span className="opacity-80">(A: {sA} vs B: {sB})</span></div><div className="mt-1 text-xs opacity-80">Diff: {d}</div></div>)} )()}
+                  <FormationBoard teamA={teamA} teamB={teamB} map={map} scale={formScale}/>
                 </div>
+              </section>
 
-                {/* Radar */}
-                <div className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-                  <div className="mb-2 text-center text-sm text-slate-300">Radar comparativo</div>
-                  <RadarChart dataSeries={[
-                    {values:Object.fromEntries(STAT.map(k=>[k,+avg(teamA.map(id=>map[id]?.[k]??0)).toFixed(2)])),stroke:hexA(teamColors.A,1),fill:hexA(teamColors.A,0.18)},
-                    {values:Object.fromEntries(STAT.map(k=>[k,+avg(teamB.map(id=>map[id]?.[k]??0)).toFixed(2)])),stroke:hexA(teamColors.B,1),fill:hexA(teamColors.B,0.18)},
-                  ]}/>
-                  <div className="mt-2 flex justify-center gap-4 text-xs text-slate-300">
-                    <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{backgroundColor:teamColors.A}}></span> A</span>
-                    <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{backgroundColor:teamColors.B}}></span> B</span>
+              {/* === PLANTEL === */}
+              <section className="tabs-page" ref={el=>pageRefs.current.plantel=el}>
+                <div className="mx-auto max-w-5xl space-y-3">
+
+                  {/* Acciones arriba */}
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={()=>setForm({})} className="rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">+ Añadir jugador</button>
+                    <button onClick={clearConvocados} className="rounded-xl bg-amber-600 px-3 py-1 text-sm text-white ring-1 ring-amber-500 hover:bg-amber-500">🧹 Limpiar convocados</button>
+                    <button onClick={()=>{setPlayers(withG(SEED));}} className="rounded-xl bg-rose-700 px-3 py-1 text-sm text-white ring-1 ring-rose-500 hover:bg-rose-600">Restablecer seed</button>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input value={q} onChange={e=>setQ(e.target.value)} className="flex-1 min-w-[160px] rounded-lg bg-slate-900/70 px-3 py-2 ring-1 ring-slate-700" placeholder="Buscar por nombre / apodo / equipo"/>
+                    <select value={sort} onChange={e=>setSort(e.target.value)} className="rounded-lg bg-slate-900/70 px-3 py-2 ring-1 ring-slate-700">
+                      <option value="global-desc">Rating ↓</option>
+                      <option value="global-asc">Rating ↑</option>
+                      <option value="nombre">Nombre A-Z</option>
+                    </select>
+                  </div>
+
+                  <div className="grid gap-3" style={{gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))'}}>
+                    {filtered.map(p=>(
+                      <PlayerRow
+                        key={p.id}
+                        p={p}
+                        selected={selected.has(p.id)}
+                        onToggle={()=>toggle(p.id)}
+                        onOpen={()=>setPlayerDetailId(p.id)}
+                        onEdit={()=>setForm({initial:p})}
+                        pinA={pinA}
+                        pinB={pinB}
+                        setPinA={setPinA}
+                        setPinB={setPinB}
+                        disableAdd={selected.size>=10 && !selected.has(p.id)}
+                      />
+                    ))}
                   </div>
                 </div>
+              </section>
 
-                {/* Barras */}
-                <div className={`grid gap-3 ${gridCols}`}>
-                  {['A','B'].map((t,i)=>{const ids=t==='A'?teamA:teamB;const col=i?teamColors.B:teamColors.A;return(
-                    <div key={t} className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-                      <div className="mb-1 text-sm font-semibold">Barras — Equipo {t}</div>
-                      <div className="space-y-2">{STAT.map(k=>{const v=+avg(ids.map(id=>map[id]?.[k]??0)).toFixed(2);return(
-                        <div key={k}>
-                          <div className="mb-1 flex items-center justify-between text-sm"><span className="text-slate-300" title={SL[k]}>{k}</span><span className="font-semibold">{v}</span></div>
-                          <div className="h-2 w-full rounded bg-slate-700"><div className="h-2 rounded" style={{width:`${(v/10)*100}%`,backgroundColor:col}}/></div>
-                        </div>)})}</div>
-                    </div>
-                  )})}
-                </div>
+            </div>
+          </div>
 
-                <FormationBoard teamA={teamA} teamB={teamB} map={map} scale={formScale}/>
-              </div>
-            </section>
+          {!window.matchMedia('(display-mode: standalone)').matches && (
+            <button onClick={doInstall} className="install-pill rounded-full bg-emerald-600 px-4 py-2 text-sm text-white ring-1 ring-emerald-500 shadow-lg">
+              📲 Instalar
+            </button>
+          )}
 
-            {/* === PLANTEL === */}
-            <section className="tabs-page" ref={el=>pageRefs.current.plantel=el}>
-              <div className="mx-auto max-w-5xl space-y-3">
+          {/* Modales */}
+          <div id="modals-root">
+            {settings && (
+              <SettingsModal
+                onClose={()=>setSettings(false)} kChem={kChem} setKChem={setKChem}
+                formScale={formScale} setFormScale={setFormScale}
+                partidoTwoCols={partidoTwoCols} setPartidoTwoCols={setPartidoTwoCols}
+                teamColors={teamColors} setTeamColors={setTeamColors}
+                onOpenGlossary={()=>{setSettings(false);setShowGlossary(true)}}
+              />
+            )}
+            {showGlossary && <GlossaryModal onClose={()=>setShowGlossary(false)}/>}
+            {playerDetailId && (players.find(p=>p.id===playerDetailId)) && (
+              <PlayerDetails
+                p={players.find(p=>p.id===playerDetailId)}
+                onClose={()=>setPlayerDetailId(null)}
+              />
+            )}
 
-                {/* Acciones arriba */}
-                <div className="flex flex-wrap gap-2">
-                  <button onClick={()=>setForm({})} className="rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">+ Añadir jugador</button>
-                  <button onClick={clearConvocados} className="rounded-xl bg-amber-600 px-3 py-1 text-sm text-white ring-1 ring-amber-500 hover:bg-amber-500">🧹 Limpiar convocados</button>
-                  <button onClick={()=>{setPlayers(withG(SEED));}} className="rounded-xl bg-rose-700 px-3 py-1 text-sm text-white ring-1 ring-rose-500 hover:bg-rose-600">Restablecer seed</button>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <input value={q} onChange={e=>setQ(e.target.value)} className="flex-1 min-w-[160px] rounded-lg bg-slate-900/70 px-3 py-2 ring-1 ring-slate-700" placeholder="Buscar por nombre / apodo / equipo"/>
-                  <select value={sort} onChange={e=>setSort(e.target.value)} className="rounded-lg bg-slate-900/70 px-3 py-2 ring-1 ring-slate-700">
-                    <option value="global-desc">Rating ↓</option><option value="global-asc">Rating ↑</option><option value="nombre">Nombre A-Z</option>
-                  </select>
-                </div>
-
-                <div className="grid gap-3" style={{gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))'}}>
-                  {filtered.map(p=>(
-                    <PlayerRow key={p.id} p={p} selected={selected.has(p.id)}
-                      onToggle={()=>toggle(p.id)} onOpen={()=>setPlayerDetailId(p.id)} onEdit={()=>setForm({initial:p})}
-                      pinA={new Set()} pinB={new Set()} setPinA={()=>{}} setPinB={()=>{}}
-                      disableAdd={selected.size>=10 && !selected.has(p.id)} />
-                  ))}
-                </div>
-              </div>
-            </section>
-
+            {form && (
+              <PlayerFormModal
+                initial={form.initial}
+                onClose={()=>setForm(null)}
+                onSave={upsertPlayer}
+                onDelete={deletePlayer}
+              />
+            )}
           </div>
         </div>
+      );
+    };
 
-        {!window.matchMedia('(display-mode: standalone)').matches && (
-          <button onClick={doInstall} className="install-pill rounded-full bg-emerald-600 px-4 py-2 text-sm text-white ring-1 ring-emerald-500 shadow-lg">📲 Instalar</button>
-        )}
-
-        {/* Modales */}
-        <div id="modals-root">
-          {settings && <SettingsModal
-            onClose={()=>setSettings(false)} kChem={kChem} setKChem={setKChem}
-            formScale={formScale} setFormScale={setFormScale}
-            partidoTwoCols={partidoTwoCols} setPartidoTwoCols={setPartidoTwoCols}
-            teamColors={teamColors} setTeamColors={setTeamColors}
-            onOpenGlossary={()=>{setSettings(false);setShowGlossary(true)}}/>}
-          {showGlossary && <GlossaryModal onClose={()=>setShowGlossary(false)}/>}
-                    {playerDetailId && (players.find(p=>p.id===playerDetailId)) && (
-            <PlayerDetails
-              p={players.find(p=>p.id===playerDetailId)}
-              onClose={()=>setPlayerDetailId(null)}
-            />
-          )}
-
-          {form && (
-            <PlayerFormModal
-              initial={form.initial}
-              onClose={()=>setForm(null)}
-              onSave={upsertPlayer}
-              onDelete={deletePlayer}
-            />
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
   </script>
 </body>
 </html>
-
