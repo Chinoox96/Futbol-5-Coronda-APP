@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#10b981"/>
   <link id="mf" rel="manifest">
 
-  <!-- iOS icons (si existen; si no, se generan en runtime) -->
+  <!-- iOS icons (tus íconos locales) -->
   <link rel="apple-touch-icon" sizes="192x192" href="./icons/icon-192.png"/>
   <link rel="apple-touch-icon" sizes="512x512" href="./icons/icon-512.png"/>
 
@@ -31,12 +31,12 @@
       --pitch-image-desktop: var(--pitch-image-mobile);
       --pitch-darken: 0.50;
       --parallax-speed: 0.35;
-      --header-h: 140px;
+      --header-h: 104px;
     }
     html,body{background:#0b1220;color:#e2e8f0;margin:0;overflow-x:hidden}
     img,svg{max-width:100%;height:auto}
 
-    /* Fondo (degradado Coronda + cesped) */
+    /* Fondo (degradado + césped) */
     #bg-parallax{
       position:fixed;inset:0;z-index:0;
       background-image:
@@ -66,8 +66,8 @@
     .title-fifa{font-style:italic;letter-spacing:.5px}
 
     /* Tabs */
-    .tabs-bar{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.75rem}
-    .tab-large{border-radius:14px;padding:.75rem 1rem;font-weight:700;text-align:center;
+    .tabs-bar{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.5rem}
+    .tab-large{border-radius:14px;padding:.55rem 1rem;font-weight:700;text-align:center;
       border:1px solid rgba(51,65,85,.8);background:rgba(2,6,23,.6);color:#cbd5e1;transition:all .2s}
     .tab-large.active{background:#0b1220;color:#fff;border-color:#4ade80;box-shadow:0 0 0 1px rgba(74,222,128,.25) inset}
 
@@ -83,16 +83,40 @@
     .rarity-silver{background:linear-gradient(180deg,#e5e7eb,#9ca3af)}
     .rarity-gold{background:linear-gradient(180deg,#fde68a,#d97706)}
     .rarity-special{background:transparent}
-    .rarity-special::before{content:"";position:absolute;inset:-2px;border-radius:18px;background:conic-gradient(from 0deg,#22d3ee,#a78bfa,#f472b6,#22d3ee);animation:spin 6s linear infinite}
-    .rarity-special::after{content:"";position:absolute;inset:2px;border-radius:14px;background:linear-gradient(180deg,rgba(15,23,42,.9),rgba(30,41,59,.85))}
+    .rarity-special::before{
+      content:"";position:absolute;inset:-2px;border-radius:18px;
+      background:conic-gradient(from 0deg,#22d3ee,#a78bfa,#f472b6,#22d3ee);
+      animation:spin 6s linear infinite;
+    }
+    .rarity-special::after{
+      content:"";position:absolute;inset:2px;border-radius:14px;
+      background:linear-gradient(180deg,rgba(15,23,42,.9),rgba(30,41,59,.85));
+    }
+
+    /* Legendaria */
+    .rarity-legendary{
+      position:relative;
+      background:transparent;
+    }
+    .rarity-legendary::before{
+      content:"";position:absolute;inset:-2px;border-radius:18px;
+      background:conic-gradient(from 0deg,#facc15,#fb923c,#e879f9,#38bdf8,#facc15);
+      animation:spin 5s linear infinite;
+    }
+    .rarity-legendary::after{
+      content:"";position:absolute;inset:2px;border-radius:14px;
+      background:linear-gradient(180deg,rgba(15,23,42,.98),rgba(30,41,59,.94));
+      box-shadow:0 0 24px rgba(250,204,21,.35);
+    }
+
     @keyframes spin{to{transform:rotate(1turn)}}
 
-    /* Cancha (16:9 nueva imagen) */
+    /* Cancha (16:9) */
     .board{position:relative;width:100%;max-width:980px;aspect-ratio:16/9;border-radius:16px;overflow:hidden}
     .board img.field{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
     .board .layer{position:absolute;inset:0}
 
-    /* Botón instalar */
+    /* Botón instalar flotante */
     .install-pill{position:fixed;right:12px;bottom:12px;z-index:60}
   </style>
 </head>
@@ -100,27 +124,29 @@
   <div id="bg-parallax" aria-hidden="true"></div>
   <div id="root"></div>
 
-  <!-- Manifest dinámico (rutas correctas según base) -->
+  <!-- Manifest dinámico apuntando a TUS íconos -->
   <script>
     (function(){
       const link=document.getElementById('mf');
-      const base = location.pathname.endsWith('/')?location.pathname:location.pathname.replace(/[^/]+$/,'');
-      const mkIcon=(n,c)=>{const a=document.createElement('canvas');a.width=a.height=n;const x=a.getContext('2d');
-        x.fillStyle=c;x.fillRect(0,0,n,n);x.fillStyle='#0b1220';x.textAlign='center';x.textBaseline='middle';
-        x.font=`${Math.floor(n*.42)}px sans-serif`;x.fillText('F5',n/2,n/2);return a.toDataURL('image/png')};
-      async function exists(u){try{const r=await fetch(u,{method:'HEAD',cache:'no-cache'});return r.ok}catch{return false}}
-      (async ()=>{
-        let icons=[{src:`${base}icons/icon-192.png`,sizes:'192x192',type:'image/png',purpose:'any maskable'},
-                   {src:`${base}icons/icon-512.png`,sizes:'512x512',type:'image/png',purpose:'any maskable'}];
-        if(!(await exists(icons[0].src))||!(await exists(icons[1].src))){
-          icons=[{src:mkIcon(192,'#10b981'),sizes:'192x192',type:'image/png'},
-                 {src:mkIcon(512,'#10b981'),sizes:'512x512',type:'image/png'}];
-        }
-        const man={name:'F5C',short_name:'F5C',start_url:base,scope:base,display:'standalone',
-                   background_color:'#0f172a',theme_color:'#10b981',icons};
-        const b=new Blob([JSON.stringify(man)],{type:'application/manifest+json'});
-        link.href=URL.createObjectURL(b);
-      })();
+      const base = location.pathname.endsWith('/') ? location.pathname : location.pathname.replace(/[^/]+$/,'');
+      const icons=[
+        {src:`${base}icons/icon-192.png`,sizes:'192x192',type:'image/png',purpose:'any maskable'},
+        {src:`${base}icons/icon-512.png`,sizes:'512x512',type:'image/png',purpose:'any maskable'}
+      ];
+      const startUrl = base + '?pwa=1';
+      const man={
+        id:'f5c-app',
+        name:'F5C',
+        short_name:'F5C',
+        start_url:startUrl,
+        scope:base,
+        display:'standalone',
+        background_color:'#0f172a',
+        theme_color:'#10b981',
+        icons
+      };
+      const b=new Blob([JSON.stringify(man)],{type:'application/manifest+json'});
+      link.href=URL.createObjectURL(b);
     })();
   </script>
 
@@ -154,7 +180,7 @@
     })();
   </script>
 
-  <!-- SW registro (usa tu sw.js actual) -->
+  <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -191,7 +217,17 @@
 
     const globalOf=p=>{let s=0,w=0;for(const k in Wt){s+=(p[k]||0)*Wt[k];w+=Wt[k]}return +(s/w).toFixed(2)};
     const withG = (a) => (a || []).map(p => ({ ...p, _GLOBAL: globalOf(p) }));
-    const rarityOf=p=>{const r=Math.round((p._GLOBAL||globalOf(p))*10);if(p.especial||r>=90)return 'special';if(r>=80)return 'gold';if(r>=70)return 'silver';return 'bronze'};
+
+    const rarityOf=p=>{
+      const r=Math.round((p._GLOBAL||globalOf(p))*10);
+      if(p.legendaria) return 'legendary';
+      if(p.especial) return 'special';
+      if(r>=90) return 'gold';
+      if(r>=80) return 'gold';
+      if(r>=70) return 'silver';
+      return 'bronze';
+    };
+
     const colorNum100 = v => v>=90?'text-emerald-400':v>=80?'text-emerald-300':v>=70?'text-amber-300':v>=60?'text-amber-200':'text-rose-300';
     const colorNum10  = v => v>=9?'text-emerald-400' :v>=8?'text-emerald-300' :v>=7?'text-amber-300' :v>=6?'text-amber-200' :'text-rose-300';
     const hexA=(hex,a)=>{const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)||[];const r=parseInt(m[1]||'10',16),g=parseInt(m[2]||'b9',16),b=parseInt(m[3]||'81',16);return `rgba(${r},${g},${b},${a})`};
@@ -224,19 +260,19 @@
 
     /* ========= SEED ========= */
     const SEED=[
-      {id:'1',nombre:'Leo',apodo:'',equipoPropio:'La 10',equipoFavorito:'Barcelona',fotoUrl:mkAvatar('Leo'),ATA:10,PAS:9,REG:10,VEL:9,DEF:4,FIS:7,ARQ:3,EQP:8,pie:'Izquierdo',estrellas:5,especial:true,bandera:'🇦🇷',pos:'LA'},
-      {id:'2',nombre:'Fabi',apodo:'',equipoPropio:'La 10',equipoFavorito:'Colón',fotoUrl:mkAvatar('Fabi'),ATA:7,PAS:8,REG:7,VEL:7,DEF:7,FIS:7,ARQ:4,EQP:9,pie:'Derecho',estrellas:4,bandera:'🇦🇷',pos:'MU'},
-      {id:'3',nombre:'Cuti',apodo:'',equipoPropio:'Muralla',equipoFavorito:'Belgrano',fotoUrl:mkAvatar('Cuti'),ATA:5,PAS:6,REG:5,VEL:7,DEF:10,FIS:9,ARQ:4,EQP:7,pie:'Derecho',estrellas:4,bandera:'🇦🇷',pos:'TI'},
-      {id:'4',nombre:'Dibu',apodo:'',equipoPropio:'Muralla',equipoFavorito:'Arsenal',fotoUrl:mkAvatar('Dibu'),ATA:3,PAS:5,REG:4,VEL:5,DEF:8,FIS:8,ARQ:10,EQP:7,pie:'Derecho',estrellas:5,bandera:'🇦🇷',pos:'AR'},
-      {id:'5',nombre:'Papu',apodo:'',equipoPropio:'Tiki',equipoFavorito:'San Lorenzo',fotoUrl:mkAvatar('Papu'),ATA:8,PAS:8,REG:9,VEL:8,DEF:5,FIS:6,ARQ:3,EQP:7,pie:'Derecho',estrellas:4,bandera:'🇦🇷',pos:'LA'},
-      {id:'6',nombre:'Nico',apodo:'',equipoPropio:'Tiki',equipoFavorito:'Boca',fotoUrl:mkAvatar('Nico'),ATA:7,PAS:7,REG:7,VEL:8,DEF:6,FIS:7,ARQ:4,EQP:6,pie:'Derecho',estrellas:4,bandera:'🇦🇷',pos:'LA'},
-      {id:'7',nombre:'Chino',apodo:'',equipoPropio:'Muralla',equipoFavorito:"Newell's",fotoUrl:mkAvatar('Chino'),ATA:5,PAS:6,REG:5,VEL:6,DEF:8,FIS:7,ARQ:8,EQP:6,pie:'Izquierdo',estrellas:3,bandera:'🇦🇷',pos:'AR'},
-      {id:'8',nombre:'Joa',apodo:'',equipoPropio:'La 10',equipoFavorito:'River',fotoUrl:mkAvatar('Joa'),ATA:6,PAS:6,REG:6,VEL:7,DEF:8,FIS:8,ARQ:5,EQP:7,pie:'Derecho',estrellas:3,bandera:'🇦🇷',pos:'TI'},
-      {id:'9',nombre:'Fideo',apodo:'',equipoPropio:'Tiki',equipoFavorito:'Rosario C.',fotoUrl:mkAvatar('Fideo'),ATA:8,PAS:9,REG:9,VEL:8,DEF:6,FIS:6,ARQ:3,EQP:8,pie:'Izquierdo',estrellas:5,bandera:'🇦🇷',pos:'LA'},
-      {id:'10',nombre:'Kuni',apodo:'',equipoPropio:'La 10',equipoFavorito:'Independiente',fotoUrl:mkAvatar('Kuni'),ATA:9,PAS:7,REG:8,VEL:9,DEF:5,FIS:7,ARQ:3,EQP:7,pie:'Derecho',estrellas:4,bandera:'🇦🇷',pos:'MU'},
-      {id:'11',nombre:'Tomi',apodo:'',equipoPropio:'Muralla',equipoFavorito:'Talleres',fotoUrl:mkAvatar('Tomi'),ATA:6,PAS:7,REG:6,VEL:7,DEF:7,FIS:7,ARQ:5,EQP:6,pie:'Derecho',estrellas:3,bandera:'🇦🇷',pos:'LA'},
-      {id:'12',nombre:'Gonza',apodo:'',equipoPropio:'Tiki',equipoFavorito:'Racing',fotoUrl:mkAvatar('Gonza'),ATA:7,PAS:6,REG:7,VEL:8,DEF:6,FIS:7,ARQ:4,EQP:6,pie:'Derecho',estrellas:3,bandera:'🇦🇷',pos:'TI'},
-    ];
+      {id:'1',nombre:'Leo',apodo:'',equipoPropio:'La 10',equipoFavorito:'Barcelona',fotoUrl:mkAvatar('Leo'),ATA:10,PAS:9,REG:10,VEL:9,DEF:4,FIS:7,ARQ:3,EQP:8,pie:'Izquierdo',estrellas:5,especial:true,legendaria:false,bandera:'🇦🇷',pos:'LA'},
+      {id:'2',nombre:'Fabi',apodo:'',equipoPropio:'La 10',equipoFavorito:'Colón',fotoUrl:mkAvatar('Fabi'),ATA:7,PAS:8,REG:7,VEL:7,DEF:7,FIS:7,ARQ:4,EQP:9,pie:'Derecho',estrellas:4,legendaria:false,bandera:'🇦🇷',pos:'MU'},
+      {id:'3',nombre:'Cuti',apodo:'',equipoPropio:'Muralla',equipoFavorito:'Belgrano',fotoUrl:mkAvatar('Cuti'),ATA:5,PAS:6,REG:5,VEL:7,DEF:10,FIS:9,ARQ:4,EQP:7,pie:'Derecho',estrellas:4,legendaria:false,bandera:'🇦🇷',pos:'TI'},
+      {id:'4',nombre:'Dibu',apodo:'',equipoPropio:'Muralla',equipoFavorito:'Arsenal',fotoUrl:mkAvatar('Dibu'),ATA:3,PAS:5,REG:4,VEL:5,DEF:8,FIS:8,ARQ:10,EQP:7,pie:'Derecho',estrellas:5,legendaria:false,bandera:'🇦🇷',pos:'AR'},
+      {id:'5',nombre:'Papu',apodo:'',equipoPropio:'Tiki',equipoFavorito:'San Lorenzo',fotoUrl:mkAvatar('Papu'),ATA:8,PAS:8,REG:9,VEL:8,DEF:5,FIS:6,ARQ:3,EQP:7,pie:'Derecho',estrellas:4,legendaria:false,bandera:'🇦🇷',pos:'LA'},
+      {id:'6',nombre:'Nico',apodo:'',equipoPropio:'Tiki',equipoFavorito:'Boca',fotoUrl:mkAvatar('Nico'),ATA:7,PAS:7,REG:7,VEL:8,DEF:6,FIS:7,ARQ:4,EQP:6,pie:'Derecho',estrellas:4,legendaria:false,bandera:'🇦🇷',pos:'LA'},
+      {id:'7',nombre:'Chino',apodo:'',equipoPropio:'Muralla',equipoFavorito:"Newell's",fotoUrl:mkAvatar('Chino'),ATA:5,PAS:6,REG:5,VEL:6,DEF:8,FIS:7,ARQ:8,EQP:6,pie:'Izquierdo',estrellas:3,legendaria:false,bandera:'🇦🇷',pos:'AR'},
+      {id:'8',nombre:'Joa',apodo:'',equipoPropio:'La 10',equipoFavorito:'River',fotoUrl:mkAvatar('Joa'),ATA:6,PAS:6,REG:6,VEL:7,DEF:8,FIS:8,ARQ:5,EQP:7,pie:'Derecho',estrellas:3,legendaria:false,bandera:'🇦🇷',pos:'TI'},
+      {id:'9',nombre:'Fideo',apodo:'',equipoPropio:'Tiki',equipoFavorito:'Rosario C.',fotoUrl:mkAvatar('Fideo'),ATA:8,PAS:9,REG:9,VEL:8,DEF:6,FIS:6,ARQ:3,EQP:8,pie:'Izquierdo',estrellas:5,legendaria:false,bandera:'🇦🇷',pos:'LA'},
+      {id:'10',nombre:'Kuni',apodo:'',equipoPropio:'La 10',equipoFavorito:'Independiente',fotoUrl:mkAvatar('Kuni'),ATA:9,PAS:7,REG:8,VEL:9,DEF:5,FIS:7,ARQ:3,EQP:7,pie:'Derecho',estrellas:4,legendaria:false,bandera:'🇦🇷',pos:'MU'},
+      {id:'11',nombre:'Tomi',apodo:'',equipoPropio:'Muralla',equipoFavorito:'Talleres',fotoUrl:mkAvatar('Tomi'),ATA:6,PAS:7,REG:6,VEL:7,DEF:7,FIS:7,ARQ:5,EQP:6,pie:'Derecho',estrellas:3,legendaria:false,bandera:'🇦🇷',pos:'LA'},
+      {id:'12',nombre:'Gonza',apodo:'',equipoPropio:'Tiki',equipoFavorito:'Racing',fotoUrl:mkAvatar('Gonza'),ATA:7,PAS:6,REG:7,VEL:8,DEF:6,FIS:7,ARQ:4,EQP:6,pie:'Derecho',estrellas:3,legendaria:false,bandera:'🇦🇷',pos:'TI'},
+    ].map(p=>({...p,_GLOBAL:globalOf(p)}));
 
     /* ========= Cancha ========= */
     const FIELD_VER='v4';
@@ -251,7 +287,7 @@
       const rate=Math.round((p._GLOBAL||globalOf(p))*10);
       const rare=rarityOf(p);
       const ring = rare==='bronze'?'ring-yellow-800':rare==='silver'?'ring-slate-300':rare==='gold'?'ring-yellow-500':'ring-cyan-300';
-      const rareClass = rare==='special' ? 'rarity-special' : `rarity-${rare}`;
+      const rareClass = rare==='legendary' ? 'rarity-legendary' : rare==='special' ? 'rarity-special' : `rarity-${rare}`;
       const [src,setSrc]=React.useState(p.fotoUrl||'');
       React.useEffect(()=>setSrc(p.fotoUrl||''),[p.fotoUrl]);
       return (
@@ -269,7 +305,9 @@
               <img src={src||mkAvatar(p.nombre)} onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}}
                    className="rounded-xl object-cover ring-2 h-24 w-24" alt={p.nombre}/>
             </div>
-            <div className="mt-2 text-center text-sm font-extrabold">{p.nombre}{p.apodo?` “${p.apodo}”`:''}</div>
+            <div className="mt-2 text-center text-sm font-extrabold">
+              {p.nombre}{p.apodo?` “${p.apodo}”`:''} {p.legendaria && <span className="text-xs text-amber-200">★</span>}
+            </div>
             <div className="mt-1 grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] font-semibold">
               {STAT.map(k=>(
                 <div key={k} className="flex items-center justify-between rounded-lg bg-white/30 px-2 py-1">
@@ -285,7 +323,7 @@
     const MiniCard=({p})=>{
       const rare=rarityOf(p);
       const ring = rare==='bronze'?'ring-yellow-800':rare==='silver'?'ring-slate-300':rare==='gold'?'ring-yellow-500':'ring-cyan-300';
-      const rareClass = rare==='special' ? 'rarity-special' : `rarity-${rare}`;
+      const rareClass = rare==='legendary' ? 'rarity-legendary' : rare==='special' ? 'rarity-special' : `rarity-${rare}`;
       const [src,setSrc]=React.useState(p.fotoUrl||'');
       React.useEffect(()=>setSrc(p.fotoUrl||''),[p.fotoUrl]);
       return (
@@ -300,7 +338,9 @@
             <div className="mt-1 grid place-items-center">
               <img src={src||mkAvatar(p.nombre)} onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}} className="h-16 w-16 rounded-lg object-cover ring-2"/>
             </div>
-            <div className="mt-1 text-center text-[11px] font-extrabold px-1 leading-tight">{p.nombre}</div>
+            <div className="mt-1 text-center text-[11px] font-extrabold px-1 leading-tight">
+              {p.nombre}{p.legendaria && <span className="text-[10px] text-amber-200">★</span>}
+            </div>
             <div className="mt-1 grid grid-cols-2 gap-1 text-[9px] font-semibold px-1 pb-1">
               {STAT.map(k=>(
                 <div key={k} className="flex items-center justify-between rounded bg-white/30 px-1 py-[1px]">
@@ -309,6 +349,24 @@
               ))}
             </div>
           </div>
+        </div>
+      );
+    };
+
+    /* Chip para mapa de formación (más chico y limpio) */
+    const FieldChip=({p})=>{
+      const [src,setSrc]=React.useState(p.fotoUrl||'');
+      React.useEffect(()=>setSrc(p.fotoUrl||''),[p.fotoUrl]);
+      const rating=Math.round((p._GLOBAL||globalOf(p))*10);
+      return(
+        <div className="rounded-2xl bg-slate-900/80 ring-1 ring-slate-700 px-2 py-1 flex flex-col items-center w-[72px]">
+          <img
+            src={src||mkAvatar(p.nombre)}
+            onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}}
+            className="h-10 w-10 rounded-full object-cover ring-2 ring-emerald-400"
+            alt={p.nombre}
+          />
+          <div className={`mt-1 text-xs font-bold tabular-nums ${colorNum100(rating)}`}>{rating}</div>
         </div>
       );
     };
@@ -342,7 +400,7 @@
     const FormationBoard=({teamA=[],teamB=[],map,scale=0.5})=>{
       const ref=useRef(null);
       const isDesk=()=>window.matchMedia('(min-width:768px)').matches;
-      const scaleLive=isDesk()?scale:Math.max(0.42,Math.min(scale,0.56));
+      const scaleLive=isDesk()?scale:Math.max(0.30,Math.min(scale,0.42));
       const makeCanvas=async()=>{
         const el=ref.current;if(!el)return;
         const canvas=await html2canvas(el,{backgroundColor:null,useCORS:true,allowTaint:true,scale:2});
@@ -386,7 +444,7 @@
                 return(
                   <div key={'A'+id} className="absolute"
                     style={{left:`${pos.x}%`,top:`${pos.y}%`,transform:`translate(-50%,-50%) scale(${scaleLive})`,transformOrigin:'top left'}}>
-                    <MiniCard p={p}/>
+                    <FieldChip p={p}/>
                   </div>
                 );
               })}
@@ -395,7 +453,7 @@
                 return(
                   <div key={'B'+id} className="absolute"
                     style={{left:`${pos.x}%`,top:`${pos.y}%`,transform:`translate(-50%,-50%) scale(${scaleLive})`,transformOrigin:'top left'}}>
-                    <MiniCard p={p}/>
+                    <FieldChip p={p}/>
                   </div>
                 );
               })}
@@ -436,7 +494,7 @@
       );
     };
 
-    const PlayerRow=({p,selected,onToggle,onOpen,onEdit,pinA,pinB,setPinA,setPinB,disableAdd})=>{
+    const PlayerRow=({p,selected,onToggle,onOpen,onEdit,pinA,pinB,setPinA,setPinB,disableAdd,isAdmin})=>{
       const disabled=!selected && disableAdd;
       const [src,setSrc]=React.useState(p.fotoUrl||'');
       React.useEffect(()=>setSrc(p.fotoUrl||''),[p.fotoUrl]);
@@ -445,13 +503,17 @@
           <button onClick={onOpen} className="flex items-center gap-2 min-w-0 text-left">
             <img src={src||mkAvatar(p.nombre)} onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}} className="h-9 w-9 rounded-full object-cover ring-1 ring-slate-700" alt={p.nombre}/>
             <div className="min-w-0">
-              <div className="truncate font-semibold">{p.nombre}</div>
+              <div className="truncate font-semibold">
+                {p.nombre}{p.legendaria && <span className="text-[10px] text-amber-300 ml-1">★</span>}
+              </div>
               {p.apodo?<div className="truncate text-xs text-slate-400">“{p.apodo}”</div>:null}
             </div>
           </button>
           <div className="flex items-center gap-2">
             <span className={`tabular-nums text-sm font-bold ${colorNum100(Math.round(p._GLOBAL*10))}`}>{Math.round(p._GLOBAL*10)}</span>
-            <button onClick={onEdit} className="rounded-lg bg-slate-800 px-2 py-1 text-xs ring-1 ring-slate-700 hover:bg-slate-700">✏️</button>
+            {isAdmin && (
+              <button onClick={onEdit} className="rounded-lg bg-slate-800 px-2 py-1 text-xs ring-1 ring-slate-700 hover:bg-slate-700">✏️</button>
+            )}
             <PinButtons id={p.id} pinA={pinA} pinB={pinB} setPinA={setPinA} setPinB={setPinB}/>
             <button onClick={onToggle} disabled={disabled}
               className={`rounded-xl px-3 py-1 text-sm ring-1 ${selected?'bg-emerald-600 text-white ring-emerald-500':disabled?'bg-slate-800/40 text-slate-500 ring-slate-800 cursor-not-allowed':'bg-slate-800 text-slate-200 ring-slate-700 hover:bg-slate-700'}`}>
@@ -479,7 +541,10 @@
         <div className="fixed inset-0 z-[90] grid place-items-center bg-black/60 p-3" onClick={onClose}>
           <div className="w-full max-w-4xl space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700 max-h-[90vh] overflow-auto" onClick={e=>e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <div className="text-lg font-semibold">{p.nombre}{p.apodo?` “${p.apodo}”`:''} {p.bandera||''}</div>
+              <div className="text-lg font-semibold">
+                {p.nombre}{p.apodo?` “${p.apodo}”`:''} {p.bandera||''}
+                {p.legendaria && <span className="ml-2 text-xs text-amber-300">Carta legendaria ★</span>}
+              </div>
               <button onClick={onClose} className="rounded-lg bg-slate-800 px-2 py-1 ring-1 ring-slate-700">Cerrar</button>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -513,14 +578,15 @@
       );
     };
 
-    /* ========= Formulario con substats + eliminar ========= */
+    /* ========= Formulario con substats + legendaria ========= */
     const PlayerFormModal=({initial,onClose,onSave,onDelete})=>{
       const isEdit=!!(initial&&initial.id);
       const defaultSubs=Object.fromEntries(STAT.map(k=>[k,(SUBS[k]||[]).map(n=>({n,v:5}))]));
       const start=initial?JSON.parse(JSON.stringify(initial)):{
         nombre:'',apodo:'',pos:'LA',bandera:'🇦🇷',pie:'Derecho',equipoPropio:'',equipoFavorito:'',
-        ATA:5,PAS:5,REG:5,VEL:5,DEF:5,FIS:5,ARQ:5,EQP:5,fotoUrl:'',subs:defaultSubs
+        ATA:5,PAS:5,REG:5,VEL:5,DEF:5,FIS:5,ARQ:5,EQP:5,fotoUrl:'',subs:defaultSubs,legendaria:false
       };
+      if(start.legendaria == null) start.legendaria=false;
       if(!start.subs) start.subs=Object.fromEntries(STAT.map(k=>[k,(SUBS[k]||[]).map(n=>({n,v:start[k]||5}))]));
       const [f,setF]=useState(start);
       const set=(k,v)=>setF(s=>({...s,[k]:v}));
@@ -578,6 +644,10 @@
                 <label className="col-span-2 flex flex-col gap-1">Foto URL
                   <input value={f.fotoUrl} onChange={e=>set('fotoUrl',e.target.value)} className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700" placeholder="https://…"/>
                 </label>
+                <label className="col-span-2 flex items-center gap-2 mt-1 text-sm">
+                  <input type="checkbox" checked={f.legendaria} onChange={e=>set('legendaria',e.target.checked)}/>
+                  <span>Carta legendaria</span>
+                </label>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {STAT.map(k=>(
@@ -615,14 +685,24 @@
     };
 
     /* ========= Settings ========= */
-    const SettingsModal=({onClose,kChem,setKChem,formScale,setFormScale,partidoTwoCols,setPartidoTwoCols,teamColors,setTeamColors,onOpenGlossary})=>{
+    const SettingsModal=({
+      onClose,kChem,setKChem,
+      formScale,setFormScale,
+      partidoTwoCols,setPartidoTwoCols,
+      teamColors,setTeamColors,
+      onOpenGlossary,
+      isAdmin,setIsAdmin
+    })=>{
       const [a,setA]=useState(teamColors.A),[b,setB]=useState(teamColors.B);
       useEffect(()=>{setA(teamColors.A);setB(teamColors.B)},[teamColors]);
       const saveColors=()=>setTeamColors({A:a,B:b});
       return(
         <div className="fixed inset-0 z-[90] grid place-items-center bg-black/60 p-3" onClick={onClose}>
           <div className="w-full max-w-md space-y-3 rounded-2xl bg-slate-900 p-4 ring-1 ring-slate-700" onClick={e=>e.stopPropagation()}>
-            <div className="mb-1 text-lg font-semibold">Ajustes</div>
+            <div className="mb-1 flex items-center justify-between">
+              <div className="text-lg font-semibold">Ajustes</div>
+              {isAdmin && <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[11px] font-semibold text-amber-300 ring-1 ring-amber-400/40">ADMIN</span>}
+            </div>
 
             <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700">
               <div className="mb-1 text-sm font-semibold">Peso de química</div>
@@ -657,9 +737,18 @@
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <button onClick={onOpenGlossary} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">📘 Glosario</button>
-              <button onClick={onClose} className="rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">Cerrar</button>
+              <div className="flex items-center gap-2">
+                {isAdmin && (
+                  <button
+                    onClick={()=>setIsAdmin(false)}
+                    className="rounded-xl bg-rose-700 px-3 py-1 text-xs text-white ring-1 ring-rose-500 hover:bg-rose-600">
+                    Salir modo admin
+                  </button>
+                )}
+                <button onClick={onClose} className="rounded-xl bg-slate-800 px-3 py-1 text-sm text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700">Cerrar</button>
+              </div>
             </div>
           </div>
         </div>
@@ -736,6 +825,9 @@
       const[q,setQ]=useState(''); const[sort,setSort]=useState('global-desc');
       const[showGlossary,setShowGlossary]=useState(false);
       const[playerDetailId,setPlayerDetailId]=useState(null);
+      const[isAdmin,setIsAdmin]=useState(()=>{
+        try{return JSON.parse(localStorage.getItem('f5.admin')??'false')}catch{return false}
+      });
 
       // persist
       useEffect(()=>localStorage.setItem('f5.players',JSON.stringify(players)),[players]);
@@ -747,8 +839,9 @@
       useEffect(()=>localStorage.setItem('f5.formScale',String(formScale)),[formScale]);
       useEffect(()=>localStorage.setItem('f5.partidoTwoCols',JSON.stringify(partidoTwoCols)),[partidoTwoCols]);
       useEffect(()=>localStorage.setItem('f5.teamColors',JSON.stringify(teamColors)),[teamColors]);
+      useEffect(()=>localStorage.setItem('f5.admin',JSON.stringify(isAdmin)),[isAdmin]);
 
-      // altura del viewport a cada tab (evita zona muerta)
+      // altura del viewport a cada tab
       const viewportRef=useRef(null);
       const pageRefs=useRef({partido:null,plantel:null});
       const fitHeight=()=>{
@@ -784,7 +877,6 @@
 
       const convocados=[...selected];
       const canMake=convocados.length===10, reachedMax=convocados.length>=10;
-      // Reglas para validar pins
       const invalidPins =
         pinA.size > 5 ||
         pinB.size > 5 ||
@@ -802,13 +894,6 @@
         return n;
       });
 
-      const makeR=()=>{
-        if(!canMake||invalidPins)return;
-        const ids=[...convocados];
-        ids.sort(()=>Math.random()-.5);
-        setTeams({A:ids.slice(0,5),B:ids.slice(5)});
-      };
-
       const chem=useMemo(()=>{
         const q={};
         for(const a of players){
@@ -825,6 +910,13 @@
         }
         return q;
       },[players]);
+
+      const makeR=()=>{
+        if(!canMake||invalidPins)return;
+        const ids=[...convocados];
+        ids.sort(()=>Math.random()-.5);
+        setTeams({A:ids.slice(0,5),B:ids.slice(5)});
+      };
 
       const makeB=()=>{
         if(!canMake || invalidPins) return;
@@ -869,7 +961,7 @@
       },[]);
       const doInstall=async()=>{
         if(!deferredPrompt){
-          alert('Tu navegador no ofrece instalación ahora. Prueba desde Chrome en Android.');
+          alert('Tu navegador no ofrece instalación ahora. Probá desde Chrome en Android o con HTTPS.');
           return;
         }
         deferredPrompt.prompt();
@@ -899,24 +991,69 @@
         });
       };
 
+      // Botón de Config con "long press" para admin
+      const configBtnRef=useRef(null);
+      useEffect(()=>{
+        const el=configBtnRef.current;
+        if(!el) return;
+        let timer=null;
+        const SECRET='f5c-admin-2024'; // cambialo por el PIN que quieras
+        const start=()=>{
+          timer=setTimeout(()=>{
+            const pass=prompt('PIN de administrador:');
+            if(pass===SECRET){
+              setIsAdmin(true);
+              alert('Modo administrador activado');
+            }else if(pass){
+              alert('PIN incorrecto');
+            }
+          },900);
+        };
+        const clear=()=>{
+          if(timer){clearTimeout(timer);timer=null;}
+        };
+        el.addEventListener('mousedown',start);
+        el.addEventListener('touchstart',start,{passive:true});
+        window.addEventListener('mouseup',clear);
+        window.addEventListener('touchend',clear);
+        return ()=>{
+          el.removeEventListener('mousedown',start);
+          el.removeEventListener('touchstart',start);
+          window.removeEventListener('mouseup',clear);
+          window.removeEventListener('touchend',clear);
+        };
+      },[setIsAdmin]);
+
       return(
         <div className="min-h-screen">
           <header className="app-header">
-            <div className="mx-auto max-w-5xl px-3 py-3">
+            <div className="mx-auto max-w-5xl px-3 py-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-2xl leading-none">⚽</span>
                   <div className="text-2xl font-extrabold title-fifa">F5C</div>
+                  {isAdmin && (
+                    <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[11px] font-semibold text-amber-300 ring-1 ring-amber-400/40">
+                      ADMIN
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={()=>setSettings(true)} className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700">⚙️ Config</button>
+                  <button
+                    ref={configBtnRef}
+                    onClick={()=>setSettings(true)}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/80 ring-1 ring-slate-700 hover:bg-slate-800 text-lg"
+                    title="Config"
+                  >
+                    ⚙️
+                  </button>
                 </div>
               </div>
               <div className="tabs-bar">
                 <button className={`tab-large ${tab==='partido'?'active':''}`} onClick={()=>setTab('partido')}>Partido</button>
                 <button className={`tab-large ${tab==='plantel'?'active':''}`} onClick={()=>setTab('plantel')}>Plantel</button>
               </div>
-              <div className="mt-2 text-center">
+              <div className="mt-1 text-center">
                 <span className="inline-block rounded-full bg-slate-900/60 px-3 py-1 text-xs ring-1 ring-slate-700">
                   Convocados: <b>{[...selected].length}</b>/10
                 </span>
@@ -953,7 +1090,10 @@
                   <div className={`grid gap-2 ${gridCols}`}>
                     {[['A',ratingA,chemA,scoreA],['B',ratingB,chemB,scoreB]].map(([t,rt,ch,sc],i)=>(
                       <div key={t} className="rounded-2xl bg-slate-900/70 p-3 ring-2" style={{borderColor:hexA(i?teamColors.B:teamColors.A,.45)}}>
-                        <div className="mb-1 text-sm font-semibold">Equipo {t}</div>
+                        <div className="mb-1 text-sm font-semibold flex items-center gap-2">
+                          <span className="inline-flex h-3 w-3 rounded-full" style={{backgroundColor:i?teamColors.B:teamColors.A}}></span>
+                          <span>Equipo {t}</span>
+                        </div>
                         <div className="grid grid-cols-3 gap-2 text-center">
                           <div>
                             <div className="text-xs text-slate-300">Rating</div>
@@ -974,10 +1114,14 @@
 
                   <div className={`grid gap-3 ${gridCols}`}>
                     {['A','B'].map((t,i)=>{
-                      const ids=(teams?.[t]||[]), col=i?teamColors.B:teamColors.A;
+                      const ids=t==='A'?teamA:teamB;
+                      const col=i?teamColors.B:teamColors.A;
                       return (
                         <div key={t} className="space-y-2">
-                          <div className="text-xs font-semibold text-slate-300">Equipo {t}</div>
+                          <div className="text-xs font-semibold text-slate-300 flex items-center gap-2">
+                            <span className="inline-flex h-2.5 w-2.5 rounded-full" style={{backgroundColor:col}}></span>
+                            <span>Equipo {t}</span>
+                          </div>
                           {ids.map((id,idx)=>{
                             const p=map[id];if(!p)return null;
                             return (
@@ -1002,12 +1146,18 @@
                                     return {A,B};
                                   });
                                 }}
-                                className="flex items-center justify-between rounded-xl bg-slate-900/70 p-2 ring-2"
-                                style={{borderColor:hexA(col,.35)}}
+                                className="flex items-center justify-between rounded-xl p-2 ring-2"
+                                style={{
+                                  borderColor:hexA(col,.55),
+                                  backgroundColor:hexA(col,0.13)
+                                }}
                               >
                                 <button onClick={()=>setPlayerDetailId(id)} className="flex items-center gap-2 min-w-0">
+                                  <span className="inline-flex h-2.5 w-2.5 rounded-full" style={{backgroundColor:col}}></span>
                                   <img src={p.fotoUrl||mkAvatar(p.nombre)} onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}} className="h-8 w-8 rounded-full object-cover ring-1 ring-slate-700" alt={p.nombre}/>
-                                  <span className="truncate">{p.nombre}{p.apodo?` “${p.apodo}”`:''}</span>
+                                  <span className="truncate">
+                                    {p.nombre}{p.apodo?` “${p.apodo}”`:''}{p.legendaria && <span className="text-[10px] text-amber-200 ml-1">★</span>}
+                                  </span>
                                 </button>
                                 <span className={`tabular-nums text-sm font-bold ${colorNum100(Math.round(p._GLOBAL*10))}`}>{Math.round(p._GLOBAL*10)}</span>
                               </div>
@@ -1060,7 +1210,10 @@
                       const col=i?teamColors.B:teamColors.A;
                       return(
                         <div key={t} className="rounded-2xl bg-slate-900/70 p-3 ring-1 ring-slate-700">
-                          <div className="mb-1 text-sm font-semibold">Barras — Equipo {t}</div>
+                          <div className="mb-1 text-sm font-semibold flex items-center gap-2">
+                            <span className="inline-flex h-2.5 w-2.5 rounded-full" style={{backgroundColor:col}}></span>
+                            <span>Barras — Equipo {t}</span>
+                          </div>
                           <div className="space-y-2">
                             {STAT.map(k=>{
                               const v=+avg(ids.map(id=>map[id]?.[k]??0)).toFixed(2);
@@ -1092,9 +1245,19 @@
 
                   {/* Acciones arriba */}
                   <div className="flex flex-wrap gap-2">
-                    <button onClick={()=>setForm({})} className="rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">+ Añadir jugador</button>
-                    <button onClick={clearConvocados} className="rounded-xl bg-amber-600 px-3 py-1 text-sm text-white ring-1 ring-amber-500 hover:bg-amber-500">🧹 Limpiar convocados</button>
-                    <button onClick={()=>{setPlayers(withG(SEED));}} className="rounded-xl bg-rose-700 px-3 py-1 text-sm text-white ring-1 ring-rose-500 hover:bg-rose-600">Restablecer seed</button>
+                    {isAdmin && (
+                      <button onClick={()=>setForm({})} className="rounded-xl bg-emerald-600 px-3 py-1 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500">
+                        + Añadir jugador
+                      </button>
+                    )}
+                    <button onClick={clearConvocados} className="rounded-xl bg-amber-600 px-3 py-1 text-sm text-white ring-1 ring-amber-500 hover:bg-amber-500">
+                      🧹 Limpiar convocados
+                    </button>
+                    {isAdmin && (
+                      <button onClick={()=>{setPlayers(withG(SEED));}} className="rounded-xl bg-rose-700 px-3 py-1 text-sm text-white ring-1 ring-rose-500 hover:bg-rose-600">
+                        Restablecer seed
+                      </button>
+                    )}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
@@ -1120,6 +1283,7 @@
                         setPinA={setPinA}
                         setPinB={setPinB}
                         disableAdd={selected.size>=10 && !selected.has(p.id)}
+                        isAdmin={isAdmin}
                       />
                     ))}
                   </div>
@@ -1129,9 +1293,10 @@
             </div>
           </div>
 
-          {!window.matchMedia('(display-mode: standalone)').matches && (
+          {/* Botón Instalar solo si el navegador realmente lo permite y no está en standalone */}
+          {!window.matchMedia('(display-mode: standalone)').matches && deferredPrompt && (
             <button onClick={doInstall} className="install-pill rounded-full bg-emerald-600 px-4 py-2 text-sm text-white ring-1 ring-emerald-500 shadow-lg">
-              📲 Instalar
+              📲 Instalar app
             </button>
           )}
 
@@ -1144,6 +1309,8 @@
                 partidoTwoCols={partidoTwoCols} setPartidoTwoCols={setPartidoTwoCols}
                 teamColors={teamColors} setTeamColors={setTeamColors}
                 onOpenGlossary={()=>{setSettings(false);setShowGlossary(true)}}
+                isAdmin={isAdmin}
+                setIsAdmin={setIsAdmin}
               />
             )}
             {showGlossary && <GlossaryModal onClose={()=>setShowGlossary(false)}/>}
