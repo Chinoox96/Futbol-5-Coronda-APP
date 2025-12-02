@@ -31,7 +31,7 @@
       --pitch-image-desktop: var(--pitch-image-mobile);
       --pitch-darken: 0.50;
       --parallax-speed: 0.35;
-      --header-h: 120px;
+      --header-h: 140px; /* un poco más alto para que no tape nada */
     }
     html,body{
       background:#0b1220;
@@ -281,13 +281,13 @@
     }
   </script>
 
-  <!-- Ajustar altura del header -->
+  <!-- Ajustar altura del header (queda como backup, pero ahora usamos un valor cómodo por defecto) -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const header = document.querySelector('.app-header');
       const spacer = document.querySelector('.header-spacer');
       if (header && spacer) {
-        const h = header.offsetHeight || 120;
+        const h = header.offsetHeight || 140;
         spacer.style.height = h + 'px';
         document.documentElement.style.setProperty('--header-h', h + 'px');
       }
@@ -593,7 +593,7 @@
       );
     };
 
-    // Chip para el mapa de formación (foto grande, rating chico) con rarezas
+    // Chip para el mapa de formación: nombre/apodo + pos + rating, color solo en borde
     const FieldChip = ({ p }) => {
       const rare = rarityOf(p);
       const ring =
@@ -603,27 +603,29 @@
         rare === 'legendary'? 'ring-amber-300'  :
                               'ring-cyan-300';
 
-      const rareClass =
-        rare === 'legendary' ? 'rarity-legendary' :
-        rare === 'special'   ? 'rarity-special'   :
-                               `rarity-${rare}`;
-
       const [src, setSrc] = React.useState(p.fotoUrl || '');
       React.useEffect(() => setSrc(p.fotoUrl || ''), [p.fotoUrl]);
 
       const rating = Math.round((p._GLOBAL || globalOf(p)) * 10);
+      const displayName = p.apodo || p.nombre;
 
       return (
-        <div className={`card-rect ${rareClass} text-slate-900 ring-1 ${ring} shadow w-[86px]`}>
-          <div className="card-inner flex flex-col items-center py-1.5">
-            <img
-              src={src || mkAvatar(p.nombre)}
-              onError={e => { e.currentTarget.src = mkAvatar(p.nombre); }}
-              className="h-10 w-10 rounded-full object-cover ring-2 ring-slate-900/70"
-              alt={p.nombre}
-            />
-            <div className={`mt-1 text-xs font-bold tabular-nums ${colorNum100(rating)}`}>
-              {rating}
+        <div className={`rounded-xl bg-slate-950/90 px-2 py-1 ring-2 ${ring} shadow flex items-center gap-2 w-[130px]`}>
+          <img
+            src={src || mkAvatar(p.nombre)}
+            onError={e => { e.currentTarget.src = mkAvatar(p.nombre); }}
+            className="h-9 w-9 rounded-full object-cover ring-1 ring-slate-900/70"
+            alt={p.nombre}
+          />
+          <div className="flex-1 min-w-0">
+            <div className="text-[10px] font-semibold text-slate-100 truncate">
+              {displayName}
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-slate-300 mt-[2px]">
+              <span>{p.pos || 'F5'}</span>
+              <span className={`${colorNum100(rating)} font-bold tabular-nums`}>
+                {rating}
+              </span>
             </div>
           </div>
         </div>
@@ -766,12 +768,6 @@
 
       return(
         <div className="w-full">
-          <div className="mb-2 text-center">
-            <span className="inline-flex items-center gap-2 rounded-xl bg-slate-900/70 px-3 py-1 text-sm ring-1 ring-slate-700">
-              <span className="text-lg">⚽</span>
-              <span>Formación F5</span>
-            </span>
-          </div>
           <div
             ref={ref}
             className="board ring-1 ring-slate-700 shadow-xl mx-auto bg-slate-900/30 relative"
@@ -900,7 +896,7 @@
       const [src,setSrc]=React.useState(p.fotoUrl||'');
       React.useEffect(()=>setSrc(p.fotoUrl||''),[p.fotoUrl]);
       return(
-        <div className="flex items-center justify-between rounded-xl bg-slate-900/70 p-2 ring-1 ring-slate-700">
+        <div className="flex items-center justify-between rounded-xl bg-slate-900/90 p-2 ring-1 ring-slate-700">
           <button onClick={onOpen} className="flex items-center gap-2 min-w-0 text-left">
             <img
               src={src||mkAvatar(p.nombre)}
@@ -1721,7 +1717,7 @@
         s.last=now;
         if(s.taps>=5){
           const pw=prompt('Clave admin');
-          if(pw==='f5admin'){ // <- cambia esta clave si querés
+          if(pw==='f5admin'){
             setIsAdmin(true);
             alert('Modo admin activado');
           }else{
@@ -1731,6 +1727,8 @@
       };
 
       const currentDetail = playerDetailId ? map[playerDetailId] : null;
+
+      const convocadosCount = [...selected].length;
 
       return(
         <div className="min-h-screen">
@@ -1768,17 +1766,22 @@
                   Plantel
                 </button>
               </div>
-              <div className="mt-2 text-center">
-                <span className="inline-block rounded-full bg-slate-900/60 px-3 py-1 text-xs ring-1 ring-slate-700">
-                  Convocados: <b>{[...selected].length}</b>/10
-                </span>
-              </div>
             </div>
           </header>
           <div className="header-spacer"></div>
 
+          {/* Convocados flotante */}
+          <div
+            className="fixed z-40 left-1/2 -translate-x-1/2"
+            style={{ top: 'calc(var(--header-h) + 6px)' }}
+          >
+            <span className="inline-block rounded-full bg-slate-900/80 px-3 py-1 text-xs ring-1 ring-slate-700 shadow-lg">
+              Convocados: <b>{convocadosCount}</b>/10
+            </span>
+          </div>
+
           {/* Viewport con altura dinámica */}
-          <div ref={viewportRef} className="tabs-viewport" style={{height:'auto'}}>
+          <div ref={viewportRef} className="tabs-viewport" style={{height:'auto', marginTop:'24px'}}>
             <div className="tabs-track" style={{transform:`translateX(${tab==='partido'?'0%':'-50%'})`}}>
 
               {/* === PARTIDO === */}
@@ -1809,22 +1812,6 @@
                     </button>
                   </div>
 
-                  {/* Botones de formación extra */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={resetFormation}
-                      className="rounded-xl px-4 py-2 text-sm bg-slate-900/80 hover:bg-slate-800 ring-1 ring-slate-700"
-                    >
-                      🔄 Reset formación
-                    </button>
-                    <button
-                      onClick={shuffleInsideTeams}
-                      className="rounded-xl px-4 py-2 text-sm bg-slate-900/80 hover:bg-slate-800 ring-1 ring-slate-700"
-                    >
-                      ⇅ Mezclar dentro del equipo
-                    </button>
-                  </div>
-
                   {/* Score equipos (tarjetas arriba) */}
                   <div className={`grid gap-2 ${gridCols}`}>
                     {[['A',ratingA,chemA,scoreA],['B',ratingB,chemB,scoreB]].map(([t,rt,ch,sc],i)=>{
@@ -1832,10 +1819,9 @@
                       return(
                         <div
                           key={t}
-                          className="rounded-2xl bg-slate-900/80 p-3 ring-2 shadow-sm"
+                          className="rounded-2xl bg-slate-900/95 p-3 ring-2 shadow-sm"
                           style={{
-                            borderColor:hexA(col,0.7),
-                            backgroundColor:hexA(col,0.22)
+                            borderColor:hexA(col,0.9)
                           }}
                         >
                           <div className="mb-1 text-sm font-semibold flex items-center justify-between">
@@ -1860,7 +1846,7 @@
                     })}
                   </div>
 
-                  {/* Listado de jugadores por equipo con borde que encierra todo */}
+                  {/* Listado de jugadores por equipo, más opaco; solo borde coloreado */}
                   <div className={`grid gap-3 ${gridCols}`}>
                     {['A','B'].map((t,i)=>{
                       const ids=t==='A'?teamA:teamB;
@@ -1868,10 +1854,9 @@
                       return(
                         <div
                           key={t}
-                          className="rounded-2xl p-3 ring-2 bg-slate-900/80"
+                          className="rounded-2xl p-3 ring-2 bg-slate-900/95"
                           style={{
-                            borderColor:hexA(col,0.7),
-                            backgroundColor:hexA(col,0.18)
+                            borderColor:hexA(col,0.9)
                           }}
                         >
                           <div className="mb-2 flex items-center justify-between">
@@ -1910,7 +1895,7 @@
                                     });
                                     setFormKey(k=>k+1);
                                   }}
-                                  className="flex items-center justify-between rounded-xl bg-slate-900/80 p-2 ring-1 ring-slate-700"
+                                  className="flex items-center justify-between rounded-xl bg-slate-900/90 p-2 ring-1 ring-slate-700"
                                 >
                                   <button
                                     onClick={()=>setPlayerDetailId(id)}
@@ -1939,7 +1924,7 @@
                   </div>
 
                   {/* Semáforo */}
-                  <div className="rounded-2xl p-3 ring-1 bg-slate-900/70 ring-slate-700">
+                  <div className="rounded-2xl p-3 ring-1 bg-slate-900/90 ring-slate-700">
                     {(()=>{
                       const sA=teamScoreUI(teamA,map,chem,kChem);
                       const sB=teamScoreUI(teamB,map,chem,kChem);
@@ -1969,8 +1954,8 @@
                     })()}
                   </div>
 
-                  {/* Formación */}
-                  <div className="mt-2 rounded-2xl bg-slate-900/80 p-3 ring-1 ring-slate-700">
+                  {/* Formación + botones de formación abajo */}
+                  <div className="mt-2 rounded-2xl bg-slate-900/90 p-3 ring-1 ring-slate-700 space-y-3">
                     <FormationBoard
                       key={formKey}
                       teamA={teamA}
@@ -1978,16 +1963,20 @@
                       map={map}
                       scale={formScale}
                     />
-                  </div>
-
-                  {/* Botón limpiar convocados */}
-                  <div className="flex justify-end">
-                    <button
-                      onClick={clearConvocados}
-                      className="rounded-xl bg-slate-900/80 px-3 py-2 text-xs text-slate-100 ring-1 ring-slate-700 hover:bg-slate-800"
-                    >
-                      🗑️ Limpiar convocados
-                    </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={resetFormation}
+                        className="rounded-xl px-4 py-2 text-sm bg-slate-900 hover:bg-slate-800 ring-1 ring-slate-700"
+                      >
+                        🔄 Reset formación
+                      </button>
+                      <button
+                        onClick={shuffleInsideTeams}
+                        className="rounded-xl px-4 py-2 text-sm bg-slate-900 hover:bg-slate-800 ring-1 ring-slate-700"
+                      >
+                        ⇅ Mezclar posiciones
+                      </button>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -1995,33 +1984,61 @@
               {/* === PLANTEL === */}
               <section className="tabs-page" ref={el=>pageRefs.current.plantel=el}>
                 <div className="mx-auto max-w-5xl space-y-3">
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input
-                      value={q}
-                      onChange={e=>setQ(e.target.value)}
-                      placeholder="Buscar por nombre, apodo o equipo…"
-                      className="flex-1 rounded-xl bg-slate-900/80 px-3 py-2 text-sm ring-1 ring-slate-700"
-                    />
-                    <select
-                      value={sort}
-                      onChange={e=>setSort(e.target.value)}
-                      className="rounded-xl bg-slate-900/80 px-3 py-2 text-sm ring-1 ring-slate-700"
-                    >
-                      <option value="global-desc">Rating ↓</option>
-                      <option value="global-asc">Rating ↑</option>
-                      <option value="nombre">Nombre A–Z</option>
-                    </select>
-                    {isAdmin && (
-                      <button
-                        onClick={()=>setForm({})}
-                        className="rounded-xl bg-emerald-600 px-3 py-2 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500"
+
+                  {/* Barra de búsqueda / orden / acciones */}
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex-1 flex items-center gap-2">
+                      <input
+                        value={q}
+                        onChange={e=>setQ(e.target.value)}
+                        placeholder="Buscar por nombre, apodo o equipo…"
+                        className="w-full rounded-xl bg-slate-900/80 px-3 py-2 text-sm ring-1 ring-slate-700 placeholder:text-slate-500"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={sort}
+                        onChange={e=>setSort(e.target.value)}
+                        className="rounded-xl bg-slate-900/80 px-2 py-2 text-xs ring-1 ring-slate-700"
                       >
-                        ➕ Añadir
-                      </button>
-                    )}
+                        <option value="global-desc">Rating ↓</option>
+                        <option value="global-asc">Rating ↑</option>
+                        <option value="nombre">Nombre A–Z</option>
+                      </select>
+                      {isAdmin && (
+                        <button
+                          onClick={()=>setForm({})}
+                          className="rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white ring-1 ring-emerald-500 hover:bg-emerald-500"
+                        >
+                          ➕ Añadir
+                        </button>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
+                  {/* Info de convocados / limpiar */}
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-xs text-slate-300">
+                    <div>
+                      Plantel: <b>{players.length}</b> jugadores — Convocados:{' '}
+                      <b>{convocadosCount}</b>/10
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={clearConvocados}
+                        disabled={convocadosCount===0}
+                        className={`rounded-xl px-3 py-1 ring-1 text-xs ${
+                          convocadosCount===0
+                            ? 'bg-slate-900/50 text-slate-500 ring-slate-800 cursor-not-allowed'
+                            : 'bg-slate-900 text-slate-100 ring-slate-700 hover:bg-slate-800'
+                        }`}
+                      >
+                        Limpiar convocados
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Lista de jugadores */}
+                  <div className="space-y-2 pb-4">
                     {filtered.map(p=>(
                       <PlayerRow
                         key={p.id}
@@ -2038,6 +2055,11 @@
                         isAdmin={isAdmin}
                       />
                     ))}
+                    {filtered.length===0 && (
+                      <div className="rounded-xl bg-slate-900/80 p-3 text-center text-sm text-slate-300 ring-1 ring-slate-800">
+                        No hay jugadores que coincidan con la búsqueda.
+                      </div>
+                    )}
                   </div>
                 </div>
               </section>
@@ -2045,14 +2067,14 @@
             </div>
           </div>
 
-          {/* Botón de instalar PWA */}
-          {deferredPrompt && (
+          {/* Botón instalar PWA */}
+          {(
             <div className="install-pill">
               <button
                 onClick={doInstall}
-                className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg ring-1 ring-emerald-400 hover:bg-emerald-500"
+                className="rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-lg ring-1 ring-emerald-400 hover:bg-emerald-500"
               >
-                ⬇️ Instalar app
+                📲 Instalar F5C
               </button>
             </div>
           )}
@@ -2069,22 +2091,29 @@
               setPartidoTwoCols={setPartidoTwoCols}
               teamColors={teamColors}
               setTeamColors={setTeamColors}
-              onOpenGlossary={()=>{setShowGlossary(true);setSettings(false);}}
+              onOpenGlossary={()=>{
+                setSettings(false);
+                setShowGlossary(true);
+              }}
               isAdmin={isAdmin}
               setIsAdmin={setIsAdmin}
             />
           )}
+
           {showGlossary && (
-            <GlossaryModal onClose={()=>setShowGlossary(false)}/>
+            <GlossaryModal onClose={()=>setShowGlossary(false)} />
           )}
-          {form && isAdmin && (
+
+          {form && (
             <PlayerFormModal
-              initial={form.id?form:null}
+              key={form.id || 'new'}
+              initial={form}
               onClose={()=>setForm(null)}
               onSave={upsertPlayer}
               onDelete={deletePlayer}
             />
           )}
+
           {currentDetail && (
             <PlayerDetails
               p={currentDetail}
@@ -2095,7 +2124,8 @@
       );
     };
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
   </script>
 </body>
 </html>
