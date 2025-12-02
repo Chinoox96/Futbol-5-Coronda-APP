@@ -479,7 +479,7 @@
     ];
     const POS_B=POS_A.map(p=>({x:100-p.x,y:p.y}));
 
-    /* ========= UI: FIFA / MiniCard / Chip campo / Radar ========= */
+    /* ========= UI: FIFA / FieldChip / Radar ========= */
     const FifaCard=({p})=>{
       const rate=Math.round((p._GLOBAL||globalOf(p))*10);
       const rare=rarityOf(p);
@@ -544,57 +544,7 @@
       );
     };
 
-    const MiniCard=({p})=>{
-      const rare=rarityOf(p);
-      const ring =
-        rare==='bronze'   ? 'ring-yellow-800' :
-        rare==='silver'   ? 'ring-slate-300'  :
-        rare==='gold'     ? 'ring-yellow-500' :
-        rare==='legendary'? 'ring-amber-300'  :
-                            'ring-cyan-300';
-      const rareClass =
-        rare==='legendary' ? 'rarity-legendary' :
-        rare==='special'   ? 'rarity-special'   :
-                             `rarity-${rare}`;
-      const [src,setSrc]=React.useState(p.fotoUrl||'');
-      React.useEffect(()=>setSrc(p.fotoUrl||''),[p.fotoUrl]);
-      return (
-        <div className={`card-rect ${rareClass} text-slate-900 ring-1 ${ring} shadow w-[104px]`}>
-          <div className="card-inner">
-            <div className="flex justify-between items-start">
-              <div className="text-center leading-4">
-                <div className="text-xl font-black">
-                  {Math.round((p._GLOBAL||globalOf(p))*10)}
-                </div>
-                <div className="text-[10px] font-bold">{p.pos||'F5'}</div>
-              </div>
-              <div className="h-6 w-6 grid place-items-center bg-white/70 text-[10px] font-extrabold ring-1 ring-black/10 rounded">
-                {(p.equipoPropio||'').slice(0,2).toUpperCase()}
-              </div>
-            </div>
-            <div className="mt-1 grid place-items-center">
-              <img
-                src={src||mkAvatar(p.nombre)}
-                onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}}
-                className="h-16 w-16 rounded-lg object-cover ring-2"
-              />
-            </div>
-            <div className="mt-1 text-center text-[11px] font-extrabold px-1 leading-tight">
-              {p.nombre}
-            </div>
-            <div className="mt-1 grid grid-cols-2 gap-1 text-[9px] font-semibold px-1 pb-1">
-              {STAT.map(k=>(
-                <div key={k} className="flex items-center justify-between rounded bg-white/30 px-1 py-[1px]">
-                  <span>{k}</span><span className="tabular-nums">{p[k]}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      );
-    };
-
-    // Chip para el mapa de formación: nombre/apodo + pos + rating, color solo en borde
+    // CHIP de la cancha → mini carta VERTICAL con color según rareza
     const FieldChip = ({ p }) => {
       const rare = rarityOf(p);
       const ring =
@@ -604,6 +554,17 @@
         rare === 'legendary'? 'ring-amber-300'  :
                               'ring-cyan-300';
 
+      const bgClass =
+        rare === 'bronze'
+          ? "bg-[linear-gradient(180deg,#d3a076,#7a5438)]"
+          : rare === 'silver'
+          ? "bg-[linear-gradient(180deg,#f9fafb,#9ca3af)]"
+          : rare === 'gold'
+          ? "bg-[linear-gradient(180deg,#fde68a,#d97706)]"
+          : rare === 'legendary'
+          ? "bg-[radial-gradient(circle,#fb923c,#a855f7,#22c55e)]"
+          : "bg-slate-950/90";
+
       const [src, setSrc] = React.useState(p.fotoUrl || '');
       React.useEffect(() => setSrc(p.fotoUrl || ''), [p.fotoUrl]);
 
@@ -611,23 +572,25 @@
       const displayName = p.apodo || p.nombre;
 
       return (
-        <div className={`rounded-xl bg-slate-950/90 px-2 py-1 ring-2 ${ring} shadow flex items-center gap-2 w-[130px]`}>
+        <div
+          className={`card-rect w-[110px] ${bgClass} text-slate-900 ring-2 ${ring} shadow flex flex-col items-center px-2 py-2`}
+        >
+          <div className="text-center leading-4 mb-1">
+            <div className="text-lg font-black">
+              {rating}
+            </div>
+            <div className="text-[10px] font-bold">
+              {p.pos || "F5"}
+            </div>
+          </div>
           <img
             src={src || mkAvatar(p.nombre)}
             onError={e => { e.currentTarget.src = mkAvatar(p.nombre); }}
-            className="h-9 w-9 rounded-full object-cover ring-1 ring-slate-900/70"
+            className="h-10 w-10 rounded-full object-cover ring-1 ring-slate-900/70"
             alt={p.nombre}
           />
-          <div className="flex-1 min-w-0">
-            <div className="text-[10px] font-semibold text-slate-100 truncate">
-              {displayName}
-            </div>
-            <div className="flex items-center justify-between text-[10px] text-slate-300 mt-[2px]">
-              <span>{p.pos || 'F5'}</span>
-              <span className={`${colorNum100(rating)} font-bold tabular-nums`}>
-                {rating}
-              </span>
-            </div>
+          <div className="mt-1 text-[10px] font-semibold text-center truncate w-full">
+            {displayName}
           </div>
         </div>
       );
@@ -1701,8 +1664,8 @@
         setTeams(t=>{
           if(!t) return t;
           return {
-            A: shuffle(t.A||[]),
-            B: shuffle(t.B||[])
+            A: shuffle(t.A || []),
+            B: shuffle(t.B || [])
           };
         });
         setFormKey(k=>k+1);
@@ -1813,16 +1776,17 @@
                     </button>
                   </div>
 
-                  {/* Score equipos (tarjetas arriba) */}
+                  {/* Score equipos (tarjetas arriba) con fondo semitransparente del color del equipo */}
                   <div className={`grid gap-2 ${gridCols}`}>
                     {[['A',ratingA,chemA,scoreA],['B',ratingB,chemB,scoreB]].map(([t,rt,ch,sc],i)=>{
                       const col=i?teamColors.B:teamColors.A;
                       return(
                         <div
                           key={t}
-                          className="rounded-2xl bg-slate-900/95 p-3 ring-2 shadow-sm"
+                          className="rounded-2xl p-3 ring-2 shadow-sm"
                           style={{
-                            borderColor:hexA(col,0.9)
+                            background: hexA(col,0.16),
+                            borderColor: hexA(col,0.85)
                           }}
                         >
                           <div className="mb-1 text-sm font-semibold flex items-center justify-between">
@@ -1847,7 +1811,7 @@
                     })}
                   </div>
 
-                  {/* Listado de jugadores por equipo, más opaco; solo borde coloreado */}
+                  {/* Listado de jugadores por equipo con panel de color semitransparente */}
                   <div className={`grid gap-3 ${gridCols}`}>
                     {['A','B'].map((t,i)=>{
                       const ids=t==='A'?teamA:teamB;
@@ -1855,9 +1819,10 @@
                       return(
                         <div
                           key={t}
-                          className="rounded-2xl p-3 ring-2 bg-slate-900/95"
+                          className="rounded-2xl p-3 ring-2"
                           style={{
-                            borderColor:hexA(col,0.9)
+                            background: hexA(col,0.12),
+                            borderColor: hexA(col,0.75)
                           }}
                         >
                           <div className="mb-2 flex items-center justify-between">
