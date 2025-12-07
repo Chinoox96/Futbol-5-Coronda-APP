@@ -903,41 +903,59 @@
       );
     };
 
-    const BarsCompare=({statsA,statsB,colorA,colorB})=>(
-      <div className="grid gap-3">
-        {STAT.map((k,i)=>{
-          const a=statsA[i]||0;
-          const b=statsB[i]||0;
-          const max=Math.max(10,a,b);
-          const Track=({label,val,color})=>(
-            <div className="flex items-center gap-2 text-[11px] text-slate-200/90">
-              <span className="flex items-center gap-1 w-16">
-                <span className="h-2 w-2 rounded-full" style={{background:color}}/>
-                {label}
-              </span>
-              <div className="relative h-3 flex-1 overflow-hidden rounded-full bg-slate-800/80 ring-1 ring-slate-700">
-                <div
-                  className="absolute left-0 top-0 h-full"
-                  style={{width:`${(val/max)*100}%`,background:hexA(color,0.9)}}
-                />
-                <div className="relative z-10 flex h-full items-center px-2 text-[10px] font-semibold">
-                  <span className="tabular-nums">{val.toFixed(1)}</span>
+    const BarsCompare=({statsA,statsB,colorA,colorB,twoCols})=>{
+      const cards=STAT.map((k,i)=>{
+        const a=statsA[i]||0;
+        const b=statsB[i]||0;
+        const max=Math.max(10,a,b);
+        const half=Math.max(1,max)/2;
+        const pctA=Math.min(50,(a/half)*25);
+        const pctB=Math.min(50,(b/half)*25);
+        return(
+          <div key={k} className="space-y-2 rounded-xl bg-slate-900/60 p-2 ring-1 ring-slate-800">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-100">
+              <span>{SL[k]}</span>
+              <span className="text-[10px] font-normal text-slate-400">máx ref: {max.toFixed(1)}</span>
+            </div>
+            <div className="space-y-1.5">
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-[11px] text-slate-200/90">
+                <div className="flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full" style={{background:colorA}}></span>
+                  <span className="font-semibold tabular-nums">{a.toFixed(1)}</span>
+                  <span className="text-[10px] text-slate-400">Equipo A</span>
+                </div>
+                <span className="text-[10px] font-semibold text-slate-400">vs</span>
+                <div className="flex items-center justify-end gap-1">
+                  <span className="text-[10px] text-slate-400">Equipo B</span>
+                  <span className="font-semibold tabular-nums">{b.toFixed(1)}</span>
+                  <span className="h-2 w-2 rounded-full" style={{background:colorB}}></span>
+                </div>
+              </div>
+              <div className="relative h-6 overflow-hidden rounded-full bg-slate-800/80 ring-1 ring-slate-700">
+                <div className="absolute inset-y-1 left-1/2 w-px bg-slate-700/80"></div>
+                <div className="absolute inset-y-1 right-1/2 flex justify-end pr-1">
+                  <div
+                    className="h-full rounded-l-full"
+                    style={{width:`${pctA}%`,background:hexA(colorA,0.9)}}
+                  ></div>
+                </div>
+                <div className="absolute inset-y-1 left-1/2 flex justify-start pl-1">
+                  <div
+                    className="h-full rounded-r-full"
+                    style={{width:`${pctB}%`,background:hexA(colorB,0.9)}}
+                  ></div>
                 </div>
               </div>
             </div>
-          );
-          return(
-            <div key={k} className="space-y-1 rounded-xl bg-slate-900/60 p-2 ring-1 ring-slate-800">
-              <div className="text-xs font-semibold text-slate-100">{SL[k]}</div>
-              <div className="space-y-1.5">
-                <Track label="Equipo A" val={a} color={colorA}/>
-                <Track label="Equipo B" val={b} color={colorB}/>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
+          </div>
+        );
+      });
+      return(
+        <div className={twoCols? 'grid grid-cols-2 gap-3' : 'grid gap-3'}>
+          {cards}
+        </div>
+      );
+    };
 
 
     /* ========= Filas / Detalles ========= */
@@ -2046,6 +2064,7 @@
                           statsB={statAvgB}
                           colorA={teamColors.A}
                           colorB={teamColors.B}
+                          twoCols={partidoTwoCols}
                         />
                       </>
                     ) : (
