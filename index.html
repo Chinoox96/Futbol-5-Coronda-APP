@@ -1159,9 +1159,8 @@
       const set=(k,v)=>setF(s=>({...s,[k]:v}));
       const setSub=(k,i,v)=>setF(s=>{
         const subs=JSON.parse(JSON.stringify(s.subs));
-        subs[k][i].v=+v||1;
-        const main=Math.round(avg(subs[k].map(x=>+x.v||1)));
-        return {...s,subs,[k]:main};
+        subs[k][i].v=clamp(+v||1,1,10);
+        return {...s,subs};
       });
 
       const submit=()=>{
@@ -1299,18 +1298,34 @@
                 </div>
               </div>
 
-              {/* Stats calculados (solo display) */}
+              {/* Stats principales editables */}
               <div className="grid grid-cols-2 gap-2">
-                {STAT.map(k=>(
-                  <div
-                    key={k}
-                    className="rounded-xl bg-slate-800/60 p-2 ring-1 ring-slate-700"
-                  >
-                    <div className="text-xs font-semibold text-slate-200">{SL[k]}</div>
-                    <div className="text-lg font-extrabold text-emerald-200">{f[k]}</div>
-                    <div className="text-[11px] text-slate-400">Promedio de substats</div>
-                  </div>
-                ))}
+                {STAT.map(k=>{
+                  const subAvg=Math.round(avg((f.subs?.[k]||[]).map(x=>+x.v||0))||f[k]);
+                  return(
+                    <label
+                      key={k}
+                      className="rounded-xl bg-slate-800/60 p-2 ring-1 ring-slate-700 flex flex-col gap-2"
+                    >
+                      <div className="flex items-center justify-between text-xs font-semibold text-slate-200">
+                        <span>{SL[k]}</span>
+                        <span className="text-[11px] font-normal text-slate-400">Prom sub: {subAvg}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="range"
+                          min="1"
+                          max="10"
+                          step="1"
+                          value={f[k]}
+                          onChange={e=>set(k,clamp(+e.target.value||1,1,10))}
+                          className="flex-1"
+                        />
+                        <div className="w-10 text-right text-lg font-extrabold text-emerald-200 tabular-nums">{f[k]}</div>
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
             </div>
 
@@ -1552,7 +1567,7 @@
                 <li><b>EQP</b>: Colaboración, Disciplina, Liderazgo</li>
               </ul>
               <div className="mt-1 text-slate-300">
-                Cada stat es el promedio de sus substats (redondeo 1–10).
+                Podés editar cada stat directamente; el promedio de sus substats (1–10) queda como referencia.
               </div>
             </div>
             <div>
