@@ -179,7 +179,7 @@
     .pitch-meta{
       font-weight:900;
       font-style:italic;
-      letter-spacing:.08em;
+      letter-spacing:.2em;
       text-transform:uppercase;
       color:#fff;
       line-height:1.05;
@@ -605,53 +605,30 @@
           .slice(0,3)
           .map(it=>it.k);
 
-        const rarityBg = {
-          bronze: 'linear-gradient(180deg,#f1c08a 0%,#a86f38 28%,#6b4628 100%)',
-          silver: 'linear-gradient(180deg,#ffffff 0%,#d1d5db 35%,#9ca3af 100%)',
-          gold: 'linear-gradient(180deg,#fff3bf 0%,#fcd34d 32%,#d97706 100%)',
-          special: 'linear-gradient(180deg,#22d3ee 0%,#a78bfa 45%,#f472b6 100%)',
-          legendary: 'linear-gradient(180deg,#fbbf24 0%,#f97316 38%,#a855f7 100%)'
-        };
-
-        const cardRing =
-          rare === 'bronze'   ? 'ring-amber-800/80' :
-          rare === 'silver'   ? 'ring-slate-300/80' :
-          rare === 'gold'     ? 'ring-amber-400/80' :
-          rare === 'legendary'? 'ring-amber-300/80' :
-                                'ring-cyan-300/80';
-
         return (
-          <div
-            className={`card-rect w-[116px] md:w-[132px] text-white shadow-xl ring-2 ${cardRing}`}
-            style={{background: rarityBg[rare] || rarityBg.gold, aspectRatio:'3 / 4'}}
-          >
-            <div className="card-inner flex h-full flex-col justify-between text-center">
-              <div className="flex items-start justify-between px-1 pt-1 text-white drop-shadow">
-                <span className="text-xl md:text-2xl font-black leading-5 tabular-nums">{rating}</span>
-                <span className="rounded-lg bg-black/40 px-2 py-0.5 text-[10px] md:text-xs font-semibold uppercase tracking-wide">
-                  {p.pos || 'MC'}
-                </span>
-              </div>
-              <div className="mx-auto flex h-16 w-16 md:h-[72px] md:w-[72px] items-center justify-center overflow-hidden rounded-xl ring-2 ring-white/70 bg-black/30">
+          <div className="w-[150px] md:w-[170px] rounded-xl bg-slate-900/90 border border-white/10 shadow-lg backdrop-blur-sm text-white">
+            <div className="flex items-center gap-2 px-2 pt-2">
+              <div className={`rounded-lg ring-2 ${ring} p-[2px] bg-black/50`}> 
                 <img
                   src={src || mkAvatar(p.nombre)}
                   onError={e => { e.currentTarget.src = mkAvatar(p.nombre); }}
-                  className="h-full w-full object-cover"
+                  className="h-12 w-12 md:h-14 md:w-14 rounded-lg object-cover ring-1 ring-black/50"
                   alt={p.nombre}
                 />
               </div>
-              <div className="px-1 leading-4">
-                <div className="text-[11px] md:text-[12px] font-black truncate drop-shadow">{displayName}</div>
-                <div className="text-[10px] text-white/85">{p.posicion || 'Jugador'}</div>
+              <div className="flex-1 min-w-0 leading-4">
+                <div className="text-[11px] md:text-[12px] font-semibold truncate">{displayName}</div>
+                <div className="text-[10px] text-slate-200/90">{p.posicion||'Jugador'}</div>
               </div>
-              <div className="grid grid-cols-3 gap-1 px-1 pb-1">
-                {topStats.map(k=>(
-                  <div key={k} className="rounded-lg bg-black/25 px-1.5 py-1 text-center leading-3 ring-1 ring-white/15">
-                    <div className="text-[10px] font-semibold">{k}</div>
-                    <div className="text-[11px] font-black tabular-nums">{p[k] ?? '-'}</div>
-                  </div>
-                ))}
-              </div>
+              <div className="text-lg md:text-xl font-black text-emerald-200 tabular-nums drop-shadow">{rating}</div>
+            </div>
+            <div className="grid grid-cols-3 gap-1 px-2 pb-2 pt-1">
+              {topStats.map(k=>(
+                <div key={k} className="rounded-lg bg-white/10 px-2 py-1 text-center leading-4">
+                  <div className="text-[10px] font-semibold">{k}</div>
+                  <div className="text-[11px] md:text-xs font-black tabular-nums">{p[k] ?? '-'}</div>
+                </div>
+              ))}
             </div>
           </div>
         );
@@ -823,12 +800,12 @@
             {open && (
               <>
                 {stadiumLabel ? (
-                  <div className="absolute left-3 top-3 pitch-meta text-[13px] sm:text-xl md:text-2xl lg:text-3xl leading-tight drop-shadow">
-                    {stadiumLabel}
+                  <div className="absolute left-3 top-3 rounded-full bg-black/60 px-3 py-1 text-[13px] sm:text-base font-black uppercase tracking-[0.18em] text-white drop-shadow">
+                    ESTADIO: {stadiumLabel}
                   </div>
                 ) : null}
                 {matchInfo ? (
-                  <div className="absolute right-3 top-3 pitch-meta text-right text-[12px] sm:text-lg md:text-2xl lg:text-3xl leading-tight drop-shadow">
+                  <div className="absolute right-3 top-3 rounded-full bg-black/55 px-3 py-1 text-[13px] sm:text-base font-bold uppercase tracking-[0.15em] text-white drop-shadow text-right">
                     {matchInfo}
                   </div>
                 ) : null}
@@ -1870,7 +1847,7 @@
         const pg=pageRefs.current[tab];if(!pg)return;
         vp.style.height=pg.scrollHeight+'px';
       };
-      useEffect(()=>{fitHeight();},[tab,players,selected,teams,formScale,partidoTwoCols,fieldChipMode,fieldOpen]);
+      useEffect(()=>{fitHeight();},[tab,players,selected,teams,formScale,partidoTwoCols,fieldChipMode]);
       useEffect(()=>{
         const fn=()=>fitHeight();
         window.addEventListener('resize',fn,{passive:true});
@@ -2423,11 +2400,11 @@
                       <>
                         <div className="grid gap-2 sm:grid-cols-2">
                           <label className="flex flex-col gap-1 text-xs text-slate-200">
-                            <span className="font-semibold">Estadio/Cancha</span>
+                            <span className="font-semibold">ESTADIO</span>
                             <input
                               value={stadium}
                               onChange={e=>setStadium(e.target.value)}
-                              placeholder="Nombre del estadio o cancha"
+                              placeholder="Nombre del estadio"
                               className="rounded-xl bg-slate-900/70 px-3 py-2 text-sm ring-1 ring-slate-700 placeholder:text-slate-500"
                             />
                           </label>
