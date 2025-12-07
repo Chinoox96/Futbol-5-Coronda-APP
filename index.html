@@ -554,7 +554,7 @@
       );
     };
 
-    // CHIP de la cancha → mini carta VERTICAL con color según rareza
+    // CHIP de la cancha → avatar circular con aro de rareza, nombre y rating
     const FieldChip = ({ p }) => {
       const rare = rarityOf(p);
       const ring =
@@ -564,17 +564,6 @@
         rare === 'legendary'? 'ring-amber-300'  :
                               'ring-cyan-300';
 
-      const bgClass =
-        rare === 'bronze'
-          ? "bg-[linear-gradient(180deg,#d3a076,#7a5438)]"
-          : rare === 'silver'
-          ? "bg-[linear-gradient(180deg,#f9fafb,#9ca3af)]"
-          : rare === 'gold'
-          ? "bg-[linear-gradient(180deg,#fde68a,#d97706)]"
-          : rare === 'legendary'
-          ? "bg-[radial-gradient(circle,#fb923c,#a855f7,#22c55e)]"
-          : "bg-slate-950/90";
-
       const [src, setSrc] = React.useState(p.fotoUrl || '');
       React.useEffect(() => setSrc(p.fotoUrl || ''), [p.fotoUrl]);
 
@@ -582,25 +571,20 @@
       const displayName = p.apodo || p.nombre;
 
       return (
-        <div
-          className={`card-rect w-[110px] ${bgClass} text-slate-900 ring-2 ${ring} shadow flex flex-col items-center px-2 py-2`}
-        >
-          <div className="text-center leading-4 mb-1">
-            <div className="text-lg font-black">
-              {rating}
-            </div>
-            <div className="text-[10px] font-bold">
-              {p.pos || "F5"}
-            </div>
+        <div className="flex flex-col items-center gap-1 text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.45)]">
+          <div className={`rounded-full ring-4 ${ring} p-[3px] bg-slate-900/80`}>
+            <img
+              src={src || mkAvatar(p.nombre)}
+              onError={e => { e.currentTarget.src = mkAvatar(p.nombre); }}
+              className="h-12 w-12 rounded-full object-cover ring-1 ring-black/40"
+              alt={p.nombre}
+            />
           </div>
-          <img
-            src={src || mkAvatar(p.nombre)}
-            onError={e => { e.currentTarget.src = mkAvatar(p.nombre); }}
-            className="h-10 w-10 rounded-full object-cover ring-1 ring-slate-900/70"
-            alt={p.nombre}
-          />
-          <div className="mt-1 text-[10px] font-semibold text-center truncate w-full">
+          <div className="text-[11px] font-semibold leading-4 text-center max-w-[96px] truncate">
             {displayName}
+          </div>
+          <div className="text-[10px] font-black leading-3 text-slate-200">
+            {rating}
           </div>
         </div>
       );
