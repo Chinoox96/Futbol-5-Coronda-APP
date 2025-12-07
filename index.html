@@ -189,38 +189,14 @@
   <div id="bg-parallax" aria-hidden="true"></div>
   <div id="root"></div>
 
-  <!-- Manifest dinámico con iconos subidos -->
+  <!-- Manifest con ruta estática para evitar advertencias del navegador -->
   <script>
     (function(){
       const link = document.getElementById('mf');
       const basePath = location.pathname.endsWith('/')
         ? location.pathname
         : location.pathname.replace(/[^/]+$/,'');
-      const man = {
-        name: 'F5C',
-        short_name: 'F5C',
-        start_url: basePath || '/',
-        scope: basePath || '/',
-        display: 'standalone',
-        background_color: '#0f172a',
-        theme_color: '#10b981',
-        icons: [
-          {
-            src: basePath + 'icons/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any maskable'
-          },
-          {
-            src: basePath + 'icons/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
-          }
-        ]
-      };
-      const b = new Blob([JSON.stringify(man)],{type:'application/json'});
-      link.href = URL.createObjectURL(b);
+      link.href = (basePath || '/') + 'manifest.json';
     })();
   </script>
 
@@ -315,6 +291,38 @@
       ARQ:['Reflejos','Manos','Saque'],
       EQP:['Colaboración','Disciplina','Liderazgo']
     };
+    const POS_OPTIONS=[
+      {code:'AR',label:'Arquero',alias:['PO','POR']},
+      {code:'DFC',label:'Defensa Central',alias:['DF','DFI','DFD']},
+      {code:'LATI',label:'Lateral Izquierdo',alias:['LI','LAI']},
+      {code:'LATD',label:'Lateral Derecho',alias:['LD','LAD']},
+      {code:'MCD',label:'Mediocentro Defensivo',alias:['VOL']},
+      {code:'MC',label:'Mediocampista Central',alias:['MCO','MED']},
+      {code:'MEI',label:'Mediocampista Izquierdo',alias:['MI']},
+      {code:'MED',label:'Mediocampista Derecho',alias:['MD']},
+      {code:'EI',label:'Extremo Izquierdo'},
+      {code:'ED',label:'Extremo Derecho'},
+      {code:'DC',label:'Delantero Centro',alias:['DEL']},
+      {code:'MP',label:'Media Punta',alias:['ENG']},
+    ];
+    const FLAG_OPTIONS=[
+      {code:'🇦🇷',label:'Argentina'},
+      {code:'🇺🇾',label:'Uruguay'},
+      {code:'🇨🇱',label:'Chile'},
+      {code:'🇵🇾',label:'Paraguay'},
+      {code:'🇧🇷',label:'Brasil'},
+      {code:'🇧🇴',label:'Bolivia'},
+      {code:'🇵🇪',label:'Perú'},
+      {code:'🇨🇴',label:'Colombia'},
+      {code:'🇻🇪',label:'Venezuela'},
+      {code:'🇲🇽',label:'México'},
+      {code:'🇪🇸',label:'España'},
+      {code:'🇮🇹',label:'Italia'},
+      {code:'🇫🇷',label:'Francia'},
+      {code:'🇩🇪',label:'Alemania'},
+      {code:'🏳️',label:'Otra'},
+    ];
+    const FOOT_OPTIONS=['Derecho','Izquierdo','Ambidiestro'];
     const Wt={ATA:.18,DEF:.16,PAS:.14,REG:.14,VEL:.14,FIS:.10,ARQ:.07,EQP:.07};
 
     const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -1123,6 +1131,9 @@
       const s=p.subs||(Object.fromEntries(
         STAT.map(k=>[k,(SUBS[k]||[]).map(n=>({n,v:p[k]}))])
       ));
+      const posInfo=posInfoOf(p.pos);
+      const posLabel=posInfo?.label||p.posicion||p.pos;
+      const posCode=posInfo?.code||p.pos;
       return(
         <div className="fixed inset-0 z-[90] grid place-items-center bg-black/60 p-3" onClick={onClose}>
           <div
@@ -1151,7 +1162,8 @@
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div className="rounded-lg bg-slate-900/60 p-2">
                       Posición:
-                      <div className="font-semibold">{p.pos}</div>
+                      <div className="font-semibold">{posLabel}</div>
+                      <div className="text-[11px] text-slate-300">{posCode}</div>
                     </div>
                     <div className="rounded-lg bg-slate-900/60 p-2">
                       Pie:
@@ -1202,13 +1214,14 @@
     /* ========= Formulario ========= */
     const PlayerFormModal=({initial,onClose,onSave,onDelete})=>{
       const isEdit=!!(initial&&initial.id);
+      const defaultPosInfo = posInfoOf(initial?.pos) || POS_OPTIONS[5] || POS_OPTIONS[0];
       const defaultSubs=Object.fromEntries(
         STAT.map(k=>[k,(SUBS[k]||[]).map(n=>({n,v:5}))])
       );
       const start = initial
         ? JSON.parse(JSON.stringify(initial))
         : {
-            nombre:'',apodo:'',pos:'LA',bandera:'🇦🇷',pie:'Derecho',
+            nombre:'',apodo:'',pos:defaultPosInfo?.code||'MC',posicion:defaultPosInfo?.label||'Mediocampista Central',bandera:'🇦🇷',pie:'Derecho',
             equipoPropio:'',equipoFavorito:'',equipoFavoritoEscudoUrl:'',
             ATA:5,PAS:5,REG:5,VEL:5,DEF:5,FIS:5,ARQ:5,EQP:5,
             fotoUrl:'',subs:defaultSubs,especial:false,legendaria:false
@@ -1220,6 +1233,11 @@
         );
       }
 
+      if(!start.posicion){
+        const info=posInfoOf(start.pos);
+        start.posicion=info?.label||start.pos||'Mediocampista Central';
+      }
+
       const [f,setF]=useState(start);
       const set=(k,v)=>setF(s=>({...s,[k]:v}));
       const setSub=(k,i,v)=>setF(s=>{
@@ -1227,6 +1245,14 @@
         subs[k][i].v=clamp(+v||1,1,10);
         return {...s,subs};
       });
+      const setPos=(code)=>{
+        const info=posInfoOf(code);
+        setF(s=>({
+          ...s,
+          pos: info?.code || code,
+          posicion: info?.label || s.posicion
+        }));
+      };
 
       const submit=()=>{
         const id=isEdit?f.id:String(Date.now());
@@ -1295,29 +1321,50 @@
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  Pos
-                  <input
+                  Posición
+                  <select
                     value={f.pos}
-                    onChange={e=>set('pos',e.target.value)}
+                    onChange={e=>setPos(e.target.value)}
                     className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700"
-                    placeholder="LA / MU / TI / AR"
-                  />
+                  >
+                    {!posInfoOf(f.pos) && f.pos && (
+                      <option value={f.pos}>{f.pos} — Personalizada</option>
+                    )}
+                    {POS_OPTIONS.map(opt=>(
+                      <option key={opt.code} value={opt.code}>
+                        {opt.code} — {opt.label}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label className="flex flex-col gap-1">
                   Bandera
-                  <input
+                  <select
                     value={f.bandera}
                     onChange={e=>set('bandera',e.target.value)}
                     className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700"
-                  />
+                  >
+                    {!FLAG_OPTIONS.some(o=>o.code===f.bandera) && f.bandera && (
+                      <option value={f.bandera}>{f.bandera} Personalizada</option>
+                    )}
+                    {FLAG_OPTIONS.map(opt=>(
+                      <option key={opt.code} value={opt.code}>
+                        {opt.code} {opt.label}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label className="flex flex-col gap-1">
                   Pie
-                  <input
+                  <select
                     value={f.pie}
                     onChange={e=>set('pie',e.target.value)}
                     className="rounded bg-slate-800 px-2 py-1 ring-1 ring-slate-700"
-                  />
+                  >
+                    {FOOT_OPTIONS.map(opt=>(
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
                 </label>
                 <label className="flex flex-col gap-1">
                   Equipo propio
