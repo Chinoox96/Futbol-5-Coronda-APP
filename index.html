@@ -810,6 +810,138 @@
       );
     };
 
+    /* ========= Comparativa (Radar + Barras) ========= */
+    const TeamRadar=({statsA,statsB,colorA,colorB})=>{
+      const size=340;
+      const center=size/2;
+      const radius=center-28;
+      const angleStep=(Math.PI*2)/STAT.length;
+      const point=(v,i)=>{
+        const a=-Math.PI/2 + i*angleStep;
+        const r=(Math.max(0,v)/10)*radius;
+        return [
+          center + r*Math.cos(a),
+          center + r*Math.sin(a)
+        ].join(',');
+      };
+      const path=(arr)=>arr.map((v,i)=>point(v,i)).join(' ');
+      const rings=[10,7.5,5,2.5];
+      return(
+        <svg viewBox={`0 0 ${size} ${size}`} className="w-full max-w-xl mx-auto">
+          <defs>
+            <linearGradient id="gradA" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colorA} stopOpacity="0.10"/>
+              <stop offset="100%" stopColor={colorA} stopOpacity="0.30"/>
+            </linearGradient>
+            <linearGradient id="gradB" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colorB} stopOpacity="0.10"/>
+              <stop offset="100%" stopColor={colorB} stopOpacity="0.30"/>
+            </linearGradient>
+          </defs>
+          <g>
+            {rings.map((r,idx)=>{
+              const rad=(r/10)*radius;
+              return(
+                <g key={idx}>
+                  <polygon
+                    points={STAT.map((_,i)=>{
+                      const a=-Math.PI/2 + i*angleStep;
+                      return [center+rad*Math.cos(a),center+rad*Math.sin(a)].join(',');
+                    }).join(' ')}
+                    fill="none"
+                    stroke="rgba(148,163,184,0.25)"
+                    strokeDasharray="4 4"
+                  />
+                  <text
+                    x={center}
+                    y={center-rad-2}
+                    textAnchor="middle"
+                    fontSize="10"
+                    fill="rgba(148,163,184,0.8)"
+                  >
+                    {r}
+                  </text>
+                </g>
+              );
+            })}
+            {STAT.map((k,i)=>{
+              const a=-Math.PI/2 + i*angleStep;
+              const x=center + Math.cos(a)*radius;
+              const y=center + Math.sin(a)*radius;
+              const tx=center + Math.cos(a)*(radius+16);
+              const ty=center + Math.sin(a)*(radius+16);
+              return(
+                <g key={k}>
+                  <line x1={center} y1={center} x2={x} y2={y} stroke="rgba(148,163,184,0.35)" strokeWidth="1"/>
+                  <text
+                    x={tx}
+                    y={ty}
+                    textAnchor="middle"
+                    fontSize="11"
+                    fill="rgba(226,232,240,0.9)"
+                    style={{fontWeight:700}}
+                  >
+                    {k}
+                  </text>
+                </g>
+              );
+            })}
+            <polygon
+              points={path(statsA)}
+              fill="url(#gradA)"
+              stroke={colorA}
+              strokeWidth="2"
+            />
+            <polygon
+              points={path(statsB)}
+              fill="url(#gradB)"
+              stroke={colorB}
+              strokeWidth="2"
+            />
+          </g>
+        </svg>
+      );
+    };
+
+    const BarsCompare=({statsA,statsB,colorA,colorB})=>(
+      <div className="grid gap-3">
+        {STAT.map((k,i)=>{
+          const a=statsA[i]||0;
+          const b=statsB[i]||0;
+          const max=10;
+          return(
+            <div key={k} className="space-y-1">
+              <div className="flex justify-between text-xs text-slate-300">
+                <span className="font-semibold text-slate-100">{SL[k]}</span>
+                <span className="tabular-nums">{a.toFixed(1)} vs {b.toFixed(1)}</span>
+              </div>
+              <div className="relative h-3 overflow-hidden rounded-full bg-slate-900/80 ring-1 ring-slate-700">
+                <div
+                  className="absolute left-0 top-0 h-full"
+                  style={{
+                    width:`${(a/max)*100}%`,
+                    background:hexA(colorA,0.8)
+                  }}
+                />
+                <div
+                  className="absolute right-0 top-0 h-full"
+                  style={{
+                    width:`${(b/max)*100}%`,
+                    background:hexA(colorB,0.8)
+                  }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-slate-200/80">
+                  <span className="px-2">Equipo A</span>
+                  <span className="px-2">Equipo B</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+
+
     /* ========= Filas / Detalles ========= */
     const PinButtons=({id,pinA,pinB,setPinA,setPinB})=>{
       const onA=pinA.has(id),onB=pinB.has(id);
@@ -1167,20 +1299,17 @@
                 </div>
               </div>
 
-              {/* Stats solo lectura (dependen de substats) */}
+              {/* Stats calculados (solo display) */}
               <div className="grid grid-cols-2 gap-2">
                 {STAT.map(k=>(
-                  <label key={k} className="flex flex-col gap-1">
-                    {SL[k]} (promedio)
-                    <input
-                      type="number"
-                      min="1"
-                      max="10"
-                      value={f[k]}
-                      readOnly
-                      className="rounded bg-slate-800/70 px-2 py-1 ring-1 ring-slate-700 text-slate-400 cursor-not-allowed"
-                    />
-                  </label>
+                  <div
+                    key={k}
+                    className="rounded-xl bg-slate-800/60 p-2 ring-1 ring-slate-700"
+                  >
+                    <div className="text-xs font-semibold text-slate-200">{SL[k]}</div>
+                    <div className="text-lg font-extrabold text-emerald-200">{f[k]}</div>
+                    <div className="text-[11px] text-slate-400">Promedio de substats</div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -1610,6 +1739,13 @@
       const scoreA=teamScoreUI(teamA,map,chem,kChem)||0;
       const scoreB=teamScoreUI(teamB,map,chem,kChem)||0;
 
+      const teamStatAvg=(ids)=>STAT.map(k=>+(avg(ids.map(id=>map[id]?.[k]||0)).toFixed(2)||0));
+      const statAvgA=teamStatAvg(teamA);
+      const statAvgB=teamStatAvg(teamB);
+
+      const teamNamesA=teamA.map(id=>map[id]?.nombre).filter(Boolean);
+      const teamNamesB=teamB.map(id=>map[id]?.nombre).filter(Boolean);
+
       const gridCols = partidoTwoCols ? 'grid-cols-2' : 'grid-cols-1';
 
       // install
@@ -1809,6 +1945,78 @@
                         </div>
                       );
                     })}
+                  </div>
+
+                  {/* Comparativa visual */}
+                  <div className="rounded-2xl bg-slate-900/60 p-3 ring-1 ring-slate-700 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold text-slate-100">Comparativa de equipos</div>
+                        <div className="text-xs text-slate-300">Promedio de stats (1–10)</div>
+                      </div>
+                      <div className="flex items-center gap-3 text-[11px] text-slate-200">
+                        <div className="flex items-center gap-1">
+                          <span className="h-3 w-3 rounded-full" style={{background:hexA(teamColors.A,0.85)}}></span>
+                          Equipo A
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="h-3 w-3 rounded-full" style={{background:hexA(teamColors.B,0.85)}}></span>
+                          Equipo B
+                        </div>
+                      </div>
+                    </div>
+                    {teamA.length && teamB.length ? (
+                      <>
+                        <div className="grid gap-3 rounded-xl bg-slate-900/50 p-3 ring-1 ring-slate-800">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                            {[['A',teamNamesA,teamColors.A],['B',teamNamesB,teamColors.B]].map(([label,names,col])=>{
+                              return(
+                                <div key={label} className="space-y-1">
+                                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-200">
+                                    <span className="h-2 w-2 rounded-full" style={{background:hexA(col,0.95)}}></span>
+                                    Equipo {label}
+                                  </div>
+                                  <div className="flex flex-wrap gap-1">
+                                    {names.length
+                                      ? names.map((n,idx)=>(
+                                          <span
+                                            key={idx}
+                                            className="inline-flex items-center gap-1 rounded-full bg-black/30 px-2 py-1 text-[11px] ring-1 ring-slate-800"
+                                          >
+                                            {n}
+                                          </span>
+                                        ))
+                                      : (
+                                        <span className="text-xs text-slate-400">Sin jugadores</span>
+                                      )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <TeamRadar
+                          statsA={statAvgA}
+                          statsB={statAvgB}
+                          colorA={teamColors.A}
+                          colorB={teamColors.B}
+                        />
+                        <BarsCompare
+                          statsA={statAvgA}
+                          statsB={statAvgB}
+                          colorA={teamColors.A}
+                          colorB={teamColors.B}
+                        />
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-3 rounded-xl bg-slate-800/60 p-4 text-sm text-slate-200">
+                        <span className="text-xl">ℹ️</span>
+                        <div>
+                          <div className="font-semibold text-slate-100">Esperando equipos</div>
+                          <div className="text-slate-300">Armá dos equipos para ver el radar y las barras comparativas.</div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Listado de jugadores por equipo con panel de color semitransparente */}
