@@ -338,6 +338,16 @@
       return +(s/w).toFixed(2);
     };
     const withG = (a) => (a || []).map(p => ({ ...p, _GLOBAL: globalOf(p) }));
+    const cleanPlayers = (arr = []) => withG(
+      arr.map((p, idx) => {
+        const { _GLOBAL, ...rest } = p || {};
+        const base = { id: rest.id || String(Date.now() + idx), ...rest };
+        STAT.forEach(k => {
+          base[k] = clamp(+base[k] || 5, 1, 10);
+        });
+        return base;
+      })
+    );
 
     const rarityOf=p=>{
       const r=Math.round((p._GLOBAL||globalOf(p))*10);
@@ -1376,7 +1386,9 @@
       partidoTwoCols,setPartidoTwoCols,
       teamColors,setTeamColors,
       onOpenGlossary,
-      isAdmin,setIsAdmin
+      isAdmin,setIsAdmin,
+      onImportPlayers,onExportPlayers,onReloadPlayers,
+      remoteStatus
     })=>{
       const [a,setA]=useState(teamColors.A);
       const [b,setB]=useState(teamColors.B);
@@ -1384,6 +1396,8 @@
         setA(teamColors.A);
         setB(teamColors.B);
       },[teamColors]);
+
+      const fileRef=useRef(null);
 
       const saveColors=()=>setTeamColors({A:a,B:b});
 
@@ -1495,6 +1509,56 @@
                 </div>
               </div>
             </div>
+
+            {isAdmin && (
+              <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700 space-y-2">
+                <div className="text-sm font-semibold">Listado de jugadores</div>
+                <p className="text-xs text-slate-300">
+                  Importá o exportá el JSON del plantel. Solo disponible en modo admin.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={()=>fileRef.current?.click()}
+                    className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700"
+                  >
+                    📂 Importar JSON
+                  </button>
+                  <button
+                    onClick={onExportPlayers}
+                    className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700"
+                  >
+                    💾 Exportar JSON
+                  </button>
+                  <button
+                    onClick={()=>onReloadPlayers?.(true)}
+                    className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700"
+                  >
+                    🔄 Recargar archivo base
+                  </button>
+                </div>
+                <div className="text-[11px] text-slate-400 space-y-1">
+                  <div>
+                    Archivo base: {remoteStatus?.loadedAt
+                      ? new Date(remoteStatus.loadedAt).toLocaleString()
+                      : 'pendiente de carga'}
+                  </div>
+                  {remoteStatus?.error && (
+                    <div className="text-rose-300">Error: {remoteStatus.error}</div>
+                  )}
+                </div>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="application/json"
+                  className="hidden"
+                  onChange={e=>{
+                    const file=e.target.files?.[0];
+                    onImportPlayers?.(file);
+                    if(e.target.value) e.target.value='';
+                  }}
+                />
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <button
@@ -1620,6 +1684,7 @@
       const[playerDetailId,setPlayerDetailId]=useState(null);
       const[isAdmin,setIsAdmin]=useState(()=>localStorage.getItem('f5.isAdmin')==='1');
       const[formKey,setFormKey]=useState(0); // para resetear formación completa
+      const[remoteStatus,setRemoteStatus]=useState({loadedAt:null,error:null});
 
       // persist
       useEffect(()=>localStorage.setItem('f5.players',JSON.stringify(players)),[players]);
@@ -1632,6 +1697,26 @@
       useEffect(()=>localStorage.setItem('f5.partidoTwoCols',JSON.stringify(partidoTwoCols)),[partidoTwoCols]);
       useEffect(()=>localStorage.setItem('f5.teamColors',JSON.stringify(teamColors)),[teamColors]);
       useEffect(()=>localStorage.setItem('f5.isAdmin',isAdmin?'1':'0'),[isAdmin]);
+
+      const loadExternalPlayers=React.useCallback(async(bust=false)=>{
+        try{
+          setRemoteStatus(s=>({...s,error:null}));
+          const res=await fetch(`assets/players.json${bust?`?v=${Date.now()}`:''}`,{cache:'no-cache'});
+          if(!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data=await res.json();
+          const list=Array.isArray(data)?data:(data?.players||[]);
+          if(!Array.isArray(list)) throw new Error('Formato inválido');
+          setPlayers(cleanPlayers(list));
+          setRemoteStatus({loadedAt:new Date().toISOString(),error:null});
+        }catch(err){
+          console.error('No se pudo cargar el archivo externo',err);
+          setRemoteStatus(s=>({loadedAt:s.loadedAt||null,error:err?.message||'Error desconocido'}));
+        }
+      },[]);
+
+      useEffect(()=>{
+        loadExternalPlayers(true);
+      },[loadExternalPlayers]);
 
       // altura dinámica de la vista
       const viewportRef=useRef(null);
@@ -1814,6 +1899,33 @@
           };
         });
         setFormKey(k=>k+1);
+      };
+
+      const importPlayersFile=async(file)=>{
+        if(!file)return;
+        try{
+          const txt=await file.text();
+          const data=JSON.parse(txt);
+          const list=Array.isArray(data)?data:(data?.players||[]);
+          if(!Array.isArray(list)) throw new Error('El JSON debe contener un array de jugadores');
+          setPlayers(cleanPlayers(list));
+          setRemoteStatus({loadedAt:new Date().toISOString(),error:null});
+          alert('Listado importado correctamente');
+        }catch(err){
+          console.error('Error al importar',err);
+          alert('No se pudo importar el archivo: '+(err?.message||'Error desconocido'));
+        }
+      };
+
+      const exportPlayersFile=()=>{
+        const payload={players:players.map(({_GLOBAL,...rest})=>rest)};
+        const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement('a');
+        a.href=url;
+        a.download='f5c-players.json';
+        a.click();
+        setTimeout(()=>URL.revokeObjectURL(url),1000);
       };
 
       // Modo admin oculto (5 toques en el título)
@@ -2253,6 +2365,10 @@
               }}
               isAdmin={isAdmin}
               setIsAdmin={setIsAdmin}
+              onImportPlayers={importPlayersFile}
+              onExportPlayers={exportPlayersFile}
+              onReloadPlayers={loadExternalPlayers}
+              remoteStatus={remoteStatus}
             />
           )}
 
