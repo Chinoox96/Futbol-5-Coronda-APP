@@ -346,6 +346,10 @@
       return +(s/w).toFixed(2);
     };
     const withG = (a) => (a || []).map(p => ({ ...p, _GLOBAL: globalOf(p) }));
+    const posInfoOf=(code)=>{
+      return POS_OPTIONS.find(o=>o.code===code || o.alias?.includes(code)) || null;
+    };
+
     const cleanPlayers = (arr = []) => withG(
       arr.map((p, idx) => {
         const { _GLOBAL, ...rest } = p || {};
@@ -353,6 +357,11 @@
         STAT.forEach(k => {
           base[k] = clamp(+base[k] || 5, 1, 10);
         });
+        const posInfo = posInfoOf(base.pos);
+        base.pos = posInfo?.code || base.pos || 'MC';
+        base.posicion = base.posicion || posInfo?.label || base.pos || 'Mediocampista Central';
+        base.pie = base.pie || 'Derecho';
+        base.bandera = base.bandera || '🏳️';
         return base;
       })
     );
@@ -1257,6 +1266,9 @@
       const submit=()=>{
         const id=isEdit?f.id:String(Date.now());
         const p={...f,id};
+        const posInfo=posInfoOf(p.pos);
+        p.pos=posInfo?.code||p.pos;
+        p.posicion=posInfo?.label||p.posicion||p.pos;
         const derived=Object.fromEntries(
           STAT.map(k=>[
             k,
@@ -1794,7 +1806,7 @@
       useEffect(()=>localStorage.setItem('f5.isAdmin',isAdmin?'1':'0'),[isAdmin]);
       useEffect(()=>localStorage.setItem('f5.fieldChipMode',fieldChipMode),[fieldChipMode]);
 
-      const loadExternalPlayers=React.useCallback(async(bust=false)=>{
+      const fetchExternalPlayers=React.useCallback(async(bust=false)=>{
         try{
           setRemoteStatus(s=>({...s,error:null}));
           const res=await fetch(`assets/players.json${bust?`?v=${Date.now()}`:''}`,{cache:'no-cache'});
@@ -1811,28 +1823,8 @@
       },[]);
 
       useEffect(()=>{
-        loadExternalPlayers(true);
-      },[loadExternalPlayers]);
-
-      const loadExternalPlayers=React.useCallback(async(bust=false)=>{
-        try{
-          setRemoteStatus(s=>({...s,error:null}));
-          const res=await fetch(`assets/players.json${bust?`?v=${Date.now()}`:''}`,{cache:'no-cache'});
-          if(!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data=await res.json();
-          const list=Array.isArray(data)?data:(data?.players||[]);
-          if(!Array.isArray(list)) throw new Error('Formato inválido');
-          setPlayers(cleanPlayers(list));
-          setRemoteStatus({loadedAt:new Date().toISOString(),error:null});
-        }catch(err){
-          console.error('No se pudo cargar el archivo externo',err);
-          setRemoteStatus(s=>({loadedAt:s.loadedAt||null,error:err?.message||'Error desconocido'}));
-        }
-      },[]);
-
-      useEffect(()=>{
-        loadExternalPlayers(true);
-      },[loadExternalPlayers]);
+        fetchExternalPlayers(true);
+      },[fetchExternalPlayers]);
 
       // altura dinámica de la vista
       const viewportRef=useRef(null);
@@ -2582,7 +2574,7 @@
               setIsAdmin={setIsAdmin}
               onImportPlayers={importPlayersFile}
               onExportPlayers={exportPlayersFile}
-              onReloadPlayers={loadExternalPlayers}
+              onReloadPlayers={fetchExternalPlayers}
               remoteStatus={remoteStatus}
             />
           )}
