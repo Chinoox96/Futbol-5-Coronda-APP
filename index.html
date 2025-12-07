@@ -1739,9 +1739,6 @@
       const statAvgA=teamStatAvg(teamA);
       const statAvgB=teamStatAvg(teamB);
 
-      const teamNamesA=teamA.map(id=>map[id]?.nombre).filter(Boolean);
-      const teamNamesB=teamB.map(id=>map[id]?.nombre).filter(Boolean);
-
       const gridCols = partidoTwoCols ? 'grid-cols-2' : 'grid-cols-1';
 
       // install
@@ -1963,33 +1960,82 @@
                     </div>
                     {teamA.length && teamB.length ? (
                       <>
-                        <div className="grid gap-3 rounded-xl bg-slate-900/50 p-3 ring-1 ring-slate-800">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                            {[['A',teamNamesA,teamColors.A],['B',teamNamesB,teamColors.B]].map(([label,names,col])=>{
-                              return(
-                                <div key={label} className="space-y-1">
-                                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-200">
-                                    <span className="h-2 w-2 rounded-full" style={{background:hexA(col,0.95)}}></span>
-                                    Equipo {label}
-                                  </div>
-                                  <div className="flex flex-wrap gap-1">
-                                    {names.length
-                                      ? names.map((n,idx)=>(
-                                          <span
-                                            key={idx}
-                                            className="inline-flex items-center gap-1 rounded-full bg-black/30 px-2 py-1 text-[11px] ring-1 ring-slate-800"
-                                          >
-                                            {n}
-                                          </span>
-                                        ))
-                                      : (
-                                        <span className="text-xs text-slate-400">Sin jugadores</span>
-                                      )}
+                        {/* Listado de jugadores por equipo con panel de color semitransparente */}
+                        <div className={`grid gap-3 ${gridCols}`}>
+                          {['A','B'].map((t,i)=>{
+                            const ids=t==='A'?teamA:teamB;
+                            const col=i?teamColors.B:teamColors.A;
+                            return(
+                              <div
+                                key={t}
+                                className="rounded-2xl p-3 ring-2"
+                                style={{
+                                  background: hexA(col,0.75),
+                                  borderColor: hexA("#000",0.75)
+                                }}
+                              >
+                                <div className="mb-2 flex items-center justify-between">
+                                  <div className="text-xs font-semibold text-slate-100">
+                                    Equipo {t}
                                   </div>
                                 </div>
-                              );
-                            })}
-                          </div>
+                                <div className="space-y-2">
+                                  {ids.map((id,idx)=>{
+                                    const p=map[id];
+                                    if(!p)return null;
+                                    return(
+                                      <div
+                                        key={id}
+                                        draggable
+                                        onDragStart={e=>{
+                                          e.dataTransfer.effectAllowed='move';
+                                          window.__drag={team:t,id};
+                                        }}
+                                        onDragOver={e=>e.preventDefault()}
+                                        onDrop={e=>{
+                                          e.preventDefault();
+                                          const d=window.__drag;
+                                          if(!d)return;
+                                          const fromT=d.team,toT=t;
+                                          setTeams(tt=>{
+                                            const A=[...(tt?.A||[])],B=[...(tt?.B||[])];
+                                            const fromArr=fromT==='A'?A:B;
+                                            const toArr=toT==='A'?A:B;
+                                            const fromIdx=fromArr.indexOf(d.id);
+                                            const swapId=toArr[idx];
+                                            if(fromIdx<0)return tt;
+                                            fromArr[fromIdx]=swapId;
+                                            toArr[idx]=d.id;
+                                            return {A,B};
+                                          });
+                                          setFormKey(k=>k+1);
+                                        }}
+                                        className="flex items-center justify-between rounded-xl bg-slate-900/90 p-2 ring-1 ring-slate-700"
+                                      >
+                                        <button
+                                          onClick={()=>setPlayerDetailId(id)}
+                                          className="flex items-center gap-2 min-w-0"
+                                        >
+                                          <img
+                                            src={p.fotoUrl||mkAvatar(p.nombre)}
+                                            onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}}
+                                            className="h-8 w-8 rounded-full object-cover ring-1 ring-slate-700"
+                                            alt={p.nombre}
+                                          />
+                                          <span className="truncate">
+                                            {p.nombre}{p.apodo?` “${p.apodo}”`:''}
+                                          </span>
+                                        </button>
+                                        <span className={`tabular-nums text-sm font-bold ${colorNum100(Math.round(p._GLOBAL*10))}`}>
+                                          {Math.round(p._GLOBAL*10)}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                         <TeamRadar
                           statsA={statAvgA}
@@ -2013,84 +2059,6 @@
                         </div>
                       </div>
                     )}
-                  </div>
-
-                  {/* Listado de jugadores por equipo con panel de color semitransparente */}
-                  <div className={`grid gap-3 ${gridCols}`}>
-                    {['A','B'].map((t,i)=>{
-                      const ids=t==='A'?teamA:teamB;
-                      const col=i?teamColors.B:teamColors.A;
-                      return(
-                        <div
-                          key={t}
-                          className="rounded-2xl p-3 ring-2"
-                          style={{
-                            background: hexA(col,0.75),
-                            borderColor: hexA("#000",0.75)
-                          }}
-                        >
-                          <div className="mb-2 flex items-center justify-between">
-                            <div className="text-xs font-semibold text-slate-100">
-                              Equipo {t}
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            {ids.map((id,idx)=>{
-                              const p=map[id];
-                              if(!p)return null;
-                              return(
-                                <div
-                                  key={id}
-                                  draggable
-                                  onDragStart={e=>{
-                                    e.dataTransfer.effectAllowed='move';
-                                    window.__drag={team:t,id};
-                                  }}
-                                  onDragOver={e=>e.preventDefault()}
-                                  onDrop={e=>{
-                                    e.preventDefault();
-                                    const d=window.__drag;
-                                    if(!d)return;
-                                    const fromT=d.team,toT=t;
-                                    setTeams(tt=>{
-                                      const A=[...(tt?.A||[])],B=[...(tt?.B||[])];
-                                      const fromArr=fromT==='A'?A:B;
-                                      const toArr=toT==='A'?A:B;
-                                      const fromIdx=fromArr.indexOf(d.id);
-                                      const swapId=toArr[idx];
-                                      if(fromIdx<0)return tt;
-                                      fromArr[fromIdx]=swapId;
-                                      toArr[idx]=d.id;
-                                      return {A,B};
-                                    });
-                                    setFormKey(k=>k+1);
-                                  }}
-                                  className="flex items-center justify-between rounded-xl bg-slate-900/90 p-2 ring-1 ring-slate-700"
-                                >
-                                  <button
-                                    onClick={()=>setPlayerDetailId(id)}
-                                    className="flex items-center gap-2 min-w-0"
-                                  >
-                                    <img
-                                      src={p.fotoUrl||mkAvatar(p.nombre)}
-                                      onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}}
-                                      className="h-8 w-8 rounded-full object-cover ring-1 ring-slate-700"
-                                      alt={p.nombre}
-                                    />
-                                    <span className="truncate">
-                                      {p.nombre}{p.apodo?` “${p.apodo}”`:''}
-                                    </span>
-                                  </button>
-                                  <span className={`tabular-nums text-sm font-bold ${colorNum100(Math.round(p._GLOBAL*10))}`}>
-                                    {Math.round(p._GLOBAL*10)}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
                   </div>
 
                   {/* Semáforo */}
