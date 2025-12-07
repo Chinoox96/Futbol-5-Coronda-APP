@@ -810,6 +810,154 @@
       );
     };
 
+    /* ========= Comparativa (Radar + Barras) ========= */
+    const TeamRadar=({statsA,statsB,colorA,colorB})=>{
+      const size=340;
+      const center=size/2;
+      const radius=center-28;
+      const angleStep=(Math.PI*2)/STAT.length;
+      const point=(v,i)=>{
+        const a=-Math.PI/2 + i*angleStep;
+        const r=(Math.max(0,v)/10)*radius;
+        return [
+          center + r*Math.cos(a),
+          center + r*Math.sin(a)
+        ].join(',');
+      };
+      const path=(arr)=>arr.map((v,i)=>point(v,i)).join(' ');
+      const rings=[10,7.5,5,2.5];
+      return(
+        <svg viewBox={`0 0 ${size} ${size}`} className="w-full max-w-xl mx-auto">
+          <defs>
+            <linearGradient id="gradA" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colorA} stopOpacity="0.10"/>
+              <stop offset="100%" stopColor={colorA} stopOpacity="0.30"/>
+            </linearGradient>
+            <linearGradient id="gradB" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colorB} stopOpacity="0.10"/>
+              <stop offset="100%" stopColor={colorB} stopOpacity="0.30"/>
+            </linearGradient>
+          </defs>
+          <g>
+            {rings.map((r,idx)=>{
+              const rad=(r/10)*radius;
+              return(
+                <g key={idx}>
+                  <polygon
+                    points={STAT.map((_,i)=>{
+                      const a=-Math.PI/2 + i*angleStep;
+                      return [center+rad*Math.cos(a),center+rad*Math.sin(a)].join(',');
+                    }).join(' ')}
+                    fill="none"
+                    stroke="rgba(148,163,184,0.25)"
+                    strokeDasharray="4 4"
+                  />
+                  <text
+                    x={center}
+                    y={center-rad-2}
+                    textAnchor="middle"
+                    fontSize="10"
+                    fill="rgba(148,163,184,0.8)"
+                  >
+                    {r}
+                  </text>
+                </g>
+              );
+            })}
+            {STAT.map((k,i)=>{
+              const a=-Math.PI/2 + i*angleStep;
+              const x=center + Math.cos(a)*radius;
+              const y=center + Math.sin(a)*radius;
+              const tx=center + Math.cos(a)*(radius+16);
+              const ty=center + Math.sin(a)*(radius+16);
+              return(
+                <g key={k}>
+                  <line x1={center} y1={center} x2={x} y2={y} stroke="rgba(148,163,184,0.35)" strokeWidth="1"/>
+                  <text
+                    x={tx}
+                    y={ty}
+                    textAnchor="middle"
+                    fontSize="11"
+                    fill="rgba(226,232,240,0.9)"
+                    style={{fontWeight:700}}
+                  >
+                    {k}
+                  </text>
+                </g>
+              );
+            })}
+            <polygon
+              points={path(statsA)}
+              fill="url(#gradA)"
+              stroke={colorA}
+              strokeWidth="2"
+            />
+            <polygon
+              points={path(statsB)}
+              fill="url(#gradB)"
+              stroke={colorB}
+              strokeWidth="2"
+            />
+          </g>
+        </svg>
+      );
+    };
+
+    const BarsCompare=({statsA,statsB,colorA,colorB,twoCols})=>{
+      const cards=STAT.map((k,i)=>{
+        const a=statsA[i]||0;
+        const b=statsB[i]||0;
+        const max=Math.max(10,a,b);
+        const half=Math.max(1,max)/2;
+        const pctA=Math.min(50,(a/half)*25);
+        const pctB=Math.min(50,(b/half)*25);
+        return(
+          <div key={k} className="space-y-2 rounded-xl bg-slate-900/60 p-2 ring-1 ring-slate-800">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-100">
+              <span>{SL[k]}</span>
+              <span className="text-[10px] font-normal text-slate-400">máx ref: {max.toFixed(1)}</span>
+            </div>
+            <div className="space-y-1.5">
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-[11px] text-slate-200/90">
+                <div className="flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full" style={{background:colorA}}></span>
+                  <span className="font-semibold tabular-nums">{a.toFixed(1)}</span>
+                  <span className="text-[10px] text-slate-400">Equipo A</span>
+                </div>
+                <span className="text-[10px] font-semibold text-slate-400">vs</span>
+                <div className="flex items-center justify-end gap-1">
+                  <span className="text-[10px] text-slate-400">Equipo B</span>
+                  <span className="font-semibold tabular-nums">{b.toFixed(1)}</span>
+                  <span className="h-2 w-2 rounded-full" style={{background:colorB}}></span>
+                </div>
+              </div>
+              <div className="relative h-6 overflow-hidden rounded-full bg-slate-800/80 ring-1 ring-slate-700">
+                <div className="absolute inset-y-1 left-1/2 w-px bg-slate-700/80"></div>
+                <div className="absolute inset-y-1 right-1/2 flex w-1/2 justify-end pr-1">
+                  <div
+                    className="h-full rounded-l-full"
+                    style={{width:`${pctA}%`,background:hexA(colorA,0.9)}}
+                  ></div>
+                </div>
+                <div className="absolute inset-y-1 left-1/2 flex w-1/2 justify-start pl-1">
+                  <div
+                    className="h-full rounded-r-full"
+                    style={{width:`${pctB}%`,background:hexA(colorB,0.9)}}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      });
+      return(
+        <div className={twoCols? 'grid grid-cols-2 gap-3' : 'grid gap-3'}>
+          {cards}
+        </div>
+      );
+    };
+
+
     /* ========= Filas / Detalles ========= */
     const PinButtons=({id,pinA,pinB,setPinA,setPinB})=>{
       const onA=pinA.has(id),onB=pinB.has(id);
@@ -1027,15 +1175,24 @@
       const set=(k,v)=>setF(s=>({...s,[k]:v}));
       const setSub=(k,i,v)=>setF(s=>{
         const subs=JSON.parse(JSON.stringify(s.subs));
-        subs[k][i].v=+v||1;
-        const main=Math.round(avg(subs[k].map(x=>+x.v||1)));
-        return {...s,subs,[k]:main};
+        subs[k][i].v=clamp(+v||1,1,10);
+        return {...s,subs};
       });
 
       const submit=()=>{
         const id=isEdit?f.id:String(Date.now());
         const p={...f,id};
-        STAT.forEach(k=>p[k]=clamp(Math.round(p[k]),1,10));
+        const derived=Object.fromEntries(
+          STAT.map(k=>[
+            k,
+            clamp(
+              Math.round(avg((p.subs?.[k]||[]).map(x=>+x.v||0))||p[k]),
+              1,
+              10
+            )
+          ])
+        );
+        Object.assign(p,derived);
         p._GLOBAL=globalOf(p);
         onSave(p);
         onClose();
@@ -1069,8 +1226,8 @@
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-              <div className="md:col-span-2 grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-3 text-sm">
+              <div className="grid grid-cols-2 gap-2">
                 <label className="flex flex-col gap-1">
                   Nombre
                   <input
@@ -1167,22 +1324,6 @@
                 </div>
               </div>
 
-              {/* Stats solo lectura (dependen de substats) */}
-              <div className="grid grid-cols-2 gap-2">
-                {STAT.map(k=>(
-                  <label key={k} className="flex flex-col gap-1">
-                    {SL[k]} (promedio)
-                    <input
-                      type="number"
-                      min="1"
-                      max="10"
-                      value={f[k]}
-                      readOnly
-                      className="rounded bg-slate-800/70 px-2 py-1 ring-1 ring-slate-700 text-slate-400 cursor-not-allowed"
-                    />
-                  </label>
-                ))}
-              </div>
             </div>
 
             {/* Substats */}
@@ -1190,7 +1331,7 @@
               {STAT.map(k=>(
                 <div key={k} className="rounded-xl bg-slate-800/60 p-3 ring-1 ring-slate-700">
                   <div className="mb-2 text-sm font-semibold">
-                    {SL[k]} — Sub-stats (promedio → {f[k]})
+                    {SL[k]} — Sub-stats (promedio → {Math.round(avg((f.subs?.[k]||[]).map(it=>+it.v||0))||f[k])})
                   </div>
                   <div className="grid gap-2">
                     {(f.subs[k]||[]).map((it,i)=>(
@@ -1423,7 +1564,7 @@
                 <li><b>EQP</b>: Colaboración, Disciplina, Liderazgo</li>
               </ul>
               <div className="mt-1 text-slate-300">
-                Cada stat es el promedio de sus substats (redondeo 1–10).
+                Podés editar cada stat directamente; el promedio de sus substats (1–10) queda como referencia.
               </div>
             </div>
             <div>
@@ -1609,6 +1750,10 @@
       const chemB=+chemTeam(teamB,chem).toFixed(2)||0;
       const scoreA=teamScoreUI(teamA,map,chem,kChem)||0;
       const scoreB=teamScoreUI(teamB,map,chem,kChem)||0;
+
+      const teamStatAvg=(ids)=>STAT.map(k=>+(avg(ids.map(id=>map[id]?.[k]||0)).toFixed(2)||0));
+      const statAvgA=teamStatAvg(teamA);
+      const statAvgB=teamStatAvg(teamB);
 
       const gridCols = partidoTwoCols ? 'grid-cols-2' : 'grid-cols-1';
 
@@ -1811,82 +1956,126 @@
                     })}
                   </div>
 
-                  {/* Listado de jugadores por equipo con panel de color semitransparente */}
-                  <div className={`grid gap-3 ${gridCols}`}>
-                    {['A','B'].map((t,i)=>{
-                      const ids=t==='A'?teamA:teamB;
-                      const col=i?teamColors.B:teamColors.A;
-                      return(
-                        <div
-                          key={t}
-                          className="rounded-2xl p-3 ring-2"
-                          style={{
-                            background: hexA(col,0.75),
-                            borderColor: hexA("#000",0.75)
-                          }}
-                        >
-                          <div className="mb-2 flex items-center justify-between">
-                            <div className="text-xs font-semibold text-slate-100">
-                              Equipo {t}
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            {ids.map((id,idx)=>{
-                              const p=map[id];
-                              if(!p)return null;
-                              return(
-                                <div
-                                  key={id}
-                                  draggable
-                                  onDragStart={e=>{
-                                    e.dataTransfer.effectAllowed='move';
-                                    window.__drag={team:t,id};
-                                  }}
-                                  onDragOver={e=>e.preventDefault()}
-                                  onDrop={e=>{
-                                    e.preventDefault();
-                                    const d=window.__drag;
-                                    if(!d)return;
-                                    const fromT=d.team,toT=t;
-                                    setTeams(tt=>{
-                                      const A=[...(tt?.A||[])],B=[...(tt?.B||[])];
-                                      const fromArr=fromT==='A'?A:B;
-                                      const toArr=toT==='A'?A:B;
-                                      const fromIdx=fromArr.indexOf(d.id);
-                                      const swapId=toArr[idx];
-                                      if(fromIdx<0)return tt;
-                                      fromArr[fromIdx]=swapId;
-                                      toArr[idx]=d.id;
-                                      return {A,B};
-                                    });
-                                    setFormKey(k=>k+1);
-                                  }}
-                                  className="flex items-center justify-between rounded-xl bg-slate-900/90 p-2 ring-1 ring-slate-700"
-                                >
-                                  <button
-                                    onClick={()=>setPlayerDetailId(id)}
-                                    className="flex items-center gap-2 min-w-0"
-                                  >
-                                    <img
-                                      src={p.fotoUrl||mkAvatar(p.nombre)}
-                                      onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}}
-                                      className="h-8 w-8 rounded-full object-cover ring-1 ring-slate-700"
-                                      alt={p.nombre}
-                                    />
-                                    <span className="truncate">
-                                      {p.nombre}{p.apodo?` “${p.apodo}”`:''}
-                                    </span>
-                                  </button>
-                                  <span className={`tabular-nums text-sm font-bold ${colorNum100(Math.round(p._GLOBAL*10))}`}>
-                                    {Math.round(p._GLOBAL*10)}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
+                  {/* Comparativa visual */}
+                  <div className="rounded-2xl bg-slate-900/60 p-3 ring-1 ring-slate-700 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold text-slate-100">Comparativa de equipos</div>
+                        <div className="text-xs text-slate-300">Promedio de stats (1–10)</div>
+                      </div>
+                      <div className="flex items-center gap-3 text-[11px] text-slate-200">
+                        <div className="flex items-center gap-1">
+                          <span className="h-3 w-3 rounded-full" style={{background:hexA(teamColors.A,0.85)}}></span>
+                          Equipo A
                         </div>
-                      );
-                    })}
+                        <div className="flex items-center gap-1">
+                          <span className="h-3 w-3 rounded-full" style={{background:hexA(teamColors.B,0.85)}}></span>
+                          Equipo B
+                        </div>
+                      </div>
+                    </div>
+                    {teamA.length && teamB.length ? (
+                      <>
+                        {/* Listado de jugadores por equipo con panel de color semitransparente */}
+                        <div className={`grid gap-3 ${gridCols}`}>
+                          {['A','B'].map((t,i)=>{
+                            const ids=t==='A'?teamA:teamB;
+                            const col=i?teamColors.B:teamColors.A;
+                            return(
+                              <div
+                                key={t}
+                                className="rounded-2xl p-3 ring-2"
+                                style={{
+                                  background: hexA(col,0.75),
+                                  borderColor: hexA("#000",0.75)
+                                }}
+                              >
+                                <div className="mb-2 flex items-center justify-between">
+                                  <div className="text-xs font-semibold text-slate-100">
+                                    Equipo {t}
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  {ids.map((id,idx)=>{
+                                    const p=map[id];
+                                    if(!p)return null;
+                                    return(
+                                      <div
+                                        key={id}
+                                        draggable
+                                        onDragStart={e=>{
+                                          e.dataTransfer.effectAllowed='move';
+                                          window.__drag={team:t,id};
+                                        }}
+                                        onDragOver={e=>e.preventDefault()}
+                                        onDrop={e=>{
+                                          e.preventDefault();
+                                          const d=window.__drag;
+                                          if(!d)return;
+                                          const fromT=d.team,toT=t;
+                                          setTeams(tt=>{
+                                            const A=[...(tt?.A||[])],B=[...(tt?.B||[])];
+                                            const fromArr=fromT==='A'?A:B;
+                                            const toArr=toT==='A'?A:B;
+                                            const fromIdx=fromArr.indexOf(d.id);
+                                            const swapId=toArr[idx];
+                                            if(fromIdx<0)return tt;
+                                            fromArr[fromIdx]=swapId;
+                                            toArr[idx]=d.id;
+                                            return {A,B};
+                                          });
+                                          setFormKey(k=>k+1);
+                                        }}
+                                        className="flex items-center justify-between rounded-xl bg-slate-900/90 p-2 ring-1 ring-slate-700"
+                                      >
+                                        <button
+                                          onClick={()=>setPlayerDetailId(id)}
+                                          className="flex items-center gap-2 min-w-0"
+                                        >
+                                          <img
+                                            src={p.fotoUrl||mkAvatar(p.nombre)}
+                                            onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}}
+                                            className="h-8 w-8 rounded-full object-cover ring-1 ring-slate-700"
+                                            alt={p.nombre}
+                                          />
+                                          <span className="truncate">
+                                            {p.nombre}{p.apodo?` “${p.apodo}”`:''}
+                                          </span>
+                                        </button>
+                                        <span className={`tabular-nums text-sm font-bold ${colorNum100(Math.round(p._GLOBAL*10))}`}>
+                                          {Math.round(p._GLOBAL*10)}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <TeamRadar
+                          statsA={statAvgA}
+                          statsB={statAvgB}
+                          colorA={teamColors.A}
+                          colorB={teamColors.B}
+                        />
+                        <BarsCompare
+                          statsA={statAvgA}
+                          statsB={statAvgB}
+                          colorA={teamColors.A}
+                          colorB={teamColors.B}
+                          twoCols={partidoTwoCols}
+                        />
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-3 rounded-xl bg-slate-800/60 p-4 text-sm text-slate-200">
+                        <span className="text-xl">ℹ️</span>
+                        <div>
+                          <div className="font-semibold text-slate-100">Esperando equipos</div>
+                          <div className="text-slate-300">Armá dos equipos para ver el radar y las barras comparativas.</div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Semáforo */}
