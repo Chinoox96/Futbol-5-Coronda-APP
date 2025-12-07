@@ -338,6 +338,16 @@
       return +(s/w).toFixed(2);
     };
     const withG = (a) => (a || []).map(p => ({ ...p, _GLOBAL: globalOf(p) }));
+    const cleanPlayers = (arr = []) => withG(
+      arr.map((p, idx) => {
+        const { _GLOBAL, ...rest } = p || {};
+        const base = { id: rest.id || String(Date.now() + idx), ...rest };
+        STAT.forEach(k => {
+          base[k] = clamp(+base[k] || 5, 1, 10);
+        });
+        return base;
+      })
+    );
 
     const rarityOf=p=>{
       const r=Math.round((p._GLOBAL||globalOf(p))*10);
@@ -469,15 +479,16 @@
       y: FIELD_BOX.top  + (FIELD_BOX.bottom-FIELD_BOX.top)*(y/100)
     });
 
-    // Formación base mejorada (AR, 2 DF, VOL, DEL)
+    // Formación base mejorada (AR, 2 DF, VOL, DEL) sin cruzar la mitad
     const POS_A=[
-      {x:4,  y:50}, // AR
-      {x:24, y:30}, // DF izq
-      {x:24, y:70}, // DF der
-      {x:52, y:40}, // VOL
-      {x:70, y:60}, // DEL
+      {x:12, y:50}, // AR
+      {x:28, y:30}, // DF izq
+      {x:28, y:70}, // DF der
+      {x:40, y:40}, // VOL
+      {x:46, y:60}, // DEL
     ];
     const POS_B=POS_A.map(p=>({x:100-p.x,y:p.y}));
+    const POS_RANGE={A:[2,49],B:[51,98]};
 
     /* ========= UI: FIFA / FieldChip / Radar ========= */
     const FifaCard=({p})=>{
@@ -544,7 +555,7 @@
       );
     };
 
-    // CHIP de la cancha → mini carta VERTICAL con color según rareza
+    // CHIP de la cancha → avatar circular con aro de rareza, nombre y rating
     const FieldChip = ({ p }) => {
       const rare = rarityOf(p);
       const ring =
@@ -554,17 +565,6 @@
         rare === 'legendary'? 'ring-amber-300'  :
                               'ring-cyan-300';
 
-      const bgClass =
-        rare === 'bronze'
-          ? "bg-[linear-gradient(180deg,#d3a076,#7a5438)]"
-          : rare === 'silver'
-          ? "bg-[linear-gradient(180deg,#f9fafb,#9ca3af)]"
-          : rare === 'gold'
-          ? "bg-[linear-gradient(180deg,#fde68a,#d97706)]"
-          : rare === 'legendary'
-          ? "bg-[radial-gradient(circle,#fb923c,#a855f7,#22c55e)]"
-          : "bg-slate-950/90";
-
       const [src, setSrc] = React.useState(p.fotoUrl || '');
       React.useEffect(() => setSrc(p.fotoUrl || ''), [p.fotoUrl]);
 
@@ -572,25 +572,20 @@
       const displayName = p.apodo || p.nombre;
 
       return (
-        <div
-          className={`card-rect w-[110px] ${bgClass} text-slate-900 ring-2 ${ring} shadow flex flex-col items-center px-2 py-2`}
-        >
-          <div className="text-center leading-4 mb-1">
-            <div className="text-lg font-black">
-              {rating}
-            </div>
-            <div className="text-[10px] font-bold">
-              {p.pos || "F5"}
-            </div>
+        <div className="flex flex-col items-center gap-1 text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.45)]">
+          <div className={`rounded-full ring-4 ${ring} p-[3px] bg-slate-900/80`}>
+            <img
+              src={src || mkAvatar(p.nombre)}
+              onError={e => { e.currentTarget.src = mkAvatar(p.nombre); }}
+              className="h-12 w-12 md:h-16 md:w-16 rounded-full object-cover ring-1 ring-black/40"
+              alt={p.nombre}
+            />
           </div>
-          <img
-            src={src || mkAvatar(p.nombre)}
-            onError={e => { e.currentTarget.src = mkAvatar(p.nombre); }}
-            className="h-10 w-10 rounded-full object-cover ring-1 ring-slate-900/70"
-            alt={p.nombre}
-          />
-          <div className="mt-1 text-[10px] font-semibold text-center truncate w-full">
+          <div className="text-[11px] md:text-[12px] font-semibold leading-4 text-center max-w-[116px] truncate">
             {displayName}
+          </div>
+          <div className="text-[10px] md:text-[11px] font-black leading-3 text-slate-200">
+            {rating}
           </div>
         </div>
       );
@@ -631,7 +626,7 @@
     };
 
     /* ========= Formación (con drag + reset) ========= */
-    const FormationBoard=({teamA=[],teamB=[],map,scale=0.5})=>{
+    const FormationBoard=({teamA=[],teamB=[],map,scale=0.5,open=false,stadiumLabel='',matchInfo=''})=>{
       const ref=useRef(null);
       const [customPos,setCustomPos]=useState({});
       const [copied,setCopied]=useState(false);
@@ -703,6 +698,7 @@
 
       // drag & drop sobre la cancha
       const startDrag=(team,id,e)=>{
+        if(!open) return;
         e.preventDefault();
         const handleMove = (ev)=>{
           const r=ref.current?.getBoundingClientRect();
@@ -710,10 +706,11 @@
           const touch=ev.touches?ev.touches[0]:ev;
           const xPct=((touch.clientX - r.left)/r.width)*100;
           const yPct=((touch.clientY - r.top)/r.height)*100;
+          const [minX,maxX]=POS_RANGE[team]||[0,100];
           setCustomPos(prev=>({
             ...prev,
             [`${team}-${id}`]:{
-              x: clamp(xPct,0,100),
+              x: clamp(xPct,minX,maxX),
               y: clamp(yPct,0,100)
             }
           }));
@@ -734,9 +731,23 @@
         <div className="w-full">
           <div
             ref={ref}
-            className="board shadow-xl mx-auto bg-transparent relative"
+            className={`board shadow-xl mx-auto bg-transparent relative ${open?'':'pointer-events-none opacity-80'}`}
           >
             <img src={`assets/cancha.png?${FIELD_VER}`} alt="Cancha" className="field"/>
+            {open && (
+              <>
+                {stadiumLabel ? (
+                  <div className="absolute left-2 top-2 text-[11px] font-bold uppercase tracking-wide text-white drop-shadow">
+                    ESTADIO: {stadiumLabel}
+                  </div>
+                ) : null}
+                {matchInfo ? (
+                  <div className="absolute right-2 top-2 text-[11px] font-semibold text-white drop-shadow text-right">
+                    {matchInfo}
+                  </div>
+                ) : null}
+              </>
+            )}
             <div className="layer">
               {teamA.map((id,i)=>{
                 const p=map[id];
@@ -782,33 +793,183 @@
               })}
             </div>
           </div>
-          <div className="grid grid-cols-2 sm:flex sm:flex-row justify-center gap-2 mt-3">
-            <button
-              onClick={descargar}
-              className="rounded-xl bg-emerald-600 px-3 py-2 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500"
-            >
-              ⬇️ Descargar
-            </button>
-            <button
-              onClick={copiar}
-              className={`rounded-xl px-3 py-2 text-sm ring-1 ${
-                copied
-                  ? 'bg-emerald-700 text-white ring-emerald-500'
-                  : 'bg-slate-800 text-slate-100 ring-slate-700 hover:bg-slate-700'
-              }`}
-            >
-              {copied?'Copiado ✅':'📋 Copiar'}
-            </button>
-            <button
-              onClick={compartir}
-              className="rounded-xl bg-cyan-600 px-3 py-2 text-sm text-white ring-1 ring-cyan-500 hover:bg-cyan-500"
-            >
-              📤 Compartir
-            </button>
-          </div>
+          {open && (
+            <div className="grid grid-cols-2 sm:flex sm:flex-row justify-center gap-2 mt-3">
+              <button
+                onClick={descargar}
+                className="rounded-xl bg-emerald-600 px-3 py-2 text-sm text-white ring-1 ring-emerald-500 hover:bg-emerald-500"
+              >
+                ⬇️ Descargar
+              </button>
+              <button
+                onClick={copiar}
+                className={`rounded-xl px-3 py-2 text-sm ring-1 ${
+                  copied
+                    ? 'bg-emerald-700 text-white ring-emerald-500'
+                    : 'bg-slate-800 text-slate-100 ring-slate-700 hover:bg-slate-700'
+                }`}
+              >
+                {copied?'Copiado ✅':'📋 Copiar'}
+              </button>
+              <button
+                onClick={compartir}
+                className="rounded-xl bg-cyan-600 px-3 py-2 text-sm text-white ring-1 ring-cyan-500 hover:bg-cyan-500"
+              >
+                📤 Compartir
+              </button>
+            </div>
+          )}
         </div>
       );
     };
+
+    /* ========= Comparativa (Radar + Barras) ========= */
+    const TeamRadar=({statsA,statsB,colorA,colorB})=>{
+      const size=340;
+      const center=size/2;
+      const radius=center-28;
+      const angleStep=(Math.PI*2)/STAT.length;
+      const point=(v,i)=>{
+        const a=-Math.PI/2 + i*angleStep;
+        const r=(Math.max(0,v)/10)*radius;
+        return [
+          center + r*Math.cos(a),
+          center + r*Math.sin(a)
+        ].join(',');
+      };
+      const path=(arr)=>arr.map((v,i)=>point(v,i)).join(' ');
+      const rings=[10,7.5,5,2.5];
+      return(
+        <svg viewBox={`0 0 ${size} ${size}`} className="w-full max-w-xl mx-auto">
+          <defs>
+            <linearGradient id="gradA" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colorA} stopOpacity="0.10"/>
+              <stop offset="100%" stopColor={colorA} stopOpacity="0.30"/>
+            </linearGradient>
+            <linearGradient id="gradB" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colorB} stopOpacity="0.10"/>
+              <stop offset="100%" stopColor={colorB} stopOpacity="0.30"/>
+            </linearGradient>
+          </defs>
+          <g>
+            {rings.map((r,idx)=>{
+              const rad=(r/10)*radius;
+              return(
+                <g key={idx}>
+                  <polygon
+                    points={STAT.map((_,i)=>{
+                      const a=-Math.PI/2 + i*angleStep;
+                      return [center+rad*Math.cos(a),center+rad*Math.sin(a)].join(',');
+                    }).join(' ')}
+                    fill="none"
+                    stroke="rgba(148,163,184,0.25)"
+                    strokeDasharray="4 4"
+                  />
+                  <text
+                    x={center}
+                    y={center-rad-2}
+                    textAnchor="middle"
+                    fontSize="10"
+                    fill="rgba(148,163,184,0.8)"
+                  >
+                    {r}
+                  </text>
+                </g>
+              );
+            })}
+            {STAT.map((k,i)=>{
+              const a=-Math.PI/2 + i*angleStep;
+              const x=center + Math.cos(a)*radius;
+              const y=center + Math.sin(a)*radius;
+              const tx=center + Math.cos(a)*(radius+16);
+              const ty=center + Math.sin(a)*(radius+16);
+              return(
+                <g key={k}>
+                  <line x1={center} y1={center} x2={x} y2={y} stroke="rgba(148,163,184,0.35)" strokeWidth="1"/>
+                  <text
+                    x={tx}
+                    y={ty}
+                    textAnchor="middle"
+                    fontSize="11"
+                    fill="rgba(226,232,240,0.9)"
+                    style={{fontWeight:700}}
+                  >
+                    {k}
+                  </text>
+                </g>
+              );
+            })}
+            <polygon
+              points={path(statsA)}
+              fill="url(#gradA)"
+              stroke={colorA}
+              strokeWidth="2"
+            />
+            <polygon
+              points={path(statsB)}
+              fill="url(#gradB)"
+              stroke={colorB}
+              strokeWidth="2"
+            />
+          </g>
+        </svg>
+      );
+    };
+
+    const BarsCompare=({statsA,statsB,colorA,colorB,twoCols})=>{
+      const cards=STAT.map((k,i)=>{
+        const a=statsA[i]||0;
+        const b=statsB[i]||0;
+        const max=Math.max(10,a,b);
+        const half=Math.max(1,max)/2;
+        const pctA=Math.min(50,(a/half)*25);
+        const pctB=Math.min(50,(b/half)*25);
+        return(
+          <div key={k} className="space-y-2 rounded-xl bg-slate-900/60 p-2 ring-1 ring-slate-800">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-100">
+              <span>{SL[k]}</span>
+              <span className="text-[10px] font-normal text-slate-400">máx ref: {max.toFixed(1)}</span>
+            </div>
+            <div className="space-y-1.5">
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-[11px] text-slate-200/90">
+                <div className="flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full" style={{background:colorA}}></span>
+                  <span className="font-semibold tabular-nums">{a.toFixed(1)}</span>
+                  <span className="text-[10px] text-slate-400">Equipo A</span>
+                </div>
+                <span className="text-[10px] font-semibold text-slate-400">vs</span>
+                <div className="flex items-center justify-end gap-1">
+                  <span className="text-[10px] text-slate-400">Equipo B</span>
+                  <span className="font-semibold tabular-nums">{b.toFixed(1)}</span>
+                  <span className="h-2 w-2 rounded-full" style={{background:colorB}}></span>
+                </div>
+              </div>
+              <div className="relative h-6 overflow-hidden rounded-full bg-slate-800/80 ring-1 ring-slate-700">
+                <div className="absolute inset-y-1 left-1/2 w-px bg-slate-700/80"></div>
+                <div className="absolute inset-y-1 right-1/2 flex w-1/2 justify-end pr-1">
+                  <div
+                    className="h-full rounded-l-full"
+                    style={{width:`${pctA}%`,background:hexA(colorA,0.9)}}
+                  ></div>
+                </div>
+                <div className="absolute inset-y-1 left-1/2 flex w-1/2 justify-start pl-1">
+                  <div
+                    className="h-full rounded-r-full"
+                    style={{width:`${pctB}%`,background:hexA(colorB,0.9)}}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      });
+      return(
+        <div className={twoCols? 'grid grid-cols-2 gap-3' : 'grid gap-3'}>
+          {cards}
+        </div>
+      );
+    };
+
 
     /* ========= Filas / Detalles ========= */
     const PinButtons=({id,pinA,pinB,setPinA,setPinB})=>{
@@ -1027,15 +1188,24 @@
       const set=(k,v)=>setF(s=>({...s,[k]:v}));
       const setSub=(k,i,v)=>setF(s=>{
         const subs=JSON.parse(JSON.stringify(s.subs));
-        subs[k][i].v=+v||1;
-        const main=Math.round(avg(subs[k].map(x=>+x.v||1)));
-        return {...s,subs,[k]:main};
+        subs[k][i].v=clamp(+v||1,1,10);
+        return {...s,subs};
       });
 
       const submit=()=>{
         const id=isEdit?f.id:String(Date.now());
         const p={...f,id};
-        STAT.forEach(k=>p[k]=clamp(Math.round(p[k]),1,10));
+        const derived=Object.fromEntries(
+          STAT.map(k=>[
+            k,
+            clamp(
+              Math.round(avg((p.subs?.[k]||[]).map(x=>+x.v||0))||p[k]),
+              1,
+              10
+            )
+          ])
+        );
+        Object.assign(p,derived);
         p._GLOBAL=globalOf(p);
         onSave(p);
         onClose();
@@ -1069,8 +1239,8 @@
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-              <div className="md:col-span-2 grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-3 text-sm">
+              <div className="grid grid-cols-2 gap-2">
                 <label className="flex flex-col gap-1">
                   Nombre
                   <input
@@ -1167,22 +1337,6 @@
                 </div>
               </div>
 
-              {/* Stats solo lectura (dependen de substats) */}
-              <div className="grid grid-cols-2 gap-2">
-                {STAT.map(k=>(
-                  <label key={k} className="flex flex-col gap-1">
-                    {SL[k]} (promedio)
-                    <input
-                      type="number"
-                      min="1"
-                      max="10"
-                      value={f[k]}
-                      readOnly
-                      className="rounded bg-slate-800/70 px-2 py-1 ring-1 ring-slate-700 text-slate-400 cursor-not-allowed"
-                    />
-                  </label>
-                ))}
-              </div>
             </div>
 
             {/* Substats */}
@@ -1190,7 +1344,7 @@
               {STAT.map(k=>(
                 <div key={k} className="rounded-xl bg-slate-800/60 p-3 ring-1 ring-slate-700">
                   <div className="mb-2 text-sm font-semibold">
-                    {SL[k]} — Sub-stats (promedio → {f[k]})
+                    {SL[k]} — Sub-stats (promedio → {Math.round(avg((f.subs?.[k]||[]).map(it=>+it.v||0))||f[k])})
                   </div>
                   <div className="grid gap-2">
                     {(f.subs[k]||[]).map((it,i)=>(
@@ -1235,7 +1389,9 @@
       partidoTwoCols,setPartidoTwoCols,
       teamColors,setTeamColors,
       onOpenGlossary,
-      isAdmin,setIsAdmin
+      isAdmin,setIsAdmin,
+      onImportPlayers,onExportPlayers,onReloadPlayers,
+      remoteStatus
     })=>{
       const [a,setA]=useState(teamColors.A);
       const [b,setB]=useState(teamColors.B);
@@ -1243,6 +1399,8 @@
         setA(teamColors.A);
         setB(teamColors.B);
       },[teamColors]);
+
+      const fileRef=useRef(null);
 
       const saveColors=()=>setTeamColors({A:a,B:b});
 
@@ -1355,6 +1513,56 @@
               </div>
             </div>
 
+            {isAdmin && (
+              <div className="rounded-xl bg-slate-800/50 p-3 ring-1 ring-slate-700 space-y-2">
+                <div className="text-sm font-semibold">Listado de jugadores</div>
+                <p className="text-xs text-slate-300">
+                  Importá o exportá el JSON del plantel. Solo disponible en modo admin.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={()=>fileRef.current?.click()}
+                    className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700"
+                  >
+                    📂 Importar JSON
+                  </button>
+                  <button
+                    onClick={onExportPlayers}
+                    className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700"
+                  >
+                    💾 Exportar JSON
+                  </button>
+                  <button
+                    onClick={()=>onReloadPlayers?.(true)}
+                    className="rounded-xl bg-slate-800 px-3 py-1 text-sm ring-1 ring-slate-700 hover:bg-slate-700"
+                  >
+                    🔄 Recargar archivo base
+                  </button>
+                </div>
+                <div className="text-[11px] text-slate-400 space-y-1">
+                  <div>
+                    Archivo base: {remoteStatus?.loadedAt
+                      ? new Date(remoteStatus.loadedAt).toLocaleString()
+                      : 'pendiente de carga'}
+                  </div>
+                  {remoteStatus?.error && (
+                    <div className="text-rose-300">Error: {remoteStatus.error}</div>
+                  )}
+                </div>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="application/json"
+                  className="hidden"
+                  onChange={e=>{
+                    const file=e.target.files?.[0];
+                    onImportPlayers?.(file);
+                    if(e.target.value) e.target.value='';
+                  }}
+                />
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <button
                 onClick={onOpenGlossary}
@@ -1423,7 +1631,7 @@
                 <li><b>EQP</b>: Colaboración, Disciplina, Liderazgo</li>
               </ul>
               <div className="mt-1 text-slate-300">
-                Cada stat es el promedio de sus substats (redondeo 1–10).
+                Podés editar cada stat directamente; el promedio de sus substats (1–10) queda como referencia.
               </div>
             </div>
             <div>
@@ -1462,6 +1670,9 @@
       const[pinA,setPinA]=useState(()=>new Set(J(localStorage.getItem('f5.pins.A'),[])));
       const[pinB,setPinB]=useState(()=>new Set(J(localStorage.getItem('f5.pins.B'),[])));
       const[formScale,setFormScale]=useState(()=>+(localStorage.getItem('f5.formScale')??0.50));
+      const[fieldOpen,setFieldOpen]=useState(false);
+      const[stadium,setStadium]=useState(()=>localStorage.getItem('f5.stadium')||'');
+      const[matchDateTime,setMatchDateTime]=useState(()=>localStorage.getItem('f5.matchDateTime')||'');
       const[partidoTwoCols,setPartidoTwoCols]=useState(()=>{
         try{return JSON.parse(localStorage.getItem('f5.partidoTwoCols')??'true');}
         catch{return true;}
@@ -1479,6 +1690,7 @@
       const[playerDetailId,setPlayerDetailId]=useState(null);
       const[isAdmin,setIsAdmin]=useState(()=>localStorage.getItem('f5.isAdmin')==='1');
       const[formKey,setFormKey]=useState(0); // para resetear formación completa
+      const[remoteStatus,setRemoteStatus]=useState({loadedAt:null,error:null});
 
       // persist
       useEffect(()=>localStorage.setItem('f5.players',JSON.stringify(players)),[players]);
@@ -1488,9 +1700,31 @@
       useEffect(()=>localStorage.setItem('f5.pins.A',JSON.stringify([...pinA])),[pinA]);
       useEffect(()=>localStorage.setItem('f5.pins.B',JSON.stringify([...pinB])),[pinB]);
       useEffect(()=>localStorage.setItem('f5.formScale',String(formScale)),[formScale]);
+      useEffect(()=>localStorage.setItem('f5.stadium',stadium),[stadium]);
+      useEffect(()=>localStorage.setItem('f5.matchDateTime',matchDateTime),[matchDateTime]);
       useEffect(()=>localStorage.setItem('f5.partidoTwoCols',JSON.stringify(partidoTwoCols)),[partidoTwoCols]);
       useEffect(()=>localStorage.setItem('f5.teamColors',JSON.stringify(teamColors)),[teamColors]);
       useEffect(()=>localStorage.setItem('f5.isAdmin',isAdmin?'1':'0'),[isAdmin]);
+
+      const loadExternalPlayers=React.useCallback(async(bust=false)=>{
+        try{
+          setRemoteStatus(s=>({...s,error:null}));
+          const res=await fetch(`assets/players.json${bust?`?v=${Date.now()}`:''}`,{cache:'no-cache'});
+          if(!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data=await res.json();
+          const list=Array.isArray(data)?data:(data?.players||[]);
+          if(!Array.isArray(list)) throw new Error('Formato inválido');
+          setPlayers(cleanPlayers(list));
+          setRemoteStatus({loadedAt:new Date().toISOString(),error:null});
+        }catch(err){
+          console.error('No se pudo cargar el archivo externo',err);
+          setRemoteStatus(s=>({loadedAt:s.loadedAt||null,error:err?.message||'Error desconocido'}));
+        }
+      },[]);
+
+      useEffect(()=>{
+        loadExternalPlayers(true);
+      },[loadExternalPlayers]);
 
       // altura dinámica de la vista
       const viewportRef=useRef(null);
@@ -1610,7 +1844,17 @@
       const scoreA=teamScoreUI(teamA,map,chem,kChem)||0;
       const scoreB=teamScoreUI(teamB,map,chem,kChem)||0;
 
+      const teamStatAvg=(ids)=>STAT.map(k=>+(avg(ids.map(id=>map[id]?.[k]||0)).toFixed(2)||0));
+      const statAvgA=teamStatAvg(teamA);
+      const statAvgB=teamStatAvg(teamB);
+
       const gridCols = partidoTwoCols ? 'grid-cols-2' : 'grid-cols-1';
+      const matchLabel = (()=>{
+        if(!matchDateTime) return '';
+        const d=new Date(matchDateTime);
+        if(isNaN(d.getTime())) return matchDateTime;
+        return d.toLocaleString('es-AR',{dateStyle:'medium',timeStyle:'short'});
+      })();
 
       // install
       const [deferredPrompt,setDeferredPrompt]=useState(null);
@@ -1669,6 +1913,33 @@
           };
         });
         setFormKey(k=>k+1);
+      };
+
+      const importPlayersFile=async(file)=>{
+        if(!file)return;
+        try{
+          const txt=await file.text();
+          const data=JSON.parse(txt);
+          const list=Array.isArray(data)?data:(data?.players||[]);
+          if(!Array.isArray(list)) throw new Error('El JSON debe contener un array de jugadores');
+          setPlayers(cleanPlayers(list));
+          setRemoteStatus({loadedAt:new Date().toISOString(),error:null});
+          alert('Listado importado correctamente');
+        }catch(err){
+          console.error('Error al importar',err);
+          alert('No se pudo importar el archivo: '+(err?.message||'Error desconocido'));
+        }
+      };
+
+      const exportPlayersFile=()=>{
+        const payload={players:players.map(({_GLOBAL,...rest})=>rest)};
+        const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement('a');
+        a.href=url;
+        a.download='f5c-players.json';
+        a.click();
+        setTimeout(()=>URL.revokeObjectURL(url),1000);
       };
 
       // Modo admin oculto (5 toques en el título)
@@ -1811,82 +2082,126 @@
                     })}
                   </div>
 
-                  {/* Listado de jugadores por equipo con panel de color semitransparente */}
-                  <div className={`grid gap-3 ${gridCols}`}>
-                    {['A','B'].map((t,i)=>{
-                      const ids=t==='A'?teamA:teamB;
-                      const col=i?teamColors.B:teamColors.A;
-                      return(
-                        <div
-                          key={t}
-                          className="rounded-2xl p-3 ring-2"
-                          style={{
-                            background: hexA(col,0.75),
-                            borderColor: hexA("#000",0.75)
-                          }}
-                        >
-                          <div className="mb-2 flex items-center justify-between">
-                            <div className="text-xs font-semibold text-slate-100">
-                              Equipo {t}
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            {ids.map((id,idx)=>{
-                              const p=map[id];
-                              if(!p)return null;
-                              return(
-                                <div
-                                  key={id}
-                                  draggable
-                                  onDragStart={e=>{
-                                    e.dataTransfer.effectAllowed='move';
-                                    window.__drag={team:t,id};
-                                  }}
-                                  onDragOver={e=>e.preventDefault()}
-                                  onDrop={e=>{
-                                    e.preventDefault();
-                                    const d=window.__drag;
-                                    if(!d)return;
-                                    const fromT=d.team,toT=t;
-                                    setTeams(tt=>{
-                                      const A=[...(tt?.A||[])],B=[...(tt?.B||[])];
-                                      const fromArr=fromT==='A'?A:B;
-                                      const toArr=toT==='A'?A:B;
-                                      const fromIdx=fromArr.indexOf(d.id);
-                                      const swapId=toArr[idx];
-                                      if(fromIdx<0)return tt;
-                                      fromArr[fromIdx]=swapId;
-                                      toArr[idx]=d.id;
-                                      return {A,B};
-                                    });
-                                    setFormKey(k=>k+1);
-                                  }}
-                                  className="flex items-center justify-between rounded-xl bg-slate-900/90 p-2 ring-1 ring-slate-700"
-                                >
-                                  <button
-                                    onClick={()=>setPlayerDetailId(id)}
-                                    className="flex items-center gap-2 min-w-0"
-                                  >
-                                    <img
-                                      src={p.fotoUrl||mkAvatar(p.nombre)}
-                                      onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}}
-                                      className="h-8 w-8 rounded-full object-cover ring-1 ring-slate-700"
-                                      alt={p.nombre}
-                                    />
-                                    <span className="truncate">
-                                      {p.nombre}{p.apodo?` “${p.apodo}”`:''}
-                                    </span>
-                                  </button>
-                                  <span className={`tabular-nums text-sm font-bold ${colorNum100(Math.round(p._GLOBAL*10))}`}>
-                                    {Math.round(p._GLOBAL*10)}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
+                  {/* Comparativa visual */}
+                  <div className="rounded-2xl bg-slate-900/60 p-3 ring-1 ring-slate-700 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold text-slate-100">Comparativa de equipos</div>
+                        <div className="text-xs text-slate-300">Promedio de stats (1–10)</div>
+                      </div>
+                      <div className="flex items-center gap-3 text-[11px] text-slate-200">
+                        <div className="flex items-center gap-1">
+                          <span className="h-3 w-3 rounded-full" style={{background:hexA(teamColors.A,0.85)}}></span>
+                          Equipo A
                         </div>
-                      );
-                    })}
+                        <div className="flex items-center gap-1">
+                          <span className="h-3 w-3 rounded-full" style={{background:hexA(teamColors.B,0.85)}}></span>
+                          Equipo B
+                        </div>
+                      </div>
+                    </div>
+                    {teamA.length && teamB.length ? (
+                      <>
+                        {/* Listado de jugadores por equipo con panel de color semitransparente */}
+                        <div className={`grid gap-3 ${gridCols}`}>
+                          {['A','B'].map((t,i)=>{
+                            const ids=t==='A'?teamA:teamB;
+                            const col=i?teamColors.B:teamColors.A;
+                            return(
+                              <div
+                                key={t}
+                                className="rounded-2xl p-3 ring-2"
+                                style={{
+                                  background: hexA(col,0.75),
+                                  borderColor: hexA("#000",0.75)
+                                }}
+                              >
+                                <div className="mb-2 flex items-center justify-between">
+                                  <div className="text-xs font-semibold text-slate-100">
+                                    Equipo {t}
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  {ids.map((id,idx)=>{
+                                    const p=map[id];
+                                    if(!p)return null;
+                                    return(
+                                      <div
+                                        key={id}
+                                        draggable
+                                        onDragStart={e=>{
+                                          e.dataTransfer.effectAllowed='move';
+                                          window.__drag={team:t,id};
+                                        }}
+                                        onDragOver={e=>e.preventDefault()}
+                                        onDrop={e=>{
+                                          e.preventDefault();
+                                          const d=window.__drag;
+                                          if(!d)return;
+                                          const fromT=d.team,toT=t;
+                                          setTeams(tt=>{
+                                            const A=[...(tt?.A||[])],B=[...(tt?.B||[])];
+                                            const fromArr=fromT==='A'?A:B;
+                                            const toArr=toT==='A'?A:B;
+                                            const fromIdx=fromArr.indexOf(d.id);
+                                            const swapId=toArr[idx];
+                                            if(fromIdx<0)return tt;
+                                            fromArr[fromIdx]=swapId;
+                                            toArr[idx]=d.id;
+                                            return {A,B};
+                                          });
+                                          setFormKey(k=>k+1);
+                                        }}
+                                        className="flex items-center justify-between rounded-xl bg-slate-900/90 p-2 ring-1 ring-slate-700"
+                                      >
+                                        <button
+                                          onClick={()=>setPlayerDetailId(id)}
+                                          className="flex items-center gap-2 min-w-0"
+                                        >
+                                          <img
+                                            src={p.fotoUrl||mkAvatar(p.nombre)}
+                                            onError={(e)=>{e.currentTarget.src=mkAvatar(p.nombre)}}
+                                            className="h-8 w-8 rounded-full object-cover ring-1 ring-slate-700"
+                                            alt={p.nombre}
+                                          />
+                                          <span className="truncate">
+                                            {p.nombre}{p.apodo?` “${p.apodo}”`:''}
+                                          </span>
+                                        </button>
+                                        <span className={`tabular-nums text-sm font-bold ${colorNum100(Math.round(p._GLOBAL*10))}`}>
+                                          {Math.round(p._GLOBAL*10)}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <TeamRadar
+                          statsA={statAvgA}
+                          statsB={statAvgB}
+                          colorA={teamColors.A}
+                          colorB={teamColors.B}
+                        />
+                        <BarsCompare
+                          statsA={statAvgA}
+                          statsB={statAvgB}
+                          colorA={teamColors.A}
+                          colorB={teamColors.B}
+                          twoCols={partidoTwoCols}
+                        />
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-3 rounded-xl bg-slate-800/60 p-4 text-sm text-slate-200">
+                        <span className="text-xl">ℹ️</span>
+                        <div>
+                          <div className="font-semibold text-slate-100">Esperando equipos</div>
+                          <div className="text-slate-300">Armá dos equipos para ver el radar y las barras comparativas.</div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Semáforo */}
@@ -1922,28 +2237,92 @@
 
                   {/* Formación + botones de formación abajo */}
                   <div className="mt-2 rounded-2xl bg-slate-900/50 p-3 ring-1 ring-slate-700 space-y-3">
-
-                    <FormationBoard
-                      key={formKey}
-                      teamA={teamA}
-                      teamB={teamB}
-                      map={map}
-                      scale={formScale}
-                    />
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={resetFormation}
-                        className="rounded-xl px-4 py-2 text-sm bg-slate-900 hover:bg-slate-800 ring-1 ring-slate-700"
-                      >
-                        🔄 Reset formación
-                      </button>
-                      <button
-                        onClick={shuffleInsideTeams}
-                        className="rounded-xl px-4 py-2 text-sm bg-slate-900 hover:bg-slate-800 ring-1 ring-slate-700"
-                      >
-                        ⇅ Mezclar posiciones
-                      </button>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <div className="text-sm font-semibold text-slate-100">Formación en la cancha</div>
+                        <div className="text-xs text-slate-300">Desplegá para editar, arrastrar y exportar</div>
+                      </div>
+                      <div className="flex flex-wrap gap-2 justify-end">
+                        <button
+                          onClick={()=>setFieldOpen(o=>!o)}
+                          className={`rounded-xl px-3 py-2 text-sm ring-1 ${
+                            fieldOpen
+                              ? 'bg-emerald-700 text-white ring-emerald-500'
+                              : 'bg-slate-900 text-slate-100 ring-slate-700 hover:bg-slate-800'
+                          }`}
+                        >
+                          {fieldOpen?'Ocultar cancha':'Desplegar cancha'}
+                        </button>
+                        {fieldOpen && (
+                          <div className="flex items-center gap-2">
+                            <label className="text-xs text-slate-300">Zoom</label>
+                            <input
+                              type="range"
+                              min="0.40"
+                              max="0.80"
+                              step="0.02"
+                              value={formScale}
+                              onChange={e=>setFormScale(parseFloat(e.target.value))}
+                              className="w-28 accent-emerald-500"
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
+
+                    {fieldOpen ? (
+                      <>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <label className="flex flex-col gap-1 text-xs text-slate-200">
+                            <span className="font-semibold">ESTADIO</span>
+                            <input
+                              value={stadium}
+                              onChange={e=>setStadium(e.target.value)}
+                              placeholder="Nombre del estadio"
+                              className="rounded-xl bg-slate-900/70 px-3 py-2 text-sm ring-1 ring-slate-700 placeholder:text-slate-500"
+                            />
+                          </label>
+                          <label className="flex flex-col gap-1 text-xs text-slate-200">
+                            <span className="font-semibold">FECHA Y HORA</span>
+                            <input
+                              type="datetime-local"
+                              value={matchDateTime}
+                              onChange={e=>setMatchDateTime(e.target.value)}
+                              className="rounded-xl bg-slate-900/70 px-3 py-2 text-sm ring-1 ring-slate-700"
+                            />
+                          </label>
+                        </div>
+
+                        <FormationBoard
+                          key={formKey}
+                          teamA={teamA}
+                          teamB={teamB}
+                          map={map}
+                          scale={formScale}
+                          open={fieldOpen}
+                          stadiumLabel={stadium}
+                          matchInfo={matchLabel}
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            onClick={resetFormation}
+                            className="rounded-xl px-4 py-2 text-sm bg-slate-900 hover:bg-slate-800 ring-1 ring-slate-700"
+                          >
+                            🔄 Reset formación
+                          </button>
+                          <button
+                            onClick={shuffleInsideTeams}
+                            className="rounded-xl px-4 py-2 text-sm bg-slate-900 hover:bg-slate-800 ring-1 ring-slate-700"
+                          >
+                            ⇅ Mezclar posiciones
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="rounded-xl bg-slate-900/70 p-3 text-sm text-slate-200 ring-1 ring-slate-800">
+                        Desplegá la cancha para mover jugadores, completar estadio/fecha y acceder a descargar, copiar o compartir la formación.
+                      </div>
+                    )}
                   </div>
                 </div>
               </section>
@@ -2064,6 +2443,10 @@
               }}
               isAdmin={isAdmin}
               setIsAdmin={setIsAdmin}
+              onImportPlayers={importPlayersFile}
+              onExportPlayers={exportPlayersFile}
+              onReloadPlayers={loadExternalPlayers}
+              remoteStatus={remoteStatus}
             />
           )}
 
