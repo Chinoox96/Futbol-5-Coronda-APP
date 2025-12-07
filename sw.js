@@ -1,5 +1,5 @@
 // sw.js — cache con bust y control inmediato
-const CACHE = 'f5c-v24'; // <- súbelo cuando cambies assets
+const CACHE = 'f5c-v25'; // <- súbelo cuando cambies assets
 const ASSETS = [
   './',
   './index.html',
