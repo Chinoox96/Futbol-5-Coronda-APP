@@ -1767,6 +1767,26 @@
         loadExternalPlayers(true);
       },[loadExternalPlayers]);
 
+      const loadExternalPlayers=React.useCallback(async(bust=false)=>{
+        try{
+          setRemoteStatus(s=>({...s,error:null}));
+          const res=await fetch(`assets/players.json${bust?`?v=${Date.now()}`:''}`,{cache:'no-cache'});
+          if(!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data=await res.json();
+          const list=Array.isArray(data)?data:(data?.players||[]);
+          if(!Array.isArray(list)) throw new Error('Formato inválido');
+          setPlayers(cleanPlayers(list));
+          setRemoteStatus({loadedAt:new Date().toISOString(),error:null});
+        }catch(err){
+          console.error('No se pudo cargar el archivo externo',err);
+          setRemoteStatus(s=>({loadedAt:s.loadedAt||null,error:err?.message||'Error desconocido'}));
+        }
+      },[]);
+
+      useEffect(()=>{
+        loadExternalPlayers(true);
+      },[loadExternalPlayers]);
+
       // altura dinámica de la vista
       const viewportRef=useRef(null);
       const pageRefs=useRef({partido:null,plantel:null});
