@@ -915,7 +915,7 @@
                 <span className="font-semibold text-slate-100">{SL[k]}</span>
                 <span className="tabular-nums">{a.toFixed(1)} vs {b.toFixed(1)}</span>
               </div>
-              <div className="relative h-3 overflow-hidden rounded-full bg-slate-800 ring-1 ring-slate-700">
+              <div className="relative h-3 overflow-hidden rounded-full bg-slate-900/80 ring-1 ring-slate-700">
                 <div
                   className="absolute left-0 top-0 h-full"
                   style={{
@@ -1159,15 +1159,24 @@
       const set=(k,v)=>setF(s=>({...s,[k]:v}));
       const setSub=(k,i,v)=>setF(s=>{
         const subs=JSON.parse(JSON.stringify(s.subs));
-        subs[k][i].v=+v||1;
-        const main=Math.round(avg(subs[k].map(x=>+x.v||1)));
-        return {...s,subs,[k]:main};
+        subs[k][i].v=clamp(+v||1,1,10);
+        return {...s,subs};
       });
 
       const submit=()=>{
         const id=isEdit?f.id:String(Date.now());
         const p={...f,id};
-        STAT.forEach(k=>p[k]=clamp(Math.round(p[k]),1,10));
+        const derived=Object.fromEntries(
+          STAT.map(k=>[
+            k,
+            clamp(
+              Math.round(avg((p.subs?.[k]||[]).map(x=>+x.v||0))||p[k]),
+              1,
+              10
+            )
+          ])
+        );
+        Object.assign(p,derived);
         p._GLOBAL=globalOf(p);
         onSave(p);
         onClose();
@@ -1201,8 +1210,8 @@
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-              <div className="md:col-span-2 grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-3 text-sm">
+              <div className="grid grid-cols-2 gap-2">
                 <label className="flex flex-col gap-1">
                   Nombre
                   <input
@@ -1299,22 +1308,6 @@
                 </div>
               </div>
 
-              {/* Stats solo lectura (dependen de substats) */}
-              <div className="grid grid-cols-2 gap-2">
-                {STAT.map(k=>(
-                  <label key={k} className="flex flex-col gap-1">
-                    {SL[k]} (promedio)
-                    <input
-                      type="number"
-                      min="1"
-                      max="10"
-                      value={f[k]}
-                      readOnly
-                      className="rounded bg-slate-800/70 px-2 py-1 ring-1 ring-slate-700 text-slate-400 cursor-not-allowed"
-                    />
-                  </label>
-                ))}
-              </div>
             </div>
 
             {/* Substats */}
@@ -1322,7 +1315,7 @@
               {STAT.map(k=>(
                 <div key={k} className="rounded-xl bg-slate-800/60 p-3 ring-1 ring-slate-700">
                   <div className="mb-2 text-sm font-semibold">
-                    {SL[k]} — Sub-stats (promedio → {f[k]})
+                    {SL[k]} — Sub-stats (promedio → {Math.round(avg((f.subs?.[k]||[]).map(it=>+it.v||0))||f[k])})
                   </div>
                   <div className="grid gap-2">
                     {(f.subs[k]||[]).map((it,i)=>(
@@ -1555,7 +1548,7 @@
                 <li><b>EQP</b>: Colaboración, Disciplina, Liderazgo</li>
               </ul>
               <div className="mt-1 text-slate-300">
-                Cada stat es el promedio de sus substats (redondeo 1–10).
+                Podés editar cada stat directamente; el promedio de sus substats (1–10) queda como referencia.
               </div>
             </div>
             <div>
@@ -1745,6 +1738,9 @@
       const teamStatAvg=(ids)=>STAT.map(k=>+(avg(ids.map(id=>map[id]?.[k]||0)).toFixed(2)||0));
       const statAvgA=teamStatAvg(teamA);
       const statAvgB=teamStatAvg(teamB);
+
+      const teamNamesA=teamA.map(id=>map[id]?.nombre).filter(Boolean);
+      const teamNamesB=teamB.map(id=>map[id]?.nombre).filter(Boolean);
 
       const gridCols = partidoTwoCols ? 'grid-cols-2' : 'grid-cols-1';
 
@@ -1965,18 +1961,58 @@
                         </div>
                       </div>
                     </div>
-                    <TeamRadar
-                      statsA={statAvgA}
-                      statsB={statAvgB}
-                      colorA={teamColors.A}
-                      colorB={teamColors.B}
-                    />
-                    <BarsCompare
-                      statsA={statAvgA}
-                      statsB={statAvgB}
-                      colorA={teamColors.A}
-                      colorB={teamColors.B}
-                    />
+                    {teamA.length && teamB.length ? (
+                      <>
+                        <div className="grid gap-3 rounded-xl bg-slate-900/50 p-3 ring-1 ring-slate-800">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                            {[['A',teamNamesA,teamColors.A],['B',teamNamesB,teamColors.B]].map(([label,names,col])=>{
+                              return(
+                                <div key={label} className="space-y-1">
+                                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-200">
+                                    <span className="h-2 w-2 rounded-full" style={{background:hexA(col,0.95)}}></span>
+                                    Equipo {label}
+                                  </div>
+                                  <div className="flex flex-wrap gap-1">
+                                    {names.length
+                                      ? names.map((n,idx)=>(
+                                          <span
+                                            key={idx}
+                                            className="inline-flex items-center gap-1 rounded-full bg-black/30 px-2 py-1 text-[11px] ring-1 ring-slate-800"
+                                          >
+                                            {n}
+                                          </span>
+                                        ))
+                                      : (
+                                        <span className="text-xs text-slate-400">Sin jugadores</span>
+                                      )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <TeamRadar
+                          statsA={statAvgA}
+                          statsB={statAvgB}
+                          colorA={teamColors.A}
+                          colorB={teamColors.B}
+                        />
+                        <BarsCompare
+                          statsA={statAvgA}
+                          statsB={statAvgB}
+                          colorA={teamColors.A}
+                          colorB={teamColors.B}
+                        />
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-3 rounded-xl bg-slate-800/60 p-4 text-sm text-slate-200">
+                        <span className="text-xl">ℹ️</span>
+                        <div>
+                          <div className="font-semibold text-slate-100">Esperando equipos</div>
+                          <div className="text-slate-300">Armá dos equipos para ver el radar y las barras comparativas.</div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Listado de jugadores por equipo con panel de color semitransparente */}
