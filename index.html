@@ -556,7 +556,7 @@
     };
 
     // CHIP de la cancha → avatar circular con aro de rareza, nombre y rating
-    const FieldChip = ({ p }) => {
+    const FieldChip = ({ p, mode='ring' }) => {
       const rare = rarityOf(p);
       const ring =
         rare === 'bronze'   ? 'ring-yellow-800' :
@@ -570,6 +570,42 @@
 
       const rating = Math.round((p._GLOBAL || globalOf(p)) * 10);
       const displayName = p.apodo || p.nombre;
+
+      if(mode==='card'){
+        const topStats = [...STAT]
+          .map(k=>({k,v:p[k]??0}))
+          .sort((a,b)=>b.v-a.v)
+          .slice(0,3)
+          .map(it=>it.k);
+
+        return (
+          <div className="w-[150px] md:w-[170px] rounded-xl bg-slate-900/90 border border-white/10 shadow-lg backdrop-blur-sm text-white">
+            <div className="flex items-center gap-2 px-2 pt-2">
+              <div className={`rounded-lg ring-2 ${ring} p-[2px] bg-black/50`}> 
+                <img
+                  src={src || mkAvatar(p.nombre)}
+                  onError={e => { e.currentTarget.src = mkAvatar(p.nombre); }}
+                  className="h-12 w-12 md:h-14 md:w-14 rounded-lg object-cover ring-1 ring-black/50"
+                  alt={p.nombre}
+                />
+              </div>
+              <div className="flex-1 min-w-0 leading-4">
+                <div className="text-[11px] md:text-[12px] font-semibold truncate">{displayName}</div>
+                <div className="text-[10px] text-slate-200/90">{p.posicion||'Jugador'}</div>
+              </div>
+              <div className="text-lg md:text-xl font-black text-emerald-200 tabular-nums drop-shadow">{rating}</div>
+            </div>
+            <div className="grid grid-cols-3 gap-1 px-2 pb-2 pt-1">
+              {topStats.map(k=>(
+                <div key={k} className="rounded-lg bg-white/10 px-2 py-1 text-center leading-4">
+                  <div className="text-[10px] font-semibold">{k}</div>
+                  <div className="text-[11px] md:text-xs font-black tabular-nums">{p[k] ?? '-'}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
 
       return (
         <div className="flex flex-col items-center gap-1 text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.45)]">
@@ -626,7 +662,7 @@
     };
 
     /* ========= Formación (con drag + reset) ========= */
-    const FormationBoard=({teamA=[],teamB=[],map,scale=0.5,open=false,stadiumLabel='',matchInfo=''})=>{
+    const FormationBoard=({teamA=[],teamB=[],map,scale=0.5,open=false,stadiumLabel='',matchInfo='',chipMode='ring'})=>{
       const ref=useRef(null);
       const [customPos,setCustomPos]=useState({});
       const [copied,setCopied]=useState(false);
@@ -737,12 +773,12 @@
             {open && (
               <>
                 {stadiumLabel ? (
-                  <div className="absolute left-2 top-2 text-[11px] font-bold uppercase tracking-wide text-white drop-shadow">
+                  <div className="absolute left-3 top-3 rounded-full bg-black/60 px-3 py-1 text-[13px] sm:text-base font-black uppercase tracking-[0.18em] text-white drop-shadow">
                     ESTADIO: {stadiumLabel}
                   </div>
                 ) : null}
                 {matchInfo ? (
-                  <div className="absolute right-2 top-2 text-[11px] font-semibold text-white drop-shadow text-right">
+                  <div className="absolute right-3 top-3 rounded-full bg-black/55 px-3 py-1 text-[13px] sm:text-base font-bold uppercase tracking-[0.15em] text-white drop-shadow text-right">
                     {matchInfo}
                   </div>
                 ) : null}
@@ -761,12 +797,12 @@
                       left:`${pos.x}%`,
                       top:`${pos.y}%`,
                       transform:`translate(-50%,-50%) scale(${scaleLive})`,
-                      transformOrigin:'top left'
+                      transformOrigin:'center'
                     }}
                     onMouseDown={e=>startDrag('A',id,e)}
                     onTouchStart={e=>startDrag('A',id,e)}
                   >
-                    <FieldChip p={p}/>
+                    <FieldChip p={p} mode={chipMode}/>
                   </div>
                 );
               })}
@@ -782,12 +818,12 @@
                       left:`${pos.x}%`,
                       top:`${pos.y}%`,
                       transform:`translate(-50%,-50%) scale(${scaleLive})`,
-                      transformOrigin:'top left'
+                      transformOrigin:'center'
                     }}
                     onMouseDown={e=>startDrag('B',id,e)}
                     onTouchStart={e=>startDrag('B',id,e)}
                   >
-                    <FieldChip p={p}/>
+                    <FieldChip p={p} mode={chipMode}/>
                   </div>
                 );
               })}
@@ -1681,6 +1717,10 @@
         try{return JSON.parse(localStorage.getItem('f5.teamColors')??'{"A":"#10b981","B":"#3b82f6"}');}
         catch{return{A:'#10b981',B:'#3b82f6'};}
       });
+      const[fieldChipMode,setFieldChipMode]=useState(()=>{
+        const v=localStorage.getItem('f5.fieldChipMode')||'ring';
+        return v==='card'?'card':'ring';
+      });
       const[tab,setTab]=useState('partido');
       const[form,setForm]=useState(null);
       const[settings,setSettings]=useState(false);
@@ -1705,6 +1745,27 @@
       useEffect(()=>localStorage.setItem('f5.partidoTwoCols',JSON.stringify(partidoTwoCols)),[partidoTwoCols]);
       useEffect(()=>localStorage.setItem('f5.teamColors',JSON.stringify(teamColors)),[teamColors]);
       useEffect(()=>localStorage.setItem('f5.isAdmin',isAdmin?'1':'0'),[isAdmin]);
+      useEffect(()=>localStorage.setItem('f5.fieldChipMode',fieldChipMode),[fieldChipMode]);
+
+      const loadExternalPlayers=React.useCallback(async(bust=false)=>{
+        try{
+          setRemoteStatus(s=>({...s,error:null}));
+          const res=await fetch(`assets/players.json${bust?`?v=${Date.now()}`:''}`,{cache:'no-cache'});
+          if(!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data=await res.json();
+          const list=Array.isArray(data)?data:(data?.players||[]);
+          if(!Array.isArray(list)) throw new Error('Formato inválido');
+          setPlayers(cleanPlayers(list));
+          setRemoteStatus({loadedAt:new Date().toISOString(),error:null});
+        }catch(err){
+          console.error('No se pudo cargar el archivo externo',err);
+          setRemoteStatus(s=>({loadedAt:s.loadedAt||null,error:err?.message||'Error desconocido'}));
+        }
+      },[]);
+
+      useEffect(()=>{
+        loadExternalPlayers(true);
+      },[loadExternalPlayers]);
 
       const loadExternalPlayers=React.useCallback(async(bust=false)=>{
         try{
@@ -1734,7 +1795,7 @@
         const pg=pageRefs.current[tab];if(!pg)return;
         vp.style.height=pg.scrollHeight+'px';
       };
-      useEffect(()=>{fitHeight();},[tab,players,selected,teams,formScale,partidoTwoCols]);
+      useEffect(()=>{fitHeight();},[tab,players,selected,teams,formScale,partidoTwoCols,fieldChipMode]);
       useEffect(()=>{
         const fn=()=>fitHeight();
         window.addEventListener('resize',fn,{passive:true});
@@ -2254,18 +2315,31 @@
                           {fieldOpen?'Ocultar cancha':'Desplegar cancha'}
                         </button>
                         {fieldOpen && (
-                          <div className="flex items-center gap-2">
-                            <label className="text-xs text-slate-300">Zoom</label>
-                            <input
-                              type="range"
-                              min="0.40"
-                              max="0.80"
-                              step="0.02"
-                              value={formScale}
-                              onChange={e=>setFormScale(parseFloat(e.target.value))}
-                              className="w-28 accent-emerald-500"
-                            />
-                          </div>
+                          <>
+                            <div className="flex items-center gap-2">
+                              <label className="text-xs text-slate-300">Zoom</label>
+                              <input
+                                type="range"
+                                min="0.40"
+                                max="0.80"
+                                step="0.02"
+                                value={formScale}
+                                onChange={e=>setFormScale(parseFloat(e.target.value))}
+                                className="w-28 accent-emerald-500"
+                              />
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-slate-200">
+                              <span>Vista de fichas</span>
+                              <select
+                                value={fieldChipMode}
+                                onChange={e=>setFieldChipMode(e.target.value)}
+                                className="rounded-lg bg-slate-900/80 px-2 py-1 ring-1 ring-slate-700"
+                              >
+                                <option value="ring">Aros circulares</option>
+                                <option value="card">Minicard rectangular</option>
+                              </select>
+                            </div>
+                          </>
                         )}
                       </div>
                     </div>
@@ -2302,6 +2376,7 @@
                           open={fieldOpen}
                           stadiumLabel={stadium}
                           matchInfo={matchLabel}
+                          chipMode={fieldChipMode}
                         />
                         <div className="grid grid-cols-2 gap-2">
                           <button
@@ -2319,8 +2394,23 @@
                         </div>
                       </>
                     ) : (
-                      <div className="rounded-xl bg-slate-900/70 p-3 text-sm text-slate-200 ring-1 ring-slate-800">
-                        Desplegá la cancha para mover jugadores, completar estadio/fecha y acceder a descargar, copiar o compartir la formación.
+                      <div className="space-y-2">
+                        <div className="rounded-xl bg-slate-900/60 p-2 ring-1 ring-slate-800">
+                          <FormationBoard
+                            key={formKey}
+                            teamA={teamA}
+                            teamB={teamB}
+                            map={map}
+                            scale={0.46}
+                            open={false}
+                            stadiumLabel=""
+                            matchInfo=""
+                            chipMode={fieldChipMode}
+                          />
+                        </div>
+                        <div className="rounded-xl bg-slate-900/70 p-3 text-sm text-slate-200 ring-1 ring-slate-800">
+                          Desplegá la cancha para mover jugadores, completar estadio/fecha y acceder a descargar, copiar o compartir la formación.
+                        </div>
                       </div>
                     )}
                   </div>
