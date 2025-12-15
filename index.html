@@ -604,6 +604,17 @@
         rare === 'gold'     ? 'ring-yellow-500' :
         rare === 'legendary'? 'ring-amber-300'  :
                               'ring-cyan-300';
+      const rareGrad =
+        rare === 'bronze'   ? 'from-amber-900/95 via-amber-800/90 to-amber-600/85' :
+        rare === 'silver'   ? 'from-slate-700/95 via-slate-500/85 to-slate-200/80'  :
+        rare === 'gold'     ? 'from-amber-300/98 via-amber-200/92 to-amber-100/92' :
+        rare === 'legendary'? 'from-amber-600/95 via-rose-500/90 to-indigo-500/85' :
+                              'from-cyan-700/95 via-blue-600/90 to-indigo-700/85';
+      const lightCard = rare === 'gold';
+      const statTone = lightCard
+        ? 'bg-white/80 text-slate-900 ring-slate-200/70'
+        : 'bg-black/40 text-white ring-white/25';
+      const posLabel = p.posicion || p.pos || 'Jugador';
 
       const [src, setSrc] = React.useState(p.fotoUrl || '');
       React.useEffect(() => setSrc(p.fotoUrl || ''), [p.fotoUrl]);
@@ -615,40 +626,48 @@
         const topStats = [...STAT]
           .map(k=>({k,v:p[k]??0}))
           .sort((a,b)=>b.v-a.v)
-          .slice(0,3)
+          .slice(0,6)
           .map(it=>it.k);
 
         return (
-          <div className="w-[150px] md:w-[170px] rounded-xl bg-slate-900/90 border border-white/10 shadow-lg backdrop-blur-sm text-white">
-            <div className="flex items-center gap-2 px-2 pt-2">
-              <div className={`rounded-lg ring-2 ${ring} p-[2px] bg-black/50`}> 
-                <img
-                  src={src || mkAvatar(p.nombre)}
-                  onError={e => { e.currentTarget.src = mkAvatar(p.nombre); }}
-                  className="h-12 w-12 md:h-14 md:w-14 rounded-lg object-cover ring-1 ring-black/50"
-                  alt={p.nombre}
-                />
+          <div className={`relative w-[120px] md:w-[140px] aspect-[2/3] rounded-2xl ring-2 ${ring} shadow-xl bg-gradient-to-br ${rareGrad} ${lightCard?'text-slate-900':'text-white'}`}>
+            <div className="relative h-full flex flex-col px-2 pt-2 pb-2">
+              <div className="flex items-start justify-between leading-none">
+                <div className={`text-2xl font-black drop-shadow ${lightCard?'text-emerald-900':'text-emerald-100'}`}>{rating}</div>
+                <div className={`text-[11px] font-extrabold tracking-[0.18em] uppercase italic ${lightCard?'text-slate-800':'text-white/90'}`}>{p.pos||'F5'}</div>
               </div>
-              <div className="flex-1 min-w-0 leading-4">
-                <div className="text-[11px] md:text-[12px] font-semibold truncate">{displayName}</div>
-                <div className="text-[10px] text-slate-200/90">{p.posicion||'Jugador'}</div>
-              </div>
-              <div className="text-lg md:text-xl font-black text-emerald-200 tabular-nums drop-shadow">{rating}</div>
-            </div>
-            <div className="grid grid-cols-3 gap-1 px-2 pb-2 pt-1">
-              {topStats.map(k=>(
-                <div key={k} className="rounded-lg bg-white/10 px-2 py-1 text-center leading-4">
-                  <div className="text-[10px] font-semibold">{k}</div>
-                  <div className="text-[11px] md:text-xs font-black tabular-nums">{p[k] ?? '-'}</div>
+
+              <div className="mt-1 grid place-items-center">
+                <div className={`rounded-2xl ring-2 ${ring} p-[3px] ${lightCard?'bg-white/70':'bg-black/25'} backdrop-blur`}>
+                  <img
+                    src={src || mkAvatar(p.nombre)}
+                    onError={e => { e.currentTarget.src = mkAvatar(p.nombre); }}
+                    className={`h-16 w-16 rounded-xl object-cover ring-1 ${lightCard?'ring-white/50':'ring-black/40'}`}
+                    alt={p.nombre}
+                  />
                 </div>
-              ))}
+              </div>
+
+              <div className="mt-2 text-center leading-4" style={{fontFamily:'\"Inter\",\"Segoe UI\",\"Arial\",sans-serif'}}>
+                <div className="text-[13px] md:text-[14px] font-black uppercase tracking-wide truncate leading-tight">{displayName}</div>
+                <div className={`text-[11px] ${lightCard?'text-slate-700':'text-white/85'}`}>{posLabel}</div>
+              </div>
+
+              <div className="mt-auto grid grid-cols-2 gap-[4px] pt-2 pb-1">
+                {topStats.map(k=>(
+                  <div key={k} className={`rounded-lg px-1.5 py-1 text-center leading-4 ring-1 ${statTone}`}>
+                    <div className="text-[9px] font-semibold tracking-tight leading-tight">{k}</div>
+                    <div className="text-[10px] md:text-[11px] font-black tabular-nums drop-shadow-sm">{p[k] ?? '-'}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         );
       }
 
       return (
-        <div className="flex flex-col items-center gap-1 text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.45)]">
+        <div className="flex flex-col items-center gap-1 text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.45)]" style={{fontFamily:'"Inter","Segoe UI","Arial",sans-serif'}}>
           <div className={`rounded-full ring-4 ${ring} p-[3px] bg-slate-900/80`}>
             <img
               src={src || mkAvatar(p.nombre)}
@@ -657,10 +676,10 @@
               alt={p.nombre}
             />
           </div>
-          <div className="text-[11px] md:text-[12px] font-semibold leading-4 text-center max-w-[116px] truncate">
+          <div className="text-[12px] md:text-[13px] font-bold leading-[1.2] text-center max-w-[126px] truncate px-1">
             {displayName}
           </div>
-          <div className="text-[10px] md:text-[11px] font-black leading-3 text-slate-200">
+          <div className="text-[11px] md:text-[12px] font-black leading-4 text-slate-200">
             {rating}
           </div>
         </div>
@@ -813,12 +832,12 @@
             {open && (
               <>
                 {stadiumLabel ? (
-                  <div className="absolute left-3 top-3 rounded-full bg-black/60 px-3 py-1 text-[13px] sm:text-base font-black uppercase tracking-[0.18em] text-white drop-shadow">
-                    ESTADIO: {stadiumLabel}
+                  <div className="absolute left-4 top-3 text-white text-sm sm:text-lg font-black uppercase italic tracking-[0.26em] drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)] leading-tight">
+                    {stadiumLabel}
                   </div>
                 ) : null}
                 {matchInfo ? (
-                  <div className="absolute right-3 top-3 rounded-full bg-black/55 px-3 py-1 text-[13px] sm:text-base font-bold uppercase tracking-[0.15em] text-white drop-shadow text-right">
+                  <div className="absolute right-4 top-3 text-white text-xs sm:text-base font-extrabold uppercase italic tracking-[0.20em] drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)] text-right leading-tight">
                     {matchInfo}
                   </div>
                 ) : null}
@@ -1979,7 +1998,12 @@
         if(!matchDateTime) return '';
         const d=new Date(matchDateTime);
         if(isNaN(d.getTime())) return matchDateTime;
-        return d.toLocaleString('es-AR',{dateStyle:'medium',timeStyle:'short'});
+        return d.toLocaleString('es-AR',{
+          dateStyle:'medium',
+          timeStyle:'short',
+          hour12:false,
+          hourCycle:'h23'
+        });
       })();
 
       // install
@@ -2413,11 +2437,11 @@
                       <>
                         <div className="grid gap-2 sm:grid-cols-2">
                           <label className="flex flex-col gap-1 text-xs text-slate-200">
-                            <span className="font-semibold">ESTADIO</span>
+                            <span className="font-semibold">Estadio/Cancha</span>
                             <input
                               value={stadium}
                               onChange={e=>setStadium(e.target.value)}
-                              placeholder="Nombre del estadio"
+                              placeholder="Nombre del estadio o cancha"
                               className="rounded-xl bg-slate-900/70 px-3 py-2 text-sm ring-1 ring-slate-700 placeholder:text-slate-500"
                             />
                           </label>
