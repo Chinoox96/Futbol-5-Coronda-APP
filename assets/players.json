@@ -1,16 +1,856 @@
 {
   "players": [
-    {"id":"1","nombre":"Leo","apodo":"","equipoPropio":"La 10","equipoFavorito":"Barcelona","equipoFavoritoEscudoUrl":"","fotoUrl":"https://api.dicebear.com/7.x/identicon/svg?seed=Leo&backgroundColor=0f172a","ATA":10,"PAS":9,"REG":10,"VEL":9,"DEF":4,"FIS":7,"ARQ":3,"EQP":8,"pie":"Izquierdo","estrellas":5,"especial":true,"legendaria":true,"bandera":"🇦🇷","pos":"LA"},
-    {"id":"2","nombre":"Fabi","apodo":"","equipoPropio":"La 10","equipoFavorito":"Colón","equipoFavoritoEscudoUrl":"","fotoUrl":"https://api.dicebear.com/7.x/identicon/svg?seed=Fabi&backgroundColor=0f172a","ATA":7,"PAS":8,"REG":7,"VEL":7,"DEF":7,"FIS":7,"ARQ":4,"EQP":9,"pie":"Derecho","estrellas":4,"bandera":"🇦🇷","pos":"MU"},
-    {"id":"3","nombre":"Cuti","apodo":"","equipoPropio":"Muralla","equipoFavorito":"Belgrano","equipoFavoritoEscudoUrl":"","fotoUrl":"https://api.dicebear.com/7.x/identicon/svg?seed=Cuti&backgroundColor=0f172a","ATA":5,"PAS":6,"REG":5,"VEL":7,"DEF":10,"FIS":9,"ARQ":4,"EQP":7,"pie":"Derecho","estrellas":4,"bandera":"🇦🇷","pos":"TI"},
-    {"id":"4","nombre":"Dibu","apodo":"","equipoPropio":"Muralla","equipoFavorito":"Arsenal","equipoFavoritoEscudoUrl":"","fotoUrl":"https://api.dicebear.com/7.x/identicon/svg?seed=Dibu&backgroundColor=0f172a","ATA":3,"PAS":5,"REG":4,"VEL":5,"DEF":8,"FIS":8,"ARQ":10,"EQP":7,"pie":"Derecho","estrellas":5,"bandera":"🇦🇷","pos":"AR"},
-    {"id":"5","nombre":"Papu","apodo":"","equipoPropio":"Tiki","equipoFavorito":"San Lorenzo","equipoFavoritoEscudoUrl":"","fotoUrl":"https://api.dicebear.com/7.x/identicon/svg?seed=Papu&backgroundColor=0f172a","ATA":8,"PAS":8,"REG":9,"VEL":8,"DEF":5,"FIS":6,"ARQ":3,"EQP":7,"pie":"Derecho","estrellas":4,"bandera":"🇦🇷","pos":"LA"},
-    {"id":"6","nombre":"Nico","apodo":"","equipoPropio":"Tiki","equipoFavorito":"Boca","equipoFavoritoEscudoUrl":"","fotoUrl":"https://api.dicebear.com/7.x/identicon/svg?seed=Nico&backgroundColor=0f172a","ATA":7,"PAS":7,"REG":7,"VEL":8,"DEF":6,"FIS":7,"ARQ":4,"EQP":6,"pie":"Derecho","estrellas":4,"bandera":"🇦🇷","pos":"LA"},
-    {"id":"7","nombre":"Chino","apodo":"","equipoPropio":"Muralla","equipoFavorito":"Newell's","equipoFavoritoEscudoUrl":"","fotoUrl":"https://api.dicebear.com/7.x/identicon/svg?seed=Chino&backgroundColor=0f172a","ATA":5,"PAS":6,"REG":5,"VEL":6,"DEF":8,"FIS":7,"ARQ":8,"EQP":6,"pie":"Izquierdo","estrellas":3,"bandera":"🇦🇷","pos":"AR"},
-    {"id":"8","nombre":"Joa","apodo":"","equipoPropio":"La 10","equipoFavorito":"River","equipoFavoritoEscudoUrl":"","fotoUrl":"https://api.dicebear.com/7.x/identicon/svg?seed=Joa&backgroundColor=0f172a","ATA":6,"PAS":6,"REG":6,"VEL":7,"DEF":8,"FIS":8,"ARQ":5,"EQP":7,"pie":"Derecho","estrellas":3,"bandera":"🇦🇷","pos":"TI"},
-    {"id":"9","nombre":"Fideo","apodo":"","equipoPropio":"Tiki","equipoFavorito":"Rosario C.","equipoFavoritoEscudoUrl":"","fotoUrl":"https://api.dicebear.com/7.x/identicon/svg?seed=Fideo&backgroundColor=0f172a","ATA":8,"PAS":9,"REG":9,"VEL":8,"DEF":6,"FIS":6,"ARQ":3,"EQP":8,"pie":"Izquierdo","estrellas":5,"bandera":"🇦🇷","pos":"LA"},
-    {"id":"10","nombre":"Kuni","apodo":"","equipoPropio":"La 10","equipoFavorito":"Independiente","equipoFavoritoEscudoUrl":"","fotoUrl":"https://api.dicebear.com/7.x/identicon/svg?seed=Kuni&backgroundColor=0f172a","ATA":9,"PAS":7,"REG":8,"VEL":9,"DEF":5,"FIS":7,"ARQ":3,"EQP":7,"pie":"Derecho","estrellas":4,"bandera":"🇦🇷","pos":"MU"},
-    {"id":"11","nombre":"Tomi","apodo":"","equipoPropio":"Muralla","equipoFavorito":"Talleres","equipoFavoritoEscudoUrl":"","fotoUrl":"https://api.dicebear.com/7.x/identicon/svg?seed=Tomi&backgroundColor=0f172a","ATA":6,"PAS":7,"REG":6,"VEL":7,"DEF":7,"FIS":7,"ARQ":5,"EQP":6,"pie":"Derecho","estrellas":3,"bandera":"🇦🇷","pos":"LA"},
-    {"id":"12","nombre":"Gonza","apodo":"","equipoPropio":"Tiki","equipoFavorito":"Racing","equipoFavoritoEscudoUrl":"","fotoUrl":"https://api.dicebear.com/7.x/identicon/svg?seed=Gonza&backgroundColor=0f172a","ATA":7,"PAS":6,"REG":7,"VEL":8,"DEF":6,"FIS":7,"ARQ":4,"EQP":6,"pie":"Derecho","estrellas":3,"bandera":"🇦🇷","pos":"TI"}
+    {
+      "id": "1",
+      "nombre": "Frankito",
+      "apodo": "",
+      "equipoPropio": "F5C",
+      "equipoFavorito": "",
+      "equipoFavoritoEscudoUrl": "",
+      "fotoUrl": "https://api.dicebear.com/7.x/avataaars/png?seed=Frankito&backgroundColor=0f172a&size=160",
+      "ATA": 7,
+      "PAS": 7,
+      "REG": 7,
+      "VEL": 7,
+      "DEF": 6,
+      "FIS": 7,
+      "ARQ": 3,
+      "EQP": 7,
+      "pie": "Derecho",
+      "estrellas": 3,
+      "bandera": "🇦🇷",
+      "pos": "MU",
+      "subs": {
+        "ATA": [
+          { "n": "Posición", "v": 8 },
+          { "n": "Definición", "v": 6 },
+          { "n": "Potencia", "v": 7 }
+        ],
+        "PAS": [
+          { "n": "Visión", "v": 7 },
+          { "n": "Pase corto", "v": 6 },
+          { "n": "Pase largo", "v": 8 }
+        ],
+        "REG": [
+          { "n": "Agilidad", "v": 7 },
+          { "n": "Control", "v": 6 },
+          { "n": "Equilibrio", "v": 8 }
+        ],
+        "VEL": [
+          { "n": "Aceleración", "v": 6 },
+          { "n": "Pico", "v": 7 },
+          { "n": "Arranque", "v": 8 }
+        ],
+        "DEF": [
+          { "n": "Marcaje", "v": 6 },
+          { "n": "Anticipación", "v": 5 },
+          { "n": "Entradas", "v": 7 }
+        ],
+        "FIS": [
+          { "n": "Resistencia", "v": 8 },
+          { "n": "Fuerza", "v": 6 },
+          { "n": "Salto", "v": 7 }
+        ],
+        "ARQ": [
+          { "n": "Reflejos", "v": 3 },
+          { "n": "Manos", "v": 2 },
+          { "n": "Saque", "v": 4 }
+        ],
+        "EQP": [
+          { "n": "Colaboración", "v": 8 },
+          { "n": "Disciplina", "v": 7 },
+          { "n": "Liderazgo", "v": 6 }
+        ]
+      },
+      "chemOverrides": {
+        "2": 6,
+        "3": 7,
+        "7": 4,
+        "11": 9,
+        "5": 5
+      },
+      "posicion": "MU"
+    },
+    {
+      "id": "2",
+      "nombre": "Chino",
+      "apodo": "",
+      "equipoPropio": "F5C",
+      "equipoFavorito": "Newell's",
+      "equipoFavoritoEscudoUrl": "",
+      "fotoUrl": "https://api.dicebear.com/7.x/avataaars/png?seed=Chino&backgroundColor=0f172a&size=160",
+      "ATA": 5,
+      "PAS": 6,
+      "REG": 5,
+      "VEL": 6,
+      "DEF": 8,
+      "FIS": 7,
+      "ARQ": 9,
+      "EQP": 6,
+      "pie": "Izquierdo",
+      "estrellas": 3,
+      "bandera": "🇦🇷",
+      "pos": "AR",
+      "subs": {
+        "ATA": [
+          { "n": "Posición", "v": 4 },
+          { "n": "Definición", "v": 6 },
+          { "n": "Potencia", "v": 5 }
+        ],
+        "PAS": [
+          { "n": "Visión", "v": 6 },
+          { "n": "Pase corto", "v": 5 },
+          { "n": "Pase largo", "v": 7 }
+        ],
+        "REG": [
+          { "n": "Agilidad", "v": 5 },
+          { "n": "Control", "v": 6 },
+          { "n": "Equilibrio", "v": 5 }
+        ],
+        "VEL": [
+          { "n": "Aceleración", "v": 6 },
+          { "n": "Pico", "v": 5 },
+          { "n": "Arranque", "v": 7 }
+        ],
+        "DEF": [
+          { "n": "Marcaje", "v": 9 },
+          { "n": "Anticipación", "v": 8 },
+          { "n": "Entradas", "v": 7 }
+        ],
+        "FIS": [
+          { "n": "Resistencia", "v": 7 },
+          { "n": "Fuerza", "v": 7 },
+          { "n": "Salto", "v": 7 }
+        ],
+        "ARQ": [
+          { "n": "Reflejos", "v": 9 },
+          { "n": "Manos", "v": 9 },
+          { "n": "Saque", "v": 8 }
+        ],
+        "EQP": [
+          { "n": "Colaboración", "v": 6 },
+          { "n": "Disciplina", "v": 5 },
+          { "n": "Liderazgo", "v": 6 }
+        ]
+      },
+      "chemOverrides": {
+        "1": 6,
+        "4": 6,
+        "7": 3,
+        "10": 8,
+        "11": 7
+      },
+      "posicion": "Arquero"
+    },
+    {
+      "id": "3",
+      "nombre": "Gaspar",
+      "apodo": "",
+      "equipoPropio": "F5C",
+      "equipoFavorito": "",
+      "equipoFavoritoEscudoUrl": "",
+      "fotoUrl": "https://api.dicebear.com/7.x/avataaars/png?seed=Gaspar&backgroundColor=0f172a&size=160",
+      "ATA": 5,
+      "PAS": 6,
+      "REG": 5,
+      "VEL": 6,
+      "DEF": 9,
+      "FIS": 8,
+      "ARQ": 4,
+      "EQP": 7,
+      "pie": "Derecho",
+      "estrellas": 3,
+      "bandera": "🇦🇷",
+      "pos": "TI",
+      "subs": {
+        "ATA": [
+          { "n": "Posición", "v": 6 },
+          { "n": "Definición", "v": 5 },
+          { "n": "Potencia", "v": 4 }
+        ],
+        "PAS": [
+          { "n": "Visión", "v": 8 },
+          { "n": "Pase corto", "v": 7 },
+          { "n": "Pase largo", "v": 6 }
+        ],
+        "REG": [
+          { "n": "Agilidad", "v": 5 },
+          { "n": "Control", "v": 7 },
+          { "n": "Equilibrio", "v": 5 }
+        ],
+        "VEL": [
+          { "n": "Aceleración", "v": 6 },
+          { "n": "Pico", "v": 7 },
+          { "n": "Arranque", "v": 5 }
+        ],
+        "DEF": [
+          { "n": "Marcaje", "v": 9 },
+          { "n": "Anticipación", "v": 9 },
+          { "n": "Entradas", "v": 8 }
+        ],
+        "FIS": [
+          { "n": "Resistencia", "v": 8 },
+          { "n": "Fuerza", "v": 7 },
+          { "n": "Salto", "v": 9 }
+        ],
+        "ARQ": [
+          { "n": "Reflejos", "v": 4 },
+          { "n": "Manos", "v": 4 },
+          { "n": "Saque", "v": 4 }
+        ],
+        "EQP": [
+          { "n": "Colaboración", "v": 7 },
+          { "n": "Disciplina", "v": 7 },
+          { "n": "Liderazgo", "v": 7 }
+        ]
+      },
+      "chemOverrides": {
+        "1": 7,
+        "5": 6,
+        "6": 4,
+        "8": 9,
+        "12": 6
+      },
+      "posicion": "TI"
+    },
+    {
+      "id": "4",
+      "nombre": "Seba",
+      "apodo": "",
+      "equipoPropio": "F5C",
+      "equipoFavorito": "",
+      "equipoFavoritoEscudoUrl": "",
+      "fotoUrl": "https://api.dicebear.com/7.x/avataaars/png?seed=Seba&backgroundColor=0f172a&size=160",
+      "ATA": 8,
+      "PAS": 6,
+      "REG": 8,
+      "VEL": 7,
+      "DEF": 4,
+      "FIS": 6,
+      "ARQ": 2,
+      "EQP": 6,
+      "pie": "Derecho",
+      "estrellas": 3,
+      "bandera": "🇦🇷",
+      "pos": "LA",
+      "subs": {
+        "ATA": [
+          { "n": "Posición", "v": 9 },
+          { "n": "Definición", "v": 8 },
+          { "n": "Potencia", "v": 7 }
+        ],
+        "PAS": [
+          { "n": "Visión", "v": 6 },
+          { "n": "Pase corto", "v": 6 },
+          { "n": "Pase largo", "v": 5 }
+        ],
+        "REG": [
+          { "n": "Agilidad", "v": 8 },
+          { "n": "Control", "v": 8 },
+          { "n": "Equilibrio", "v": 7 }
+        ],
+        "VEL": [
+          { "n": "Aceleración", "v": 7 },
+          { "n": "Pico", "v": 7 },
+          { "n": "Arranque", "v": 6 }
+        ],
+        "DEF": [
+          { "n": "Marcaje", "v": 4 },
+          { "n": "Anticipación", "v": 4 },
+          { "n": "Entradas", "v": 5 }
+        ],
+        "FIS": [
+          { "n": "Resistencia", "v": 6 },
+          { "n": "Fuerza", "v": 6 },
+          { "n": "Salto", "v": 6 }
+        ],
+        "ARQ": [
+          { "n": "Reflejos", "v": 2 },
+          { "n": "Manos", "v": 2 },
+          { "n": "Saque", "v": 2 }
+        ],
+        "EQP": [
+          { "n": "Colaboración", "v": 6 },
+          { "n": "Disciplina", "v": 6 },
+          { "n": "Liderazgo", "v": 6 }
+        ]
+      },
+      "chemOverrides": {
+        "2": 4,
+        "7": 8,
+        "5": 7,
+        "9": 6,
+        "10": 5
+      },
+      "posicion": "LA"
+    },
+    {
+      "id": "5",
+      "nombre": "Martin",
+      "apodo": "",
+      "equipoPropio": "F5C",
+      "equipoFavorito": "",
+      "equipoFavoritoEscudoUrl": "",
+      "fotoUrl": "https://api.dicebear.com/7.x/avataaars/png?seed=Martin&backgroundColor=0f172a&size=160",
+      "ATA": 4,
+      "PAS": 5,
+      "REG": 4,
+      "VEL": 5,
+      "DEF": 9,
+      "FIS": 8,
+      "ARQ": 3,
+      "EQP": 6,
+      "pie": "Derecho",
+      "estrellas": 3,
+      "bandera": "🇦🇷",
+      "pos": "TI",
+      "subs": {
+        "ATA": [
+          { "n": "Posición", "v": 4 },
+          { "n": "Definición", "v": 4 },
+          { "n": "Potencia", "v": 5 }
+        ],
+        "PAS": [
+          { "n": "Visión", "v": 5 },
+          { "n": "Pase corto", "v": 6 },
+          { "n": "Pase largo", "v": 5 }
+        ],
+        "REG": [
+          { "n": "Agilidad", "v": 4 },
+          { "n": "Control", "v": 5 },
+          { "n": "Equilibrio", "v": 4 }
+        ],
+        "VEL": [
+          { "n": "Aceleración", "v": 5 },
+          { "n": "Pico", "v": 5 },
+          { "n": "Arranque", "v": 5 }
+        ],
+        "DEF": [
+          { "n": "Marcaje", "v": 9 },
+          { "n": "Anticipación", "v": 9 },
+          { "n": "Entradas", "v": 8 }
+        ],
+        "FIS": [
+          { "n": "Resistencia", "v": 8 },
+          { "n": "Fuerza", "v": 8 },
+          { "n": "Salto", "v": 8 }
+        ],
+        "ARQ": [
+          { "n": "Reflejos", "v": 3 },
+          { "n": "Manos", "v": 3 },
+          { "n": "Saque", "v": 3 }
+        ],
+        "EQP": [
+          { "n": "Colaboración", "v": 6 },
+          { "n": "Disciplina", "v": 7 },
+          { "n": "Liderazgo", "v": 6 }
+        ]
+      },
+      "chemOverrides": {
+        "3": 6,
+        "8": 7,
+        "10": 5,
+        "6": 4,
+        "12": 8
+      },
+      "posicion": "TI"
+    },
+    {
+      "id": "6",
+      "nombre": "Juan",
+      "apodo": "",
+      "equipoPropio": "F5C",
+      "equipoFavorito": "",
+      "equipoFavoritoEscudoUrl": "",
+      "fotoUrl": "https://api.dicebear.com/7.x/avataaars/png?seed=Juan&backgroundColor=0f172a&size=160",
+      "ATA": 5,
+      "PAS": 5,
+      "REG": 5,
+      "VEL": 5,
+      "DEF": 5,
+      "FIS": 5,
+      "ARQ": 2,
+      "EQP": 6,
+      "pie": "Derecho",
+      "estrellas": 2,
+      "bandera": "🇦🇷",
+      "pos": "MU",
+      "subs": {
+        "ATA": [
+          { "n": "Posición", "v": 5 },
+          { "n": "Definición", "v": 5 },
+          { "n": "Potencia", "v": 5 }
+        ],
+        "PAS": [
+          { "n": "Visión", "v": 5 },
+          { "n": "Pase corto", "v": 5 },
+          { "n": "Pase largo", "v": 5 }
+        ],
+        "REG": [
+          { "n": "Agilidad", "v": 5 },
+          { "n": "Control", "v": 5 },
+          { "n": "Equilibrio", "v": 5 }
+        ],
+        "VEL": [
+          { "n": "Aceleración", "v": 5 },
+          { "n": "Pico", "v": 5 },
+          { "n": "Arranque", "v": 5 }
+        ],
+        "DEF": [
+          { "n": "Marcaje", "v": 5 },
+          { "n": "Anticipación", "v": 5 },
+          { "n": "Entradas", "v": 5 }
+        ],
+        "FIS": [
+          { "n": "Resistencia", "v": 5 },
+          { "n": "Fuerza", "v": 5 },
+          { "n": "Salto", "v": 5 }
+        ],
+        "ARQ": [
+          { "n": "Reflejos", "v": 2 },
+          { "n": "Manos", "v": 2 },
+          { "n": "Saque", "v": 2 }
+        ],
+        "EQP": [
+          { "n": "Colaboración", "v": 6 },
+          { "n": "Disciplina", "v": 6 },
+          { "n": "Liderazgo", "v": 6 }
+        ]
+      },
+      "chemOverrides": {
+        "5": 6,
+        "7": 4,
+        "9": 7,
+        "1": 5,
+        "11": 8
+      },
+      "posicion": "MU"
+    },
+    {
+      "id": "7",
+      "nombre": "Nacho",
+      "apodo": "",
+      "equipoPropio": "F5C",
+      "equipoFavorito": "",
+      "equipoFavoritoEscudoUrl": "",
+      "fotoUrl": "https://api.dicebear.com/7.x/avataaars/png?seed=Nacho&backgroundColor=0f172a&size=160",
+      "ATA": 9,
+      "PAS": 8,
+      "REG": 8,
+      "VEL": 9,
+      "DEF": 5,
+      "FIS": 6,
+      "ARQ": 2,
+      "EQP": 7,
+      "pie": "Izquierdo",
+      "estrellas": 4,
+      "bandera": "🇦🇷",
+      "pos": "LA",
+      "subs": {
+        "ATA": [
+          { "n": "Posición", "v": 9 },
+          { "n": "Definición", "v": 9 },
+          { "n": "Potencia", "v": 8 }
+        ],
+        "PAS": [
+          { "n": "Visión", "v": 8 },
+          { "n": "Pase corto", "v": 7 },
+          { "n": "Pase largo", "v": 7 }
+        ],
+        "REG": [
+          { "n": "Agilidad", "v": 8 },
+          { "n": "Control", "v": 8 },
+          { "n": "Equilibrio", "v": 7 }
+        ],
+        "VEL": [
+          { "n": "Aceleración", "v": 9 },
+          { "n": "Pico", "v": 9 },
+          { "n": "Arranque", "v": 8 }
+        ],
+        "DEF": [
+          { "n": "Marcaje", "v": 5 },
+          { "n": "Anticipación", "v": 5 },
+          { "n": "Entradas", "v": 5 }
+        ],
+        "FIS": [
+          { "n": "Resistencia", "v": 6 },
+          { "n": "Fuerza", "v": 6 },
+          { "n": "Salto", "v": 7 }
+        ],
+        "ARQ": [
+          { "n": "Reflejos", "v": 2 },
+          { "n": "Manos", "v": 2 },
+          { "n": "Saque", "v": 2 }
+        ],
+        "EQP": [
+          { "n": "Colaboración", "v": 7 },
+          { "n": "Disciplina", "v": 6 },
+          { "n": "Liderazgo", "v": 8 }
+        ]
+      },
+      "chemOverrides": {
+        "4": 8,
+        "9": 6,
+        "11": 7,
+        "1": 4,
+        "6": 5
+      },
+      "posicion": "LA"
+    },
+    {
+      "id": "8",
+      "nombre": "Franco",
+      "apodo": "",
+      "equipoPropio": "F5C",
+      "equipoFavorito": "",
+      "equipoFavoritoEscudoUrl": "",
+      "fotoUrl": "https://api.dicebear.com/7.x/avataaars/png?seed=Franco&backgroundColor=0f172a&size=160",
+      "ATA": 6,
+      "PAS": 6,
+      "REG": 6,
+      "VEL": 6,
+      "DEF": 7,
+      "FIS": 7,
+      "ARQ": 3,
+      "EQP": 6,
+      "pie": "Derecho",
+      "estrellas": 3,
+      "bandera": "🇦🇷",
+      "pos": "TI",
+      "subs": {
+        "ATA": [
+          { "n": "Posición", "v": 6 },
+          { "n": "Definición", "v": 5 },
+          { "n": "Potencia", "v": 7 }
+        ],
+        "PAS": [
+          { "n": "Visión", "v": 6 },
+          { "n": "Pase corto", "v": 6 },
+          { "n": "Pase largo", "v": 6 }
+        ],
+        "REG": [
+          { "n": "Agilidad", "v": 6 },
+          { "n": "Control", "v": 6 },
+          { "n": "Equilibrio", "v": 6 }
+        ],
+        "VEL": [
+          { "n": "Aceleración", "v": 6 },
+          { "n": "Pico", "v": 6 },
+          { "n": "Arranque", "v": 6 }
+        ],
+        "DEF": [
+          { "n": "Marcaje", "v": 7 },
+          { "n": "Anticipación", "v": 7 },
+          { "n": "Entradas", "v": 6 }
+        ],
+        "FIS": [
+          { "n": "Resistencia", "v": 7 },
+          { "n": "Fuerza", "v": 7 },
+          { "n": "Salto", "v": 7 }
+        ],
+        "ARQ": [
+          { "n": "Reflejos", "v": 3 },
+          { "n": "Manos", "v": 3 },
+          { "n": "Saque", "v": 3 }
+        ],
+        "EQP": [
+          { "n": "Colaboración", "v": 6 },
+          { "n": "Disciplina", "v": 6 },
+          { "n": "Liderazgo", "v": 6 }
+        ]
+      },
+      "chemOverrides": {
+        "3": 6,
+        "5": 7,
+        "12": 6,
+        "2": 4,
+        "10": 8
+      },
+      "posicion": "TI"
+    },
+    {
+      "id": "9",
+      "nombre": "Fer",
+      "apodo": "",
+      "equipoPropio": "F5C",
+      "equipoFavorito": "",
+      "equipoFavoritoEscudoUrl": "",
+      "fotoUrl": "https://api.dicebear.com/7.x/avataaars/png?seed=Fer&backgroundColor=0f172a&size=160",
+      "ATA": 4,
+      "PAS": 6,
+      "REG": 4,
+      "VEL": 5,
+      "DEF": 8,
+      "FIS": 8,
+      "ARQ": 3,
+      "EQP": 7,
+      "pie": "Derecho",
+      "estrellas": 3,
+      "bandera": "🇦🇷",
+      "pos": "TI",
+      "subs": {
+        "ATA": [
+          { "n": "Posición", "v": 4 },
+          { "n": "Definición", "v": 4 },
+          { "n": "Potencia", "v": 5 }
+        ],
+        "PAS": [
+          { "n": "Visión", "v": 6 },
+          { "n": "Pase corto", "v": 6 },
+          { "n": "Pase largo", "v": 6 }
+        ],
+        "REG": [
+          { "n": "Agilidad", "v": 4 },
+          { "n": "Control", "v": 5 },
+          { "n": "Equilibrio", "v": 4 }
+        ],
+        "VEL": [
+          { "n": "Aceleración", "v": 5 },
+          { "n": "Pico", "v": 5 },
+          { "n": "Arranque", "v": 5 }
+        ],
+        "DEF": [
+          { "n": "Marcaje", "v": 8 },
+          { "n": "Anticipación", "v": 8 },
+          { "n": "Entradas", "v": 7 }
+        ],
+        "FIS": [
+          { "n": "Resistencia", "v": 8 },
+          { "n": "Fuerza", "v": 8 },
+          { "n": "Salto", "v": 8 }
+        ],
+        "ARQ": [
+          { "n": "Reflejos", "v": 3 },
+          { "n": "Manos", "v": 3 },
+          { "n": "Saque", "v": 3 }
+        ],
+        "EQP": [
+          { "n": "Colaboración", "v": 7 },
+          { "n": "Disciplina", "v": 7 },
+          { "n": "Liderazgo", "v": 7 }
+        ]
+      },
+      "chemOverrides": {
+        "6": 7,
+        "7": 6,
+        "12": 4,
+        "4": 6,
+        "11": 9
+      },
+      "posicion": "TI"
+    },
+    {
+      "id": "10",
+      "nombre": "Brian",
+      "apodo": "",
+      "equipoPropio": "F5C",
+      "equipoFavorito": "",
+      "equipoFavoritoEscudoUrl": "",
+      "fotoUrl": "https://api.dicebear.com/7.x/avataaars/png?seed=Brian&backgroundColor=0f172a&size=160",
+      "ATA": 7,
+      "PAS": 6,
+      "REG": 6,
+      "VEL": 7,
+      "DEF": 5,
+      "FIS": 6,
+      "ARQ": 2,
+      "EQP": 6,
+      "pie": "Derecho",
+      "estrellas": 3,
+      "bandera": "🇦🇷",
+      "pos": "MU",
+      "subs": {
+        "ATA": [
+          { "n": "Posición", "v": 7 },
+          { "n": "Definición", "v": 7 },
+          { "n": "Potencia", "v": 6 }
+        ],
+        "PAS": [
+          { "n": "Visión", "v": 6 },
+          { "n": "Pase corto", "v": 7 },
+          { "n": "Pase largo", "v": 5 }
+        ],
+        "REG": [
+          { "n": "Agilidad", "v": 6 },
+          { "n": "Control", "v": 7 },
+          { "n": "Equilibrio", "v": 6 }
+        ],
+        "VEL": [
+          { "n": "Aceleración", "v": 7 },
+          { "n": "Pico", "v": 7 },
+          { "n": "Arranque", "v": 7 }
+        ],
+        "DEF": [
+          { "n": "Marcaje", "v": 5 },
+          { "n": "Anticipación", "v": 5 },
+          { "n": "Entradas", "v": 5 }
+        ],
+        "FIS": [
+          { "n": "Resistencia", "v": 6 },
+          { "n": "Fuerza", "v": 6 },
+          { "n": "Salto", "v": 6 }
+        ],
+        "ARQ": [
+          { "n": "Reflejos", "v": 2 },
+          { "n": "Manos", "v": 2 },
+          { "n": "Saque", "v": 2 }
+        ],
+        "EQP": [
+          { "n": "Colaboración", "v": 6 },
+          { "n": "Disciplina", "v": 6 },
+          { "n": "Liderazgo", "v": 6 }
+        ]
+      },
+      "chemOverrides": {
+        "1": 6,
+        "5": 5,
+        "8": 8,
+        "2": 4,
+        "7": 7
+      },
+      "posicion": "MU"
+    },
+    {
+      "id": "11",
+      "nombre": "Leo",
+      "apodo": "",
+      "equipoPropio": "F5C",
+      "equipoFavorito": "",
+      "equipoFavoritoEscudoUrl": "",
+      "fotoUrl": "https://api.dicebear.com/7.x/avataaars/png?seed=Leo&backgroundColor=0f172a&size=160",
+      "ATA": 10,
+      "PAS": 9,
+      "REG": 9,
+      "VEL": 9,
+      "DEF": 4,
+      "FIS": 6,
+      "ARQ": 2,
+      "EQP": 8,
+      "pie": "Izquierdo",
+      "estrellas": 5,
+      "bandera": "🇦🇷",
+      "pos": "LA",
+      "subs": {
+        "ATA": [
+          { "n": "Posición", "v": 10 },
+          { "n": "Definición", "v": 10 },
+          { "n": "Potencia", "v": 9 }
+        ],
+        "PAS": [
+          { "n": "Visión", "v": 9 },
+          { "n": "Pase corto", "v": 9 },
+          { "n": "Pase largo", "v": 8 }
+        ],
+        "REG": [
+          { "n": "Agilidad", "v": 9 },
+          { "n": "Control", "v": 9 },
+          { "n": "Equilibrio", "v": 9 }
+        ],
+        "VEL": [
+          { "n": "Aceleración", "v": 9 },
+          { "n": "Pico", "v": 9 },
+          { "n": "Arranque", "v": 8 }
+        ],
+        "DEF": [
+          { "n": "Marcaje", "v": 4 },
+          { "n": "Anticipación", "v": 4 },
+          { "n": "Entradas", "v": 4 }
+        ],
+        "FIS": [
+          { "n": "Resistencia", "v": 6 },
+          { "n": "Fuerza", "v": 6 },
+          { "n": "Salto", "v": 7 }
+        ],
+        "ARQ": [
+          { "n": "Reflejos", "v": 2 },
+          { "n": "Manos", "v": 2 },
+          { "n": "Saque", "v": 2 }
+        ],
+        "EQP": [
+          { "n": "Colaboración", "v": 9 },
+          { "n": "Disciplina", "v": 8 },
+          { "n": "Liderazgo", "v": 9 }
+        ]
+      },
+      "chemOverrides": {
+        "1": 9,
+        "7": 7,
+        "10": 6,
+        "2": 8,
+        "9": 9
+      },
+      "posicion": "LA"
+    },
+    {
+      "id": "12",
+      "nombre": "Matias",
+      "apodo": "",
+      "equipoPropio": "F5C",
+      "equipoFavorito": "",
+      "equipoFavoritoEscudoUrl": "",
+      "fotoUrl": "https://api.dicebear.com/7.x/avataaars/png?seed=Matias&backgroundColor=0f172a&size=160",
+      "ATA": 4,
+      "PAS": 5,
+      "REG": 4,
+      "VEL": 5,
+      "DEF": 5,
+      "FIS": 5,
+      "ARQ": 3,
+      "EQP": 5,
+      "pie": "Derecho",
+      "estrellas": 2,
+      "bandera": "🇦🇷",
+      "pos": "TI",
+      "subs": {
+        "ATA": [
+          { "n": "Posición", "v": 4 },
+          { "n": "Definición", "v": 4 },
+          { "n": "Potencia", "v": 5 }
+        ],
+        "PAS": [
+          { "n": "Visión", "v": 5 },
+          { "n": "Pase corto", "v": 5 },
+          { "n": "Pase largo", "v": 5 }
+        ],
+        "REG": [
+          { "n": "Agilidad", "v": 4 },
+          { "n": "Control", "v": 5 },
+          { "n": "Equilibrio", "v": 4 }
+        ],
+        "VEL": [
+          { "n": "Aceleración", "v": 5 },
+          { "n": "Pico", "v": 5 },
+          { "n": "Arranque", "v": 5 }
+        ],
+        "DEF": [
+          { "n": "Marcaje", "v": 5 },
+          { "n": "Anticipación", "v": 5 },
+          { "n": "Entradas", "v": 5 }
+        ],
+        "FIS": [
+          { "n": "Resistencia", "v": 5 },
+          { "n": "Fuerza", "v": 5 },
+          { "n": "Salto", "v": 5 }
+        ],
+        "ARQ": [
+          { "n": "Reflejos", "v": 3 },
+          { "n": "Manos", "v": 3 },
+          { "n": "Saque", "v": 3 }
+        ],
+        "EQP": [
+          { "n": "Colaboración", "v": 5 },
+          { "n": "Disciplina", "v": 5 },
+          { "n": "Liderazgo", "v": 5 }
+        ]
+      },
+      "chemOverrides": {
+        "8": 6,
+        "9": 4,
+        "2": 6,
+        "5": 8,
+        "4": 3
+      },
+      "posicion": "TI"
+    }
   ]
 }
